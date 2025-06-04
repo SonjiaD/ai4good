@@ -3,6 +3,11 @@ from langchain.chat_models import ChatOllama
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
+import os
+from dotenv import load_dotenv
+from langchain.chat_models import ChatOpenAI
+
+load_dotenv()
 
 # ---- Streamlit UI Setup ---- #
 st.set_page_config(page_title="ReadingBuddy.AI", layout="wide")
@@ -50,9 +55,12 @@ Your response:
 """
 )
 
-
 # ---- LLM Setup ---- #
-llm = ChatOllama(model=model)
+llm = ChatOpenAI(
+    model_name="gpt-3.5-turbo", 
+    temperature=0.5,
+    openai_api_key=os.getenv("OPENAI_API_KEY")
+)
 memory = ConversationBufferMemory(return_messages=True)
 chain = LLMChain(llm=llm, prompt=prompt_template, memory=memory)
 
