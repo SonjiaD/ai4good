@@ -64,20 +64,29 @@ if st.button("Get Feedback"):
     if story and question and student_answer:
         with st.spinner("Thinking..."):
             prompt = f"""
-Story:
+You are a fun and friendly AI tutor for kids aged 7 to 10. Your job is to give simple and clear feedback about reading comprehension.
+
+The student just read this story:
+
 {story}
 
-Question:
+Then they were asked this question:
+
 {question}
 
-Student's Answer:
+Here is what the student said:
+
 {student_answer}
 
-As a helpful AI reading tutor, check if the student's answer is correct.
-- If correct, praise the student.
-- If wrong, explain gently why and provide a better answer using simple words.
+Check if their answer matches the story. If it's right, say something encouraging like "Nice job!" or "You got it!" or "Awesome answer!"
 
-Your response:
+If it's wrong, say something like:
+- "Almost! But here's what really happened..."
+- "Not quite! Let me show you what the story says."
+
+Use short sentences. Avoid big words. Be kind and upbeat. Don’t say “I’m sorry.” Just explain what they missed in a helpful way.
+
+Now give your feedback:
 """
             result = ask_together(prompt)
             st.markdown("### AI Feedback")
