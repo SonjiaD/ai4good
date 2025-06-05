@@ -10,8 +10,10 @@ display_status()
 
 profile = st.session_state.get("user_profile", "general")
 with st.sidebar:
-    if "user_profile" in st.session_state:
+    if "user_profile" in st.session_state and st.session_state.user_profile:
         st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
+    else:
+        st.warning("⚠️ Please complete onboarding first.")
 
 
 

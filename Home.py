@@ -3,6 +3,12 @@ from sklearn.tree import DecisionTreeClassifier
 
 # Set config before anything else
 st.set_page_config(page_title="ReadingBuddy.AI", layout="wide")
+with st.sidebar:
+    if "user_profile" in st.session_state and st.session_state.user_profile:
+        st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
+    else:
+        st.warning("⚠️ Please complete onboarding first.")
+
 
 # ---- Session Initialization ----
 if "has_onboarded" not in st.session_state:

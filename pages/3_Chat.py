@@ -32,8 +32,10 @@ st.markdown("**Enter a short story, a comprehension question, and the student's 
 initialize_session_state()
 display_status()
 with st.sidebar:
-    if "user_profile" in st.session_state:
+    if "user_profile" in st.session_state and st.session_state.user_profile:
         st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
+    else:
+        st.warning("⚠️ Please complete onboarding first.")
 
 
 profile = st.session_state.get("user_profile", "general")
