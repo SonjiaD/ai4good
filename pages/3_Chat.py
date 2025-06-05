@@ -1,16 +1,15 @@
 import streamlit as st
 import os
-import requests
-from dotenv import load_dotenv
-from gtts import gTTS
 import tempfile
-from utils.session import initialize_session_state, display_status, earn_reward
+from gtts import gTTS
+from dotenv import load_dotenv
+
+from utils.session import initialize_session_state, display_status
+
+from langchain.chat_models import ChatOllama
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
-from langchain.schema import HumanMessage, AIMessage
-from langchain.chat_models.base import BaseChatModel
-
 
 # ---- Streamlit UI Setup ---- #
 st.set_page_config(page_title="Chat - ReadingBuddy.AI", layout="wide")
@@ -35,87 +34,62 @@ st.markdown("**Enter a short story, a comprehension question, and the student's 
 
 initialize_session_state()
 display_status()
+
 with st.sidebar:
     if "user_profile" in st.session_state and st.session_state.user_profile:
         st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
     else:
         st.warning("⚠️ Please complete onboarding first.")
+    if st.button("🧹 Clear Chat History"):
+        st.session_state.memory = ConversationBufferMemory(return_messages=True)
+        st.rerun()
 
+# ---- Set up LangChain LLM and Memory ---- #
+if "memory" not in st.session_state:
+    st.session_state.memory = ConversationBufferMemory(return_messages=True)
 
-profile = st.session_state.get("user_profile", "general")
+llm = ChatOllama(model="llama3", temperature=0.5)  # or "mistral", "llama3", etc.
 
-# Load .env with TOGETHER_API_KEY
-load_dotenv()
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+prompt = PromptTemplate(
+    input_variables=["history", "input"],
+    template="""
+You are a fun and friendly AI tutor for kids aged 7 to 10. Help them understand stories they read.
+
+Conversation so far:
+{history}
+
+Student input:
+{input}
+
+Respond kindly, using short and friendly sentences. If their answer is right, praise them. If not, gently explain why and show the correct answer from the story.
+""",
+)
+
+chain = LLMChain(llm=llm, prompt=prompt, memory=st.session_state.memory)
 
 # ---- Inputs ---- #
 story = st.text_area("Story Text", placeholder="Type or paste a short story here...", height=150)
 question = st.text_input("Comprehension Question", placeholder="E.g. Where did the dog go?")
 student_answer = st.text_input("Student's Answer", placeholder="E.g. He went to the zoo.")
 
-# ---- LLM (Together.AI) ---- #
-def ask_together(prompt):
-    url = "https://api.together.xyz/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {TOGETHER_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "model": "mistralai/Mistral-7B-Instruct-v0.2",
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.5,
-        "max_tokens": 300
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        return data['choices'][0]['message']['content'].strip()
-    except Exception as e:
-        st.error(f"Error: {e}")
-        return "⚠️ The AI couldn't respond. Please try again."
-
 # ---- Generate and Show Feedback ---- #
 if st.button("Get Feedback"):
     if story and question and student_answer:
+        student_input = f"The story is:\n{story}\n\nThe question is:\n{question}\n\nThe student's answer is:\n{student_answer}"
         with st.spinner("Thinking..."):
-            prompt = f"""
-You are a fun and friendly AI tutor for kids aged 7 to 10. Your job is to give simple and clear feedback about reading comprehension.
-
-The student just read this story:
-
-{story}
-
-Then they were asked this question:
-
-{question}
-
-Here is what the student said:
-
-{student_answer}
-
-Check if their answer matches the story. If it's right, say something encouraging like "Nice job!" or "You got it!" or "Awesome answer!"
-
-If it's wrong, say something like:
-- "Almost! But here's what really happened..."
-- "Not quite! Let me show you what the story says."
-
-Use short sentences. Avoid big words. Be kind and upbeat. Don’t say “I’m sorry.” Just explain what they missed in a helpful way.
-
-Now give your feedback:
-"""
-            result = ask_together(prompt)
-            st.markdown("### AI Feedback")
+            result = chain.run(student_input)
+            st.markdown("### 🧠 AI Feedback")
             st.success(result)
 
-            # Text-to-speech using gTTS
             tts = gTTS(text=result)
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
                 tts.save(tmp_file.name)
                 st.audio(tmp_file.name, format="audio/mp3")
     else:
         st.warning("Please complete all fields.")
+
+# ---- Optional: Show Chat History ---- #
+with st.expander("🧾 Chat History"):
+    for msg in st.session_state.memory.chat_memory.messages:
+        role = "🧒 You" if msg.type == "human" else "🤖 Buddy"
+        st.markdown(f"**{role}:** {msg.content}")
