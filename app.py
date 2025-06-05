@@ -2,6 +2,9 @@ import streamlit as st
 import os
 import requests
 from dotenv import load_dotenv
+from gtts import gTTS
+import tempfile
+
 
 # ✅ Load .env with TOGETHER_API_KEY
 load_dotenv()
@@ -59,6 +62,42 @@ def ask_together(prompt):
         st.error(f"Error: {e}")
         return "⚠️ The AI couldn't respond. Please try again."
 
+
+# # ---- Generate and Show Feedback ---- #
+# if st.button("Get Feedback"):
+#     if story and question and student_answer:
+#         with st.spinner("Thinking..."):
+#             prompt = f"""
+# You are a fun and friendly AI tutor for kids aged 7 to 10. Your job is to give simple and clear feedback about reading comprehension.
+
+# The student just read this story:
+
+# {story}
+
+# Then they were asked this question:
+
+# {question}
+
+# Here is what the student said:
+
+# {student_answer}
+
+# Check if their answer matches the story. If it's right, say something encouraging like "Nice job!" or "You got it!" or "Awesome answer!"
+
+# If it's wrong, say something like:
+# - "Almost! But here's what really happened..."
+# - "Not quite! Let me show you what the story says."
+
+# Use short sentences. Avoid big words. Be kind and upbeat. Don’t say “I’m sorry.” Just explain what they missed in a helpful way.
+
+# Now give your feedback:
+# """
+#             result = ask_together(prompt)
+#             st.markdown("### AI Feedback")
+#             st.success(result)
+#     else:
+#         st.warning("Please complete all fields.")
+
 # ---- Generate and Show Feedback ---- #
 if st.button("Get Feedback"):
     if story and question and student_answer:
@@ -91,5 +130,11 @@ Now give your feedback:
             result = ask_together(prompt)
             st.markdown("### AI Feedback")
             st.success(result)
+
+            # ✅ Text-to-speech using gTTS
+            tts = gTTS(text=result)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+                tts.save(tmp_file.name)
+                st.audio(tmp_file.name, format="audio/mp3")
     else:
         st.warning("Please complete all fields.")
