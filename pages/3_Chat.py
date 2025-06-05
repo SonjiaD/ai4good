@@ -5,7 +5,11 @@ from dotenv import load_dotenv
 from gtts import gTTS
 import tempfile
 from utils.session import initialize_session_state, display_status, earn_reward
-
+from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import PromptTemplate
+from langchain.schema import HumanMessage, AIMessage
+from langchain.chat_models.base import BaseChatModel
 
 
 # ---- Streamlit UI Setup ---- #

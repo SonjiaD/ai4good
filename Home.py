@@ -67,7 +67,7 @@ def show_onboarding():
             st.session_state.coins = 0
             st.session_state.has_onboarded = True
             st.success(f"Profile set to: **{prediction.upper()}** 🎉")
-            st.experimental_rerun()  # Refresh to load actual homepage
+            st.rerun()  # Refresh to load actual homepage
 
 # ---- Homepage Content ----
 def show_home():
@@ -77,7 +77,7 @@ def show_home():
 
     if st.button("Reset Profile"):
         st.session_state.has_onboarded = False
-        st.experimental_rerun()
+        st.rerun()
 
     # Add other home widgets here
 
