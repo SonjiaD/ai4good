@@ -1,109 +1,57 @@
 import streamlit as st
-import os
-import requests
-from dotenv import load_dotenv
 from gtts import gTTS
 import tempfile
-from utils.session import initialize_session_state, display_status, earn_reward
+import os
+
+
+# Set config
+st.set_page_config(page_title="Read and Earn", layout="wide")
+st.title("📖 Read and Earn")
+
+with st.sidebar:
+    if "user_profile" in st.session_state:
+        st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
 
 
 
-# ---- Streamlit UI Setup ---- #
-st.set_page_config(page_title="ReadingBuddy.AI", layout="wide")
-st.title("ReadingBuddy.AI – Comprehension Feedback Bot")
-st.markdown(
-    """
-    <style>
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        .stButton>button {
-            background-color: #4a6240;
-            color: white;
-            font-weight: 600;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-st.markdown("**Enter a short story, a comprehension question, and the student's answer. The AI will give simple, friendly feedback.**")
+# Get user profile from session
+profile = st.session_state.get("user_profile", "general")
 
-initialize_session_state()
-display_status()
+# Customize settings based on profile
+if profile == "dyslexia":
+    font_size = "22px"
+    line_spacing = "2.0"
+    show_audio = True
+elif profile == "adhd":
+    font_size = "20px"
+    line_spacing = "1.75"
+    show_audio = True
+else:  # general
+    font_size = "18px"
+    line_spacing = "1.5"
+    show_audio = False
 
-# ✅ Load .env with TOGETHER_API_KEY
-load_dotenv()
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+# Sample book content
+book_text = "Once upon a time, there was a curious fox who loved reading under the stars."
+st.markdown(f"""
+<div style='background-color:#e6f5ff; padding:20px; border-radius:10px; font-size:{font_size}; line-height:{line_spacing};'>
+    {book_text}
+</div>
+""", unsafe_allow_html=True)
 
-# ---- Inputs ---- #
-story = st.text_area("Story Text", placeholder="Type or paste a short story here...", height=150)
-question = st.text_input("Comprehension Question", placeholder="E.g. Where did the dog go?")
-student_answer = st.text_input("Student's Answer", placeholder="E.g. He went to the zoo.")
+# Audio option
+if show_audio:
+    tts = gTTS(book_text)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+        tts.save(tmp.name)
+        audio_path = tmp.name
+    st.audio(audio_path)
 
-# ---- LLM (Together.AI) ---- #
-def ask_together(prompt):
-    url = "https://api.together.xyz/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {TOGETHER_API_KEY}",
-        "Content-Type": "application/json",
-    }
+# Rewards
+if st.button("🎉 Finish Section"):
+    st.success("Great job! You've earned +15 coins!")
+    st.session_state.coins = st.session_state.get("coins", 0) + 15
+    st.experimental_rerun()
 
-    payload = {
-        "model": "mistralai/Mistral-7B-Instruct-v0.2",
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.5,
-        "max_tokens": 300
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        return data['choices'][0]['message']['content'].strip()
-    except Exception as e:
-        st.error(f"Error: {e}")
-        return "⚠️ The AI couldn't respond. Please try again."
-
-# ---- Generate and Show Feedback ---- #
-if st.button("Get Feedback"):
-    if story and question and student_answer:
-        with st.spinner("Thinking..."):
-            prompt = f"""
-You are a fun and friendly AI tutor for kids aged 7 to 10. Your job is to give simple and clear feedback about reading comprehension.
-
-The student just read this story:
-
-{story}
-
-Then they were asked this question:
-
-{question}
-
-Here is what the student said:
-
-{student_answer}
-
-Check if their answer matches the story. If it's right, say something encouraging like "Nice job!" or "You got it!" or "Awesome answer!"
-
-If it's wrong, say something like:
-- "Almost! But here's what really happened..."
-- "Not quite! Let me show you what the story says."
-
-Use short sentences. Avoid big words. Be kind and upbeat. Don’t say “I’m sorry.” Just explain what they missed in a helpful way.
-
-Now give your feedback:
-"""
-            result = ask_together(prompt)
-            st.markdown("### AI Feedback")
-            st.success(result)
-
-            # ✅ Text-to-speech using gTTS
-            tts = gTTS(text=result)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-                tts.save(tmp_file.name)
-                st.audio(tmp_file.name, format="audio/mp3")
-    else:
-        st.warning("Please complete all fields.")
+# Coin display
+st.markdown(f"### 🪙 Coins: {st.session_state.get('coins', 0)}")

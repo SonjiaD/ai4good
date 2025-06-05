@@ -8,6 +8,11 @@ st.title("🛍️ Avatar Store")
 initialize_session_state()
 display_status()
 
+profile = st.session_state.get("user_profile", "general")
+with st.sidebar:
+    if "user_profile" in st.session_state:
+        st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
+
 
 
 st.markdown("### Unlock new outfits using coins! 💰")
