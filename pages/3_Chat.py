@@ -3,7 +3,7 @@ import os
 import tempfile
 from gtts import gTTS
 from dotenv import load_dotenv
-import subprocess
+import subprocess #matcha-tts
 
 from utils.session import initialize_session_state, display_status
 
@@ -37,13 +37,14 @@ initialize_session_state() #sets up default values in st.session_state
 #helps with accessing uninitialized keys (like memory, user_profile, etc.) (like memory, user_profile, etc.)
 display_status()
 
-
+#matcha-tts to find the right path to the executable
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = r"C:\Program Files\eSpeak NG\libespeak-ng.dll"
 
 #helper function using matcha-tts
 def synthesize_with_matcha(text, output_path="utterance_001.wav"):
     try:
-        # Call Matcha-TTS (without --clarity flag)
+        # Call Matcha-TTS (without --clarity flag) 
+        #not sure why paige's clarity flag doesn't work, so using default settings
         subprocess.run([
             "matcha-tts",
             "--text", text,
@@ -70,6 +71,8 @@ if "memory" not in st.session_state:
     st.session_state.memory = ConversationBufferMemory(return_messages=True)
 
 # llm = ChatOllama(model="llama3", temperature=0.5)  # temperature controls randomness; lower is more deterministic
+
+# could switch to model = "tinyllama", faster but less capable
 if "llm" not in st.session_state:
     st.session_state.llm = ChatOllama(model="llama3", temperature=0.5)
 
