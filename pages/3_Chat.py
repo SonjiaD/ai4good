@@ -3,6 +3,7 @@ import os
 import tempfile
 from gtts import gTTS
 from dotenv import load_dotenv
+import subprocess
 
 from utils.session import initialize_session_state, display_status
 
@@ -22,7 +23,7 @@ st.markdown(
             padding-bottom: 2rem;
         }
         .stButton>button {
-           background-color: #4CAF50;
+            background-color: #4CAF50;
             color: white;
             font-weight: 600;
         }
@@ -32,8 +33,28 @@ st.markdown(
 )
 st.markdown("**Enter a short story, a comprehension question, and the student's answer. The AI will give simple, friendly feedback.**")
 
-initialize_session_state()
+initialize_session_state() #sets up default values in st.session_state
+#helps with accessing uninitialized keys (like memory, user_profile, etc.) (like memory, user_profile, etc.)
 display_status()
+
+
+os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = r"C:\Program Files\eSpeak NG\libespeak-ng.dll"
+
+#helper function using matcha-tts
+def synthesize_with_matcha(text, output_path="utterance_001.wav"):
+    try:
+        # Call Matcha-TTS (without --clarity flag)
+        subprocess.run([
+            "matcha-tts",
+            "--text", text,
+            "--output_folder", "."
+        ], check=True)
+        return output_path
+    except subprocess.CalledProcessError as e:
+        st.error(f"Matcha-TTS failed: {e}")
+        return None
+
+# ---- sidebar setup---- #
 
 with st.sidebar:
     if "user_profile" in st.session_state and st.session_state.user_profile:
@@ -48,7 +69,7 @@ with st.sidebar:
 if "memory" not in st.session_state:
     st.session_state.memory = ConversationBufferMemory(return_messages=True)
 
-llm = ChatOllama(model="llama3", temperature=0.5)  # or "mistral", "llama3", etc.
+llm = ChatOllama(model="llama3", temperature=0.5)  # temperature controls randomness; lower is more deterministic
 
 prompt = PromptTemplate(
     input_variables=["history", "input"],
@@ -81,10 +102,19 @@ if st.button("Get Feedback"):
             st.markdown("### 🧠 AI Feedback")
             st.success(result)
 
-            tts = gTTS(text=result)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-                tts.save(tmp_file.name)
-                st.audio(tmp_file.name, format="audio/mp3")
+            # tts = gTTS(text=result)
+            # with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+            #     tts.save(tmp_file.name)
+            #     st.audio(tmp_file.name, format="audio/mp3")
+            
+            # Optional: tag words with !word! if desired
+            # result = result.replace("pill", "!pill!").replace("peel", "!peel!")
+
+            audio_path = synthesize_with_matcha(result)
+            if audio_path and os.path.exists(audio_path):
+                st.audio(audio_path, format="audio/wav")
+            else:
+                st.warning("Could not generate audio with Matcha-TTS.")
     else:
         st.warning("Please complete all fields.")
 
