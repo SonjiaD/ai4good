@@ -75,42 +75,52 @@ if st.session_state.uploaded_text:
         st.success(summary)
 
 # ---- Ask Questions ---- #
-    st.subheader("AI Quiz")
-    if st.button("Generate Questions"):
-        from langchain.chat_models import ChatOllama
-        llm = ChatOllama(model="tinyllama")
+st.subheader("AI Quiz Time")
 
-        q_prompt = f"Generate 3 simple reading comprehension questions for this text:\n{st.session_state.uploaded_text[:1000]}"
-        questions = llm.predict(q_prompt).strip().split("\n")
-        st.session_state.pdf_questions = [q for q in questions if q.strip() != ""]
+# Step 1: Generate questions button
+if st.button("Generate Questions"):
+    llm = ChatOllama(model="tinyllama")
+    q_prompt = f"""
+Read this short story and generate 3 specific reading comprehension questions for a child aged 7-10.
 
-    for i, q in enumerate(st.session_state.pdf_questions):
-        st.markdown(f"**Q{i+1}: {q}**")
-        user_answer = st.text_input(f"Your Answer to Q{i+1}", key=f"answer_{i}")
+{st.session_state.uploaded_text[:1000]}
+"""
+    raw = llm.predict(q_prompt)
+    questions = [q.strip("-•123. ") for q in raw.strip().split("\n") if q.strip()]
+    st.session_state.pdf_questions = questions
+    st.session_state.quiz_submitted = [False] * len(questions)
+    st.rerun()
 
-        if user_answer:
-            fb_prompt = f"Text: {st.session_state.uploaded_text[:1000]}\nQuestion: {q}\nStudent Answer: {user_answer}\nProvide gentle feedback."
-            from langchain.prompts import PromptTemplate
-            fb_template = PromptTemplate(
-                input_variables=["text", "question", "answer"],
-                template="""
-Text: {text}
+# Step 2: Display questions + input + submit button
+for i, question in enumerate(st.session_state.pdf_questions):
+    st.markdown(f"**Q{i+1}: {question}**")
+    # col1, col2 = st.columns([3, 1])
+    user_answer = st.text_input(f"Your Answer to Q{i+1}", key=f"answer_{i}")
+    if st.button(f"✅ Submit Q{i+1}", key=f"submit_{i}"):
+            st.session_state.quiz_submitted[i] = True
+            st.rerun() 
+            
+    # Step 3: Show feedback only after submit
+    if "quiz_submitted" in st.session_state and st.session_state.quiz_submitted[i]:
+        answer = st.session_state.get(f"answer_{i}", "")
+        fb_prompt = f"""
+Story:
+{st.session_state.uploaded_text[:1000]}
+
 Question: {question}
 Student Answer: {answer}
 
-Give kind, simple feedback to a child. If it's correct, praise them. If not, gently explain why and give the right answer.
-                """
-            )
-            filled_prompt = fb_template.format(text=st.session_state.uploaded_text[:1000], question=q, answer=user_answer)
-            llm = ChatOllama(model="tinyllama")
-            feedback = llm.predict(filled_prompt)
-            st.success(feedback)
+Give kid-friendly feedback. If correct, say why. If incorrect, gently guide them to the right answer.
+"""
+        llm = ChatOllama(model="tinyllama")
+        feedback = llm.predict(fb_prompt)
+        st.success(feedback)
 
-            if st.button(f"🔊 Read Feedback Q{i+1}", key=f"tts_{i}"):
-                subprocess.run([
-                    "matcha-tts",
-                    "--text", feedback,
-                    "--output_folder", "."
-                ], check=True)
-                if os.path.exists("utterance_001.wav"):
-                    st.audio("utterance_001.wav")
+        if st.button(f"🔊 Read Feedback Q{i+1}", key=f"tts_{i}"):
+            subprocess.run([
+                "matcha-tts",
+                "--text", feedback,
+                "--output_folder", "."
+            ], check=True)
+            if os.path.exists("utterance_001.wav"):
+                st.audio("utterance_001.wav")
