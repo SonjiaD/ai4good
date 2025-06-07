@@ -40,7 +40,7 @@ if st.session_state.uploaded_text:
     st.subheader("Extracted Text")
     st.text_area("PDF Content", value=st.session_state.uploaded_text, height=300)
 
-    if st.button("🔊 Read Aloud with Matcha-TTS"):
+    if st.button("🔊 Read Aloud"):
         try:
             subprocess.run([
                 "matcha-tts",
@@ -63,10 +63,10 @@ if st.session_state.uploaded_text:
             template="""Summarize this document for a 10-year-old:
 {text}"""
         )
-        summary = llm.predict(prompt.format(text=st.session_state.uploaded_text[:1000]))
-        st.session_state.pdf_summary = summary
-        st.markdown("### ✨ Summary")
-        st.success(summary)
+        # summary = llm.predict(prompt.format(text=st.session_state.uploaded_text[:1000]))
+        # st.session_state.pdf_summary = summary
+        # st.markdown("### ✨ Summary")
+        # st.success(summary)
 
 # ---- Ask Questions ---- #
 st.subheader("🧠 AI Quiz Time")
