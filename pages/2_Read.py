@@ -3,10 +3,6 @@ from gtts import gTTS
 import tempfile
 import os
 
-# --- PAGE SETUP ---
-st.set_page_config(page_title="📖 Read and Earn", layout="wide")
-st.title("📖 Read and Earn")
-
 # --- SESSION STATE INIT ---
 if "user_profile" not in st.session_state:
     st.session_state.user_profile = "general"
@@ -17,9 +13,19 @@ if "story_index" not in st.session_state:
 if "current_book" not in st.session_state:
     st.session_state.current_book = None
 
+# --- PAGE SETUP ---
+st.set_page_config(page_title="📖 Read and Earn", layout="wide")
+st.title("📖 Read and Earn")
+
 # --- SIDEBAR ---
 with st.sidebar:
-    st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
+    # st.markdown(f"**🧠 Profile:** `{st.session_state.user_profile.capitalize()}`")
+    profile = st.session_state.get("user_profile", "general")
+    if profile:
+        st.markdown(f"**🧠 Profile:** `{profile.capitalize()}`")
+    else:
+        st.warning("⚠️ Please complete onboarding first.")
+
     st.markdown(f"**🪙 Coins:** `{st.session_state.coins}`")
     if st.button("🔄 Restart Book"):
         st.session_state.story_index = 0

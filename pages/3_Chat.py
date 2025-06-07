@@ -69,7 +69,11 @@ with st.sidebar:
 if "memory" not in st.session_state:
     st.session_state.memory = ConversationBufferMemory(return_messages=True)
 
-llm = ChatOllama(model="llama3", temperature=0.5)  # temperature controls randomness; lower is more deterministic
+# llm = ChatOllama(model="llama3", temperature=0.5)  # temperature controls randomness; lower is more deterministic
+if "llm" not in st.session_state:
+    st.session_state.llm = ChatOllama(model="llama3", temperature=0.5)
+
+llm = st.session_state.llm
 
 prompt = PromptTemplate(
     input_variables=["history", "input"],
@@ -99,7 +103,7 @@ if st.button("Get Feedback"):
         student_input = f"The story is:\n{story}\n\nThe question is:\n{question}\n\nThe student's answer is:\n{student_answer}"
         with st.spinner("Thinking..."):
             result = chain.run(student_input)
-            st.markdown("### 🧠 AI Feedback")
+            st.markdown("### AI Feedback")
             st.success(result)
 
             # tts = gTTS(text=result)
