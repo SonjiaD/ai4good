@@ -89,19 +89,15 @@ Read this short story and generate 3 specific reading comprehension questions fo
     questions = [q.strip("-•123. ") for q in raw.strip().split("\n") if q.strip()]
     st.session_state.pdf_questions = questions
     st.session_state.quiz_submitted = [False] * len(questions)
+    st.session_state.feedbacks = [""] * len(questions)  # Add this line
     st.rerun()
 
 # Step 2: Display questions + input + submit button
 for i, question in enumerate(st.session_state.pdf_questions):
     st.markdown(f"**Q{i+1}: {question}**")
-    # col1, col2 = st.columns([3, 1])
     user_answer = st.text_input(f"Your Answer to Q{i+1}", key=f"answer_{i}")
+
     if st.button(f"✅ Submit Q{i+1}", key=f"submit_{i}"):
-            st.session_state.quiz_submitted[i] = True
-            st.rerun() 
-            
-    # Step 3: Show feedback only after submit
-    if "quiz_submitted" in st.session_state and st.session_state.quiz_submitted[i]:
         answer = st.session_state.get(f"answer_{i}", "")
         fb_prompt = f"""
 Story:
@@ -114,12 +110,18 @@ Give kid-friendly feedback. If correct, say why. If incorrect, gently guide them
 """
         llm = ChatOllama(model="tinyllama")
         feedback = llm.predict(fb_prompt)
-        st.success(feedback)
+        st.session_state.feedbacks[i] = feedback
+        st.session_state.quiz_submitted[i] = True
+        st.rerun()
+
+    # Step 3: Show feedback only if submitted and stored
+    if st.session_state.quiz_submitted[i] and st.session_state.feedbacks[i]:
+        st.success(st.session_state.feedbacks[i])
 
         if st.button(f"🔊 Read Feedback Q{i+1}", key=f"tts_{i}"):
             subprocess.run([
                 "matcha-tts",
-                "--text", feedback,
+                "--text", st.session_state.feedbacks[i],
                 "--output_folder", "."
             ], check=True)
             if os.path.exists("utterance_001.wav"):
