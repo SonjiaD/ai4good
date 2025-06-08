@@ -1,9 +1,14 @@
 # 4_PDF.py
 import streamlit as st
-import fitz  # PyMuPDF
 import os
+import fitz  # PyMuPDF
 import tempfile
-import subprocess
+from langchain.chat_models import ChatOllama
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from utils.session import initialize_session_state, display_status
+from streamlit_js_eval import streamlit_js_eval
+import time
 
 st.set_page_config(page_title="📄 Upload & Read PDF", layout="wide")
 st.title("📄 Upload & Read PDF")
@@ -19,6 +24,50 @@ if "quiz_submitted" not in st.session_state:
     st.session_state.quiz_submitted = []
 if "feedbacks" not in st.session_state:
     st.session_state.feedbacks = []
+
+
+# # ------------- Inactivity Overlay (for ADHD support) ------------- #
+# overlay_css = """
+# <style>
+# @keyframes fadeIn {
+#     from { opacity: 0; }
+#     to { opacity: 1; }
+# }
+# .inactive-overlay {
+#     position: fixed;
+#     top: 0; left: 0;
+#     width: 100vw; height: 100vh;
+#     background: rgba(0, 0, 0, 0.7);
+#     z-index: 9999;
+#     display: flex;
+#     flex-direction: column;
+#     justify-content: center;
+#     align-items: center;
+#     animation: fadeIn 1s ease-in-out;
+# }
+# .inactive-overlay img {
+#     max-width: 300px;
+#     margin-bottom: 20px;
+# }
+# </style>
+# """
+
+# is_idle = streamlit_js_eval(js_expressions="(Date.now() - window.lastActivity) > 5000", key="idle_check")  # 5 sec for testing
+# # st.write("Idle Status:", is_idle)
+
+# if is_idle and "overlay_dismissed" not in st.session_state:
+#     st.markdown(overlay_css, unsafe_allow_html=True)
+#     st.markdown('<div class="inactive-overlay">', unsafe_allow_html=True)
+#     st.image("cat_stretch.png", caption="Time for a quick break 🐱✨", use_column_width=False)
+
+#     if os.path.exists("ding.mp3"):
+#         st.audio("ding.mp3", autoplay=True)
+
+#     if st.button("I'm back!"):
+#         st.session_state.overlay_dismissed = True
+#         st.rerun()
+
+#     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---- Upload PDF ---- #
 uploaded_file = st.file_uploader("Upload a PDF document", type=["pdf"])
@@ -53,20 +102,22 @@ if st.session_state.uploaded_text:
             st.error(f"TTS failed: {e}")
 
 # ---- Generate Summary ---- #
-    if st.button("📄 Summarize Text"):
-        from langchain.chat_models import ChatOllama
-        from langchain.prompts import PromptTemplate
+#commented out because it is hallucinating at the moment
 
-        llm = ChatOllama(model="tinyllama")
-        prompt = PromptTemplate(
-            input_variables=["text"],
-            template="""Summarize this document for a 10-year-old:
-{text}"""
-        )
-        # summary = llm.predict(prompt.format(text=st.session_state.uploaded_text[:1000]))
-        # st.session_state.pdf_summary = summary
-        # st.markdown("### ✨ Summary")
-        # st.success(summary)
+#     if st.button("📄 Summarize Text"):
+#         from langchain.chat_models import ChatOllama
+#         from langchain.prompts import PromptTemplate
+
+#         llm = ChatOllama(model="tinyllama")
+#         prompt = PromptTemplate(
+#             input_variables=["text"],
+#             template="""Summarize this document for a 10-year-old:
+# {text}"""
+#         )
+#         summary = llm.predict(prompt.format(text=st.session_state.uploaded_text[:1000]))
+#         st.session_state.pdf_summary = summary
+#         st.markdown("### ✨ Summary")
+#         st.success(summary)
 
 # ---- Ask Questions ---- #
 st.subheader("🧠 AI Quiz Time")
