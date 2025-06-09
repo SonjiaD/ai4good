@@ -146,6 +146,13 @@ def tts():
         return jsonify({"error": str(e)}), 500
 
 
+#route for logging to flask focus
+@app.route('/api/log-focus', methods=['POST'])
+def log_focus():
+    data = request.get_json()
+    print(f"[FOCUS] {data['status']} at {data['timestamp']}")
+    return jsonify({"status": "ok"})
+
 def echo():
     data = request.get_json()
     return jsonify(response=f"You said: {data.get('message', '')}")

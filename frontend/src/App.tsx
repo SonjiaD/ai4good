@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import PdfUpload from './pages/5_PDF';
+import FocusTracker from './pages/FocusTracker';
+
 
 function App() {
   const [msg, setMsg] = useState('');
@@ -18,9 +20,12 @@ function App() {
 
   return (
     <Router>
+
+      {/* navigation bar */}
       <nav style={{ marginBottom: '1rem' }}>
         <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
         <Link to="/pdf">PDF Upload</Link>
+        <Link to ="/focus" style={{ marginLeft: '1rem' }}>Focus Tracker</Link>
       </nav>
 
       <Routes>
@@ -37,6 +42,7 @@ function App() {
           }
         />
         <Route path="/pdf" element={<PdfUpload />} />
+        <Route path="/focus" element={<FocusTracker />} />
       </Routes>
     </Router>
   );

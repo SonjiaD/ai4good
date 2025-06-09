@@ -126,9 +126,6 @@ const PdfPage: React.FC = () => {
         }
     };
 
-
-
-
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">📄 Upload & Read PDF</h1>
@@ -208,18 +205,7 @@ const PdfPage: React.FC = () => {
                   </button>
                 )}
               </div>
-              {/* {feedbacks[i] && (
-                <div className="mt-2 p-2 bg-green-100 border rounded">
-                  <strong>Feedback:</strong> {feedbacks[i]}
-                </div>
-                
-              )}
-                {audioUrls[i] && (
-                    <audio controls className="mt-2">
-                        <source src={audioUrls[i]} type="audio/wav" />
-                        Your browser does not support the audio element.
-                    </audio>
-                    )} */}
+            
               {feedbacks[i] && (
                 <>
                     <div className="mt-2 p-2 bg-green-100 border rounded">
