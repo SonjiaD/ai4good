@@ -19,7 +19,6 @@ An AI-powered reading companion designed for neurodivergent children. Children c
 
 ```bash
 git clone https://github.com/SonjiaD/ai4good
-cd ReadingBuddyAI
 ```
 
 ### 2. Backend Setup (Flask)
