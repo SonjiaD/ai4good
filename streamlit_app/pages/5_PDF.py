@@ -12,7 +12,6 @@ from streamlit_js_eval import streamlit_js_eval
 import time
 import subprocess
 
-
 st.set_page_config(page_title="📄 Upload & Read PDF", layout="wide")
 st.title("📄 Upload & Read PDF")
 
