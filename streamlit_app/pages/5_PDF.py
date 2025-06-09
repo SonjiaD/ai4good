@@ -6,9 +6,12 @@ import tempfile
 from langchain.chat_models import ChatOllama
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from utils.session import initialize_session_state, display_status
+# from utils.session import initialize_session_state, display_status
+#not working just commented it out for now
 from streamlit_js_eval import streamlit_js_eval
 import time
+import subprocess
+
 
 st.set_page_config(page_title="📄 Upload & Read PDF", layout="wide")
 st.title("📄 Upload & Read PDF")
@@ -24,6 +27,10 @@ if "quiz_submitted" not in st.session_state:
     st.session_state.quiz_submitted = []
 if "feedbacks" not in st.session_state:
     st.session_state.feedbacks = []
+
+#matcha-tts
+#making sure environment variable is set before calling matcha-tts so don't need to run in terminal
+os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
 
 
 # # ------------- Inactivity Overlay (for ADHD support) ------------- #
@@ -85,6 +92,12 @@ if uploaded_file:
     st.success("PDF uploaded and text extracted!")
 
 # ---- Display Text & Read Aloud ---- #
+
+import pathlib
+
+project_root = pathlib.Path(__file__).resolve().parents[2]
+output_path = project_root / "utterance_001.wav"
+
 if st.session_state.uploaded_text:
     st.subheader("Extracted Text")
     st.text_area("PDF Content", value=st.session_state.uploaded_text, height=300)
