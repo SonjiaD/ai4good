@@ -5,9 +5,22 @@ from flask_cors import CORS
 import os
 import fitz
 
+#importing ollama
+from langchain.chat_models import ChatOllama
+from flask import send_file, Flask, request, jsonify
+
+#matcha-tts
+import subprocess
+import traceback
+
+
 app = Flask(__name__) #creates new flask web application 
 CORS(app)  # Allow requests from frontend
 #makes sure frontend can talk to backend
+
+#matcha-tts
+os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
+
 
 @app.route("/") #defines home route like homepage of server
 def home():
@@ -47,6 +60,90 @@ def upload_pdf():
         return jsonify({'text': text})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+#generating quiz questions
+@app.route('/api/generate-quiz', methods=['POST'])
+def generate_quiz():
+    data = request.get_json()
+    story = data.get("text", "")[:1500]
+
+    q_prompt = f"""
+You are a reading tutor for kids aged 7–10.
+
+Below is a story. Your job is to create 3 simple, clear reading comprehension questions for the child.
+
+⚠️ DO NOT invent new names, settings, or actions.
+✅ ONLY use characters and events from the story **as written**.
+
+Story:
+\"\"\"{story}\"\"\"
+
+Output ONLY the 3 questions, numbered:
+1. ...
+2. ...
+3. ...
+"""
+    llm = ChatOllama(model="llama3", temperature=0.3)
+    raw = llm.predict(q_prompt)
+
+    questions = [line.strip().split(". ", 1)[-1]
+                 for line in raw.strip().split("\n")
+                 if line.strip() and line.strip()[0].isdigit()]
+
+    return jsonify({"questions": questions})
+
+#submiting answer
+@app.route('/api/submit-answer', methods=['POST'])
+def submit_answer():
+    data = request.get_json()
+    story = data.get("text", "")[:1500]
+    question = data.get("question", "")
+    answer = data.get("answer", "")
+
+    fb_prompt = f"""
+You are a friendly reading tutor for kids aged 7–10.
+
+Below is a story excerpt, a question about the story, and a student's answer.
+Give kind, simple feedback using **only** the story info.
+
+✅ If the answer is correct, say so and explain why using story phrases.
+❌ If not, gently explain the correct answer based on the story.
+
+🚫 DO NOT invent names, characters, or facts.
+
+Story:
+\"\"\"{story}\"\"\"
+Question: {question}
+Student Answer: {answer}
+"""
+
+    llm = ChatOllama(model="llama3", temperature=0.3)
+    feedback = llm.predict(fb_prompt)
+
+    return jsonify({"feedback": feedback})
+
+#matcha-tts
+import subprocess
+
+@app.route('/api/tts', methods=['POST'])
+def tts():
+    data = request.get_json()
+    text = data.get("text", "")[:300]  # limit length
+
+    try:
+        subprocess.run([
+            "matcha-tts",
+            "--text", text,
+            "--output_folder", "."
+        ], check=True)
+
+        if os.path.exists("utterance_001.wav"):
+            return send_file("utterance_001.wav", mimetype="audio/wav")
+        else:
+            return jsonify({"error": "TTS audio not found"}), 500
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": str(e)}), 500
 
 
 def echo():
