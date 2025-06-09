@@ -9,7 +9,7 @@ An AI-powered reading companion designed for neurodivergent children. Children c
 | Version       | Description                               |
 |---------------|-------------------------------------------|
 | `streamlit_app/` | Rapid prototype with local TTS and LLM |
-| `flask_react_app/` | Production-ready full-stack version (React + Flask API) |
+| `frontend/ + backend/` | Production-ready full-stack version (React + Flask API) |
 
 ---
 
@@ -18,7 +18,7 @@ An AI-powered reading companion designed for neurodivergent children. Children c
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ReadingBuddyAI.git
+git clone https://github.com/SonjiaD/ai4good
 cd ReadingBuddyAI
 ```
 
