@@ -6,14 +6,18 @@ const FocusTracker = () => {
   const [status, setStatus] = useState("Initializing...");
 
   useEffect(() => {
+
+
     let lastMouseMove = Date.now();
 
     const handleMouseMove = () => {
       lastMouseMove = Date.now();
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    
 
+    window.addEventListener("mousemove", handleMouseMove);
+    
     // Initialize WebGazer
     webgazer
       .setGazeListener((data: any, time: any) => {
@@ -21,6 +25,8 @@ const FocusTracker = () => {
           setStatus("No face detected");
           return;
         }
+
+        
 
         const now = Date.now();
         const secondsIdle = (now - lastMouseMove) / 1000;
@@ -30,9 +36,34 @@ const FocusTracker = () => {
         } else {
           setStatus("User is focused");
         }
+
+        //VERSION 2
+        // const centerX = window.innerWidth / 2;
+        // const centerY = window.innerHeight / 2;
+
+        // // Shrink the "focus zone" for stricter detection
+        // const toleranceX = 200; // Horizontal box half-width
+        // const toleranceY = 150; // Vertical box half-height
+
+        // const isFocused =
+        // Math.abs(data.x - centerX) < toleranceX &&
+        // Math.abs(data.y - centerY) < toleranceY;
+
+        // if (isFocused) {
+        // setStatus("Focused ✅");
+        // } else {
+        // setStatus("Not focused ❌");
+        // }
+
       })
       .begin()
       .showPredictionPoints(true);
+
+    
+
+    // Check for mouse inactivity 
+
+    
 
     const idleChecker = setInterval(() => {
       const now = Date.now();
