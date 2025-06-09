@@ -1,122 +1,68 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  FilesetResolver,
-  FaceLandmarker,
-  DrawingUtils,
-} from '@mediapipe/tasks-vision';
+// src/pages/FocusTracker.tsx
+import { useEffect, useState } from 'react';
+import webgazer from 'webgazer';
 
 const FocusTracker = () => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [focused, setFocused] = useState<boolean | null>(null);
+  const [status, setStatus] = useState("Initializing...");
 
   useEffect(() => {
-    let faceLandmarker: FaceLandmarker;
-    let animationFrameId: number;
+    let lastMouseMove = Date.now();
 
-    const initFaceTracking = async () => {
-      // Load the vision task model
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-      );
-
-      // Create the landmarker
-      faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-          delegate: 'GPU',
-        },
-        outputFaceBlendshapes: false,
-        runningMode: 'VIDEO',
-        numFaces: 1,
-      });
-
-      await setupCamera();
-      requestAnimationFrame(detectFace);
+    const handleMouseMove = () => {
+      lastMouseMove = Date.now();
     };
 
-    const setupCamera = async () => {
-      const video = videoRef.current!;
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-      await new Promise(resolve => {
-        video.onloadedmetadata = () => {
-          video.play();
-          resolve(true);
-        };
-      });
-    };
+    window.addEventListener("mousemove", handleMouseMove);
 
-    const detectFace = async () => {
-      const video = videoRef.current!;
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext('2d')!;
-      const drawingUtils = new DrawingUtils(ctx);
+    // Initialize WebGazer
+    webgazer
+      .setGazeListener((data: any, time: any) => {
+        if (data == null) {
+          setStatus("No face detected");
+          return;
+        }
 
-      if (
-        !video ||
-        !faceLandmarker ||
-        video.paused ||
-        video.ended ||
-        video.readyState < 2
-      ) {
-        animationFrameId = requestAnimationFrame(detectFace);
-        return;
+        const now = Date.now();
+        const secondsIdle = (now - lastMouseMove) / 1000;
+
+        if (secondsIdle > 10) {
+          setStatus("User not interacting (mouse idle)");
+        } else {
+          setStatus("User is focused");
+        }
+      })
+      .begin()
+      .showPredictionPoints(true);
+
+    const idleChecker = setInterval(() => {
+      const now = Date.now();
+      const secondsIdle = (now - lastMouseMove) / 1000;
+      if (secondsIdle > 10) {
+        setStatus("User not interacting (mouse idle)");
       }
+    }, 5000);
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const now = performance.now();
-      const results = await faceLandmarker.detectForVideo(video, now);
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-        drawingUtils.drawConnectors(
-          results.faceLandmarks[0],
-          FaceLandmarker.FACE_LANDMARKS_TESSELATION,
-          { color: '#00FF00', lineWidth: 1 }
-        );
-        setFocused(true);
-      } else {
-        setFocused(false);
-      }
-
-      animationFrameId = requestAnimationFrame(detectFace);
-    };
-
-    initFaceTracking();
-
+    // ✅ Cleanup
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("mousemove", handleMouseMove);
+      clearInterval(idleChecker);
+
+      try {
+        if (webgazer && typeof webgazer.end === "function") {
+          webgazer.end();
+        }
+      } catch (e) {
+        console.warn("Error during webgazer cleanup:", e);
       }
     };
   }, []);
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <h2>Focus Tracker</h2>
-      <div style={{ position: 'relative', display: 'inline-block' }}>
-        <video ref={videoRef} style={{ width: 640, height: 480 }} />
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 640,
-            height: 480,
-          }}
-        />
-      </div>
-      <p>
-        Status:{' '}
-        <strong style={{ color: focused ? 'green' : 'red' }}>
-          {focused === null ? 'Loading...' : focused ? 'Focused' : 'Distracted'}
-        </strong>
+    <div className="p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">🧠 Focus Detection</h1>
+      <p className="text-gray-700 mb-2">Status: <span className="font-mono">{status}</span></p>
+      <p className="text-sm text-gray-500">
+        This tool uses your webcam and mouse activity to detect whether you're paying attention to the screen.
       </p>
     </div>
   );
