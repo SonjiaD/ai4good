@@ -1,0 +1,221 @@
+.role-container {
+  font-family: 'Poppins', sans-serif;
+  color: #1a1a1a;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  width: 250px;
+  margin-right: 0.5rem;
+}
+
+nav a {
+  margin-right: 1.5rem;
+  text-decoration: none;
+  color: #000;
+}
+
+.signup-btn {
+  background-color: #5CCDFF;
+  color: #000;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.main-section {
+  text-align: center;
+  padding-top: 1rem;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  padding-bottom: 4rem; /*This causes scrollbar in case thats an issue in the future*/
+}
+.button-group {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.role-btn {
+  background-color: #34A2D3;
+  color: #000;
+  border: none;
+  padding: 1rem 2rem;
+  margin: 0.5rem 0;
+  border-radius: 30px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+/* BACKGROUND BUDD */
+.budd-face {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 500px;
+    z-index: -1; 
+    pointer-events: none; 
+} 
+
+/* QUESTIONS */
+.question{
+    font-size: 2.5em;
+    margin: 0 auto;
+    margin-top: 0.5rem;
+    margin-bottom: 1.2rem;
+    padding: 2rem;
+    border-radius: 12px;
+    font-weight: bold;
+    max-width: 70%;
+}
+
+/* CHECKBOXES */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  margin-right: 0.75rem;
+  transform: scale(1.3);
+}
+
+/* BACK, NEXT, SKIP BUTTONS */
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 3rem;
+  margin-top: 3rem;
+  width: 100%;
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.nav-left, .nav-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-left {
+  justify-content: flex-start;
+}
+
+.nav-right {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.nav-btn {
+  background-color: #e0e0e0;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: #000;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)
+}
+
+.nav-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.back-btn {
+  background-color: #34A2D3;
+}
+
+.skip-btn {
+  background-color: #ffe08c;
+}
+
+.next-btn {
+  background-color: #34A2D3;
+}
+
+/* THANK YOU PAGE */
+.thankyou-content {
+  text-align: center;
+  margin-top: 2.5rem;
+  position: relative;
+  padding: 2rem;
+}
+
+.thankyou-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.thankyou-content p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.start-btn {
+  background-color: #EC9DF9;
+  color: #000;
+  border: none;
+  padding: 2rem 4rem;
+  border-radius: 60px;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.start-btn:hover {
+  transform: scale(1.05);
+}
+
+.thankyou-bot {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 400px;
+  pointer-events: none;
+  z-index: -1; 
+}
+
+.thankyou-bear {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  pointer-events: none;
+  z-index: -1; 
+}
