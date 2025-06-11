@@ -46,7 +46,7 @@ Create and activate a virtual environment:
 Install dependencies:
 
 ```bash
-pip install flask flask-cors langchain gtts matcha-tts
+pip install flask flask-cors langchain gtts matcha-tts langchain-community pymupdf
 ```
 
 Run the Flask server:
@@ -68,7 +68,7 @@ Open a new terminal, then:
 ```bash
 cd frontend
 npm install
-npm run dev
+npm start
 ```
 
 Your React app will run at `http://localhost:3000`.
