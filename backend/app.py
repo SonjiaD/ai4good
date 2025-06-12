@@ -13,6 +13,9 @@ from flask import send_file, Flask, request, jsonify
 import subprocess
 import traceback
 
+#whisper
+import whisper
+import tempfile
 
 app = Flask(__name__) #creates new flask web application 
 CORS(app)  # Allow requests from frontend
@@ -21,6 +24,10 @@ CORS(app)  # Allow requests from frontend
 #matcha-tts
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
 
+#whisper
+# Hardcode ffmpeg path for Whisper to find it
+os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
+model = whisper.load_model("base")  # Load the Whisper model
 
 @app.route("/") #defines home route like homepage of server
 def home():
@@ -145,6 +152,15 @@ def tts():
     except subprocess.CalledProcessError as e:
         return jsonify({"error": str(e)}), 500
 
+#whisper
+@app.route('/api/transcribe-audio', methods=['POST'])
+def transcribe_audio():
+    file = request.files['audio']
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp:
+        file.save(temp.name)
+        result = model.transcribe(temp.name)
+        transcription = result['text']
+    return jsonify({'transcription': transcription})
 
 #route for logging to flask focus
 @app.route('/api/log-focus', methods=['POST'])

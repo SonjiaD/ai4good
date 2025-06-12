@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const PdfPage: React.FC = () => {
 
-    // State variables
+//state variables
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState<string>('');
   const [questions, setQuestions] = useState<string[]>([]);
@@ -126,6 +126,47 @@ const PdfPage: React.FC = () => {
         }
     };
 
+
+    const handleRecordAnswer = (index: number) => {
+      let mediaRecorder: MediaRecorder;
+      let audioChunks: BlobPart[] = [];
+
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        console.log("Recording...");
+
+        mediaRecorder.addEventListener("dataavailable", event => {
+          audioChunks.push(event.data);
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+          const formData = new FormData();
+          formData.append('audio', audioBlob);
+
+          fetch('http://localhost:5000/api/transcribe-audio', {
+            method: 'POST',
+            body: formData
+          })
+            .then(response => response.json())
+            .then(data => {
+              const updated = [...answers];
+              updated[index] = data.transcription;
+              setAnswers(updated);
+            })
+            .catch(err => console.error(err));
+        });
+
+        setTimeout(() => {
+          mediaRecorder.stop();
+          console.log("Recording stopped");
+        }, 5000);  // record 5 seconds
+      });
+    };
+
+
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">📄 Upload & Read PDF</h1>
@@ -147,12 +188,15 @@ const PdfPage: React.FC = () => {
             {text.slice(0, 800)}... {/* optional: limit view for now */}
           </div>
 
+          {/* generate questions button based on the text extracted from the PDF */}
           <button
             onClick={handleGenerateQuestions}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
           >
             🧪 Generate Questions
           </button>
+
+          {/* button to read the text aloud */}
               <button
                 onClick={handleReadText}
                 className="mt-2 px-4 py-2 bg-yellow-600 text-white rounded"
@@ -166,6 +210,8 @@ const PdfPage: React.FC = () => {
                     Your browser does not support the audio element.
                 </audio>
                 )}
+
+        
 
         </>
 
@@ -220,10 +266,20 @@ const PdfPage: React.FC = () => {
                 </>
                 )}
 
+              <button
+                onClick={() => handleRecordAnswer(i)}  
+                className="px-3 py-1 bg-red-500 text-white rounded"
+              >
+                🎙 Record Answer
+              </button>
+
+
             </div>
           ))}
         </div>
       )}
+
+      
     </div>
   );
 };
