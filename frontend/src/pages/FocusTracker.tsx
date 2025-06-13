@@ -1,4 +1,3 @@
-// src/pages/FocusTracker.tsx
 import { useEffect, useState } from 'react';
 import webgazer from 'webgazer';
 
@@ -57,7 +56,8 @@ const FocusTracker = () => {
 
       })
       .begin()
-      .showPredictionPoints(true);
+      .showPredictionPoints(false);
+      // renders a floating canvas at the top of the page
 
     
 
@@ -89,7 +89,7 @@ const FocusTracker = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="p-6 max-w-xl mx-20">
       <h1 className="text-2xl font-semibold mb-4">🧠 Focus Detection</h1>
       <p className="text-gray-700 mb-2">Status: <span className="font-mono">{status}</span></p>
       <p className="text-sm text-gray-500">

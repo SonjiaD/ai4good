@@ -26,7 +26,7 @@ os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespe
 #whisper
 # Hardcode ffmpeg path for Whisper to find it
 os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
-odel = whisper.load_model("base")  # Load the Whisper model
+model = whisper.load_model("base")  # Load the Whisper model
 
 @app.route("/") #defines home route like homepage of server
 def home():
@@ -140,6 +140,9 @@ def tts():
         subprocess.run([
             "matcha-tts",
             "--text", text,
+            # need to change form message = text;
+            # copy hit_server.py format into here
+            # doing it with websockets
             "--play"
         ], check=True)
 
