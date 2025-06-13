@@ -11,6 +11,10 @@ from flask import send_file, Flask, request, jsonify
 #matcha-tts
 import subprocess
 import traceback
+#websocket-client logic
+import asyncio
+import websockets
+import json
 
 #whisper
 import whisper
@@ -128,31 +132,64 @@ Student Answer: {answer}
 
     return jsonify({"feedback": feedback})
 
-#matcha-tts
-import subprocess
+#helper function to send message to local websocket server
+async def send_tts_message(text):
+    uri = "ws://localhost:1000"
+    async with websockets.connect(uri) as websocket:
+        message = {"text": text}
+        message_json = json.dumps(message)
+        await websocket.send(message_json)
+        print(f"Sent: {message_json})")
 
+        response = await websocket.recv()
+        print(f"Received: {response}")
+        return response
+
+#matcha-tts
 @app.route('/api/tts', methods=['POST'])
 def tts():
     data = request.get_json()
     text = data.get("text", "")[:300]  # limit length
 
     try:
-        subprocess.run([
-            "matcha-tts",
-            "--text", text,
-            # need to change form message = text;
-            # copy hit_server.py format into here
-            # doing it with websockets
-            "--play"
-        ], check=True)
+        # Run the async websocket client inside Flask sync route
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        response = loop.run_until_complete(send_tts_message(text))
 
+        #after synthesis, taking the server file back
         if os.path.exists("utterance_001.wav"):
             return send_file("utterance_001.wav", mimetype="audio/wav")
         else:
             return jsonify({"error": "TTS audio not found"}), 500
-
-    except subprocess.CalledProcessError as e:
+    
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+#OLD VERSION
+# @app.route('/api/tts', methods=['POST'])
+# def tts():
+#     data = request.get_json()
+#     text = data.get("text", "")[:300]  # limit length
+
+#     try:
+#         subprocess.run([
+#             "matcha-tts",
+#             "--text", text,
+#             # need to change form message = text;
+#             # copy hit_server.py format into here
+#             # doing it with websockets
+#             "--play"
+#         ], check=True)
+
+#         if os.path.exists("utterance_001.wav"):
+#             return send_file("utterance_001.wav", mimetype="audio/wav")
+#         else:
+#             return jsonify({"error": "TTS audio not found"}), 500
+
+#     except subprocess.CalledProcessError as e:
+#         return jsonify({"error": str(e)}), 500
 
 #whisper
 @app.route('/api/transcribe-audio', methods=['POST'])
