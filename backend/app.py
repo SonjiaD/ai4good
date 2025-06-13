@@ -1,4 +1,3 @@
-# backend/app.py
 
 from flask import Flask, request, jsonify 
 from flask_cors import CORS
@@ -27,7 +26,7 @@ os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespe
 #whisper
 # Hardcode ffmpeg path for Whisper to find it
 os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
-model = whisper.load_model("base")  # Load the Whisper model
+odel = whisper.load_model("base")  # Load the Whisper model
 
 @app.route("/") #defines home route like homepage of server
 def home():
@@ -141,7 +140,7 @@ def tts():
         subprocess.run([
             "matcha-tts",
             "--text", text,
-            "--output_folder", "."
+            "--play"
         ], check=True)
 
         if os.path.exists("utterance_001.wav"):
