@@ -37,14 +37,18 @@ body {
     gap: 40px;
     flex-wrap: wrap;
   }
-  
-  
+    
   .outfit-card {
     background-color: #fcd99e;
-    border-radius: 20px;
-    padding: 20px;
-    width: 150px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 40px;
+    padding: 40px 20px;
+    width: 240px;      
+    height: 420px;     
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
     transition: transform 0.2s;
   }
   
@@ -53,20 +57,26 @@ body {
   }
   
   .outfit-image {
-    width: 100px;
-    height: 100px;
+    flex-grow: 1;
+    max-height: calc(100% - 80px);  /* card height minus space for text */
+    width: auto;
     object-fit: contain;
-    margin-bottom: 10px;
   }
   
+
   .outfit-name {
-    font-size: 16px;
+    font-size: 24px;   
     font-weight: bold;
     margin-bottom: 5px;
   }
   
   .outfit-price {
-    font-size: 14px;
+    font-size: 20px;   
     color: #333;
+    margin-bottom: 0px;
   }
   
+
+  .outfit-card:hover {
+    transform: scale(1.05);
+  }
