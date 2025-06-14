@@ -31,6 +31,9 @@ export default function OutfitShop() {
     <div className="outfit-shop">
       <h1>Outfit Shop</h1>
       <p className="subtitle">Outfits rotate weekly— Grab them while you can!</p>
+      <div className="coin-display">
+        <img src="/images/coin.png" className="coin" />
+      </div>
 
       <div className="outfit-grid">
         {outfits.map((outfit) => (

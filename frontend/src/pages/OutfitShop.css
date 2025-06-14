@@ -103,4 +103,27 @@ body {
     animation: popIn 0.25s ease-out;
   }
   
+  .coin-display {
+    position: absolute;
+    top: 40px;
+    right: 60px;
+    background-color: #fedf99;
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  
+  .coin-icon {
+    height: 24px;
+  }
+  
+  .coin-count {
+    font-size: 20px;
+    color: #333;
+  }
   
