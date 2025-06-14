@@ -76,7 +76,15 @@ body {
     margin-bottom: 0px;
   }
   
-
   .outfit-card:hover {
     transform: scale(1.05);
   }
+
+  .checkmark {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+  }
+  

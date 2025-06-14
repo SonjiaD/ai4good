@@ -1,4 +1,5 @@
 import './OutfitShop.css';
+import React, { useState } from 'react';
 
 const outfits = [
   {
@@ -24,24 +25,38 @@ const outfits = [
 ];
 
 export default function OutfitShop() {
-    return (
-        <div className="outfit-shop">
-          <h1>Outfit Shop</h1>
-          <p className="subtitle">Outfits rotate weekly— Grab them while you can!</p>
-      
-          <div className="outfit-container">   
-            <div className="outfit-grid">
-              {outfits.map((outfit) => (
-                <div className="outfit-card" key={outfit.name}>
-                  <img src={outfit.image} alt={outfit.name} className="outfit-image" />
-                  <div className="outfit-name">{outfit.name}</div>
-                  <div className="outfit-price">
-                    <span role="img" aria-label="coin">💰</span> {outfit.price}
-                  </div>
-                </div>
-              ))}
+  const [selectedOutfit, setSelectedOutfit] = useState<string>('');
+
+  return (
+    <div className="outfit-shop">
+      <h1>Outfit Shop</h1>
+      <p className="subtitle">Outfits rotate weekly— Grab them while you can!</p>
+
+      <div className="outfit-grid">
+        {outfits.map((outfit) => (
+          <div
+            className="outfit-card"
+            key={outfit.name}
+            onClick={() => setSelectedOutfit(outfit.name)}
+            style={{ position: 'relative', cursor: 'pointer' }}
+          >
+            <img src={outfit.image} alt={outfit.name} className="outfit-image" />
+            <div className="outfit-name">{outfit.name}</div>
+            <div className="outfit-price">
+              <span role="img" aria-label="coin">💰</span> {outfit.price}
             </div>
-          </div>   {/* CLOSE outfit-container */}
-        </div>
-      );
+            {selectedOutfit === outfit.name && (
+              <img
+                src="/images/checkmark.svg"  
+                alt="Selected"
+                className="checkmark"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
+
+
