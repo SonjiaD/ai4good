@@ -1,0 +1,72 @@
+body {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+.outfit-shop {
+    text-align: center;
+    padding: 40px;
+    background-color: #fff;
+  }
+  
+  .outfit-shop h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    font-size: 18px;
+    margin-bottom: 40px;
+    color: #555;
+  }
+  
+  .outfit-container {
+    background-color: #fde4b3;
+    border-radius: 40px;
+    padding: 60px 80px;
+    margin: 40px auto;
+    max-width: 1400px;
+    min-height: 500px;  /* force height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .outfit-grid {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  
+  
+  .outfit-card {
+    background-color: #fcd99e;
+    border-radius: 20px;
+    padding: 20px;
+    width: 150px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+  
+  .outfit-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .outfit-image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+  }
+  
+  .outfit-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .outfit-price {
+    font-size: 14px;
+    color: #333;
+  }
+  
