@@ -26,8 +26,8 @@ nav a {
   color: #000;
 }
 
-.signup-btn {
-  background-color: #5CCDFF;
+.logout-nav-btn {
+  background-color: #ff7d5c;
   color: #000;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -36,7 +36,7 @@ nav a {
   font-weight: bold;
 }
 
-.main-section {
+.questionnaire-main {
   text-align: center;
   padding-top: 1rem;
   position: relative;

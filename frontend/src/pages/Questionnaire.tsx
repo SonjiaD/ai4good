@@ -84,11 +84,11 @@ const Questionnaire: React.FC = () => {
         <nav>
           <a href="#">About</a>
           <a href="#">Contact</a>
-          <button className="signup-btn">Sign Up</button>
+          <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
         </nav>
       </header>
 
-    <main className="main-section">
+    <main className="questionnaire-main">
         {showThankYou ? (
             <div className="thankyou-content">
             <h1>Thank you for your time!</h1>

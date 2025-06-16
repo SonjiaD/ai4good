@@ -1,63 +1,65 @@
 .welcome-container {
   font-family: 'Poppins', sans-serif;
-  padding: 2rem;
+  color: #1a1a1a;
+}
+
+.welcome-main {
+  text-align: center;
+  padding-top: 0rem;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  padding-bottom: 4rem; /* This causes scrollbar in case that's an issue in the future */
 }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
 }
 
 .logo-img {
-  width: 200px;
+  width: 250px;
+  margin-right: 0.5rem;
 }
 
-.welcome-main {
-  text-align: center;
+.welcome-main h1 {
+  font-size: 3rem;
 }
 
-.upload-box {
-  background: #f6f6f6;
-  padding: 2rem;
-  border-radius: 12px;
-  margin: 2rem auto;
-  width: 60%;
+.welcome-main h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-weight:500;
 }
 
-.upload-btn {
-  background-color: #0096ff;
-  color: white;
-  font-size: 1.2rem;
-  padding: 1rem 2rem;
+.file-btn {
+  background-color: #ffd800;
   border: none;
-  border-radius: 30px;
-  margin-top: 1rem;
+  padding: 1.3rem 7rem;
+  font-size: 1.7rem;
+  font-weight: bold;
+  border-radius: 40px;
   cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
 }
 
-.reading-progress {
-  margin: 2rem auto;
-  width: 70%;
+.file-btn:hover {
+  transform: scale(1.05);
 }
 
-.progress-bar-bg {
-  width: 100%;
-  background-color: #d8d8d8;
-  height: 10px;
-  border-radius: 5px;
-}
-
-.progress-bar-fill {
-  height: 10px;
-  background-color: #4caf50;
-  border-radius: 5px;
-}
-
-.achievements {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 2rem;
+.reading-buddies-img {
+  position: fixed;
+  bottom: 0;
+  left: 50%; /* This + transform centers the image horizontally */
+  transform: translateX(-50%);
+  width: 800px;
+  pointer-events: none;
+  z-index: -1;
 }

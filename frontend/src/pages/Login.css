@@ -1,0 +1,102 @@
+.login-container {
+  font-family: 'Poppins', sans-serif;
+  color: #1a1a1a;
+}
+
+.login-main h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: -1rem;
+}
+
+.login-main p {
+  font-size: 1.3rem;
+  margin-bottom: 3rem;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  width: 250px;
+  margin-right: 0.5rem;
+}
+
+nav a {
+  margin-right: 1.5rem;
+  text-decoration: none;
+  color: #000;
+}
+
+.login-main {
+  text-align: center;
+  padding-top: 0rem;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  padding-bottom: 4rem; /*This causes scrollbar in case thats an issue in the future*/
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.input {
+  width: 300px;
+  padding: 1rem;
+  font-size: 1.1rem;
+  border-radius: 30px;
+  border: none;
+  outline: none;
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.15);
+}
+
+.input.blue {
+  border: 3px solid #34A2D3;
+}
+
+.input.purple {
+  border: 3px solid #7E1890;
+}
+
+.submit-btn {
+  background-color: #B2CCE9;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.signup-text {
+  font-size: 0.95rem;
+}
+
+.signup-link {
+  color: #0079FF;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.login-buddies {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 470px;
+  pointer-events: none;
+  z-index: -1;
+}

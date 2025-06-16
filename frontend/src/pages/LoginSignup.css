@@ -1,0 +1,90 @@
+.loginsignup-container {
+  font-family: 'Poppins', sans-serif;
+  color: #1a1a1a;
+}
+
+.loginsignup-main h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.loginsignup-main p {
+  font-size: 1.3rem;
+  letter-spacing: 1.1px
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  width: 250px;
+  margin-right: 0.5rem;
+}
+
+nav a {
+  margin-right: 1.5rem;
+  text-decoration: none;
+  color: #000;
+}
+
+.loginsignup-main {
+  text-align: center;
+  padding-top: 0rem;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  padding-bottom: 4rem; /*This causes scrollbar in case thats an issue in the future*/
+}
+
+.button-group {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signup-btn {
+  background-color: #34A2D3;
+  color: #000;
+  border: none;
+  padding: 1rem 2rem;
+  margin: 0.5rem 0;
+  border-radius: 30px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.login-btn {
+  background-color: #B2CCE9;
+  color: #000;
+  border: none;
+  padding: 1rem 2rem;
+  margin: 0.5rem 0;
+  border-radius: 30px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.bookie-budd {
+  width: 250px;
+  margin-bottom: -5rem;
+  pointer-events: none;
+  z-index: -1; 
+}
