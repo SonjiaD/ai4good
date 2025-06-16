@@ -6,7 +6,7 @@ const EyeTracker: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const [focusScore, setFocusScore] = useState(0);
-  const [gazePos, setGazePos] = useState({ x: 0, y: 0 });
+  const [prevLandmarks, setPrevLandmarks] = useState<NormalizedLandmark[] | null>(null);
   const [status, setStatus] = useState("Loading...");
 
   useEffect(() => {
@@ -36,7 +36,6 @@ const EyeTracker: React.FC = () => {
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
 
-          // Wait until video fully loads before starting prediction loop
           const waitUntilVideoReady = () => {
             if (videoRef.current?.videoWidth && videoRef.current?.videoHeight) {
               if (canvasRef.current) {
@@ -71,35 +70,37 @@ const EyeTracker: React.FC = () => {
       }
 
       const landmarks = results.faceLandmarks[0];
+      setStatus("Face detected ✅");
 
-      // Draw eyes, lips, and facial mesh lightly
+      // Draw eyes and lips
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, { color: '#00FF00', lineWidth: 2 });
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, { color: '#00FF00', lineWidth: 2 });
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LIPS, { color: '#FF0000', lineWidth: 2 });
 
-      // Focus score calculation (eye + head orientation)
       const leftEAR = calculateEyeAspectRatio(landmarks, "left");
       const rightEAR = calculateEyeAspectRatio(landmarks, "right");
       const averageEAR = (leftEAR + rightEAR) / 2;
       const EARScore = Math.min((averageEAR - 0.15) / 0.1, 1);
+
       const headPoseScore = estimateHeadFocus(landmarks);
-      const totalFocusScore = Math.max(0, Math.min(1, EARScore * 0.6 + headPoseScore * 0.4));
-      setFocusScore(totalFocusScore);
+      const irisScore = estimateIrisVisibility(landmarks);
+      const jitterPenalty = estimateJitterPenalty(landmarks, prevLandmarks);
 
-      // Gaze estimation
-      const leftEye = getEyeCenter(landmarks, "left");
-      const rightEye = getEyeCenter(landmarks, "right");
-      const gazeX = (leftEye.x + rightEye.x) / 2;
-      const gazeY = (leftEye.y + rightEye.y) / 2;
-      setGazePos({ x: gazeX, y: gazeY });
+      setPrevLandmarks(landmarks);
 
-      setStatus("Face detected ✅");
+      const totalScore = Math.max(0, Math.min(1,
+        EARScore * 0.4 + headPoseScore * 0.2 + irisScore * 0.3 - jitterPenalty * 0.1
+      ));
+
+      setFocusScore(totalScore);
       requestAnimationFrame(predict);
     };
 
     init();
     return () => { faceLandmarkerRef.current?.close(); };
   }, []);
+
+  // ---- Helper Functions ----
 
   function calculateEyeAspectRatio(landmarks: NormalizedLandmark[], side: "left" | "right"): number {
     const indices = side === "left"
@@ -116,19 +117,11 @@ const EyeTracker: React.FC = () => {
     const distV1 = distance(p2, p6);
     const distV2 = distance(p3, p5);
     const distH = distance(p1, p4);
-
     return (distV1 + distV2) / (2.0 * distH);
   }
 
   function distance(a: NormalizedLandmark, b: NormalizedLandmark): number {
     return Math.hypot(a.x - b.x, a.y - b.y);
-  }
-
-  function getEyeCenter(landmarks: NormalizedLandmark[], side: "left" | "right") {
-    const indices = side === "left" ? [33, 133] : [362, 263];
-    const centerX = (landmarks[indices[0]].x + landmarks[indices[1]].x) / 2;
-    const centerY = (landmarks[indices[0]].y + landmarks[indices[1]].y) / 2;
-    return { x: centerX, y: centerY };
   }
 
   function estimateHeadFocus(landmarks: NormalizedLandmark[]): number {
@@ -140,28 +133,43 @@ const EyeTracker: React.FC = () => {
     return Math.max(0, 1 - deviation * 5);
   }
 
-  const pointerX = gazePos.x * 640;
-  const pointerY = gazePos.y * 480;
+  function estimateIrisVisibility(landmarks: NormalizedLandmark[]): number {
+    const irisLeft = landmarks[468];
+    const irisRight = landmarks[473];
+    const leftEyeCenter = getEyeCenter(landmarks, "left");
+    const rightEyeCenter = getEyeCenter(landmarks, "right");
+
+    const irisLeftDist = distance(irisLeft, leftEyeCenter);
+    const irisRightDist = distance(irisRight, rightEyeCenter);
+
+    if (irisLeftDist < 0.005 || irisRightDist < 0.005) return 0;
+    return 1;
+  }
+
+  function getEyeCenter(landmarks: NormalizedLandmark[], side: "left" | "right"): NormalizedLandmark {
+    const indices = side === "left" ? [33, 133] : [362, 263];
+    const centerX = (landmarks[indices[0]].x + landmarks[indices[1]].x) / 2;
+    const centerY = (landmarks[indices[0]].y + landmarks[indices[1]].y) / 2;
+    const centerZ = (landmarks[indices[0]].z + landmarks[indices[1]].z) / 2;
+    return { x: centerX, y: centerY, z: centerZ, visibility: 1.0 };
+  }
+
+  function estimateJitterPenalty(current: NormalizedLandmark[], previous: NormalizedLandmark[] | null): number {
+    if (!previous) return 0;
+    const deltas = current.map((p, i) => distance(p, previous[i]));
+    const avgDelta = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
+    return Math.min(avgDelta * 100, 1);
+  }
 
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection</h2>
+      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection v2.1</h2>
       <p>Status: {status}</p>
       <p>Focus Score: {(focusScore * 100).toFixed(1)}%</p>
 
       <div style={{ position: 'relative', width: '640px', height: '480px' }}>
         <video ref={videoRef} autoPlay muted style={{ position: 'absolute', top: 0, left: 0 }} width="640" height="480" />
         <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
-        <div style={{
-          position: 'absolute',
-          top: pointerY - 5,
-          left: pointerX - 5,
-          width: 10,
-          height: 10,
-          backgroundColor: 'blue',
-          borderRadius: '50%',
-          pointerEvents: 'none'
-        }} />
       </div>
     </div>
   );
