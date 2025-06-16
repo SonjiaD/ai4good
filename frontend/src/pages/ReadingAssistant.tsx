@@ -5,7 +5,7 @@ import { ReadingProvider } from '../context/ReadingContext';
 import PDFUploader from '../components/PDFUploader';
 import ExtractedText from '../components/ExtractedText';
 import QuizSection from '../components/QuizSection';
-// import EyeTracker from '../components/EyeTracker';
+import EyeTracker from '../components/EyeTracker';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 
 const ReadingAssistant: React.FC = () => {
@@ -20,7 +20,7 @@ const ReadingAssistant: React.FC = () => {
         </div>
 
         <div className="w-2/5 p-6 space-y-6 bg-gray-100">
-          {/* <EyeTracker /> */}
+          <EyeTracker />
           <AnalyticsPanel />
         </div>
 
