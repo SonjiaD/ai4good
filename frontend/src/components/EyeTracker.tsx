@@ -6,8 +6,12 @@ const EyeTracker: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const [focusScore, setFocusScore] = useState(0);
+  const [smoothedScore, setSmoothedScore] = useState(0);
   const [prevLandmarks, setPrevLandmarks] = useState<NormalizedLandmark[] | null>(null);
   const [status, setStatus] = useState("Loading...");
+
+  // EMA smoothing memory
+  const lastSmoothed = useRef<number>(0);
 
   useEffect(() => {
     const init = async () => {
@@ -72,7 +76,6 @@ const EyeTracker: React.FC = () => {
       const landmarks = results.faceLandmarks[0];
       setStatus("Face detected ✅");
 
-      // Draw eyes and lips
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, { color: '#00FF00', lineWidth: 2 });
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, { color: '#00FF00', lineWidth: 2 });
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LIPS, { color: '#FF0000', lineWidth: 2 });
@@ -88,11 +91,18 @@ const EyeTracker: React.FC = () => {
 
       setPrevLandmarks(landmarks);
 
-      const totalScore = Math.max(0, Math.min(1,
-        EARScore * 0.4 + headPoseScore * 0.2 + irisScore * 0.3 - jitterPenalty * 0.1
+      const rawScore = Math.max(0, Math.min(1,
+        EARScore * 0.4 + headPoseScore * 0.3 + irisScore * 0.3 - jitterPenalty * 0.1
       ));
 
-      setFocusScore(totalScore);
+      setFocusScore(rawScore);
+
+      // Exponential Moving Average smoothing
+      const alpha = 0.25; // smoothing factor (adjust to make more or less responsive)
+      const smooth = alpha * rawScore + (1 - alpha) * lastSmoothed.current;
+      lastSmoothed.current = smooth;
+      setSmoothedScore(smooth);
+
       requestAnimationFrame(predict);
     };
 
@@ -130,7 +140,10 @@ const EyeTracker: React.FC = () => {
     const rightEye = landmarks[263];
     const eyeCenterX = (leftEye.x + rightEye.x) / 2;
     const deviation = Math.abs(nose.x - eyeCenterX);
-    return Math.max(0, 1 - deviation * 5);
+
+    const threshold = 0.03;  // dead zone tolerance
+    const normalizedDeviation = Math.max(0, deviation - threshold);
+    return Math.max(0, 1 - normalizedDeviation * 10);
   }
 
   function estimateIrisVisibility(landmarks: NormalizedLandmark[]): number {
@@ -158,14 +171,15 @@ const EyeTracker: React.FC = () => {
     if (!previous) return 0;
     const deltas = current.map((p, i) => distance(p, previous[i]));
     const avgDelta = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
-    return Math.min(avgDelta * 100, 1);
+    return Math.min(avgDelta * 50, 1);
   }
 
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection v2.1</h2>
+      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection v3.0</h2>
       <p>Status: {status}</p>
-      <p>Focus Score: {(focusScore * 100).toFixed(1)}%</p>
+      <p>Raw Score: {(focusScore * 100).toFixed(1)}%</p>
+      <p>Smoothed Focus Score: {(smoothedScore * 100).toFixed(1)}%</p>
 
       <div style={{ position: 'relative', width: '640px', height: '480px' }}>
         <video ref={videoRef} autoPlay muted style={{ position: 'absolute', top: 0, left: 0 }} width="640" height="480" />
