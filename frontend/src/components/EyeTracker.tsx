@@ -25,22 +25,31 @@ const EyeTracker: React.FC = () => {
         numFaces: 1
       });
 
-      startCamera();
+      await startCamera();
     };
 
     const startCamera = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
 
-          if (canvasRef.current && videoRef.current) {
-            canvasRef.current.width = videoRef.current.videoWidth;
-            canvasRef.current.height = videoRef.current.videoHeight;
-          }
+          // Wait until video fully loads before starting prediction loop
+          const waitUntilVideoReady = () => {
+            if (videoRef.current?.videoWidth && videoRef.current?.videoHeight) {
+              if (canvasRef.current) {
+                canvasRef.current.width = videoRef.current.videoWidth;
+                canvasRef.current.height = videoRef.current.videoHeight;
+              }
+              requestAnimationFrame(predict);
+            } else {
+              requestAnimationFrame(waitUntilVideoReady);
+            }
+          };
 
-          requestAnimationFrame(predict);
+          waitUntilVideoReady();
         };
       }
     };
@@ -62,29 +71,29 @@ const EyeTracker: React.FC = () => {
       }
 
       const landmarks = results.faceLandmarks[0];
-      
-      // Only draw eyes, mouth and light face mesh for less blur
+
+      // Draw eyes, lips, and facial mesh lightly
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, { color: '#00FF00', lineWidth: 2 });
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, { color: '#00FF00', lineWidth: 2 });
       drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LIPS, { color: '#FF0000', lineWidth: 2 });
 
+      // Focus score calculation (eye + head orientation)
       const leftEAR = calculateEyeAspectRatio(landmarks, "left");
       const rightEAR = calculateEyeAspectRatio(landmarks, "right");
       const averageEAR = (leftEAR + rightEAR) / 2;
-
-      const EARScore = Math.min((averageEAR - 0.15) / 0.1, 1);  // normalize EAR
-
+      const EARScore = Math.min((averageEAR - 0.15) / 0.1, 1);
       const headPoseScore = estimateHeadFocus(landmarks);
       const totalFocusScore = Math.max(0, Math.min(1, EARScore * 0.6 + headPoseScore * 0.4));
       setFocusScore(totalFocusScore);
 
-      // Gaze estimation using eye centers
+      // Gaze estimation
       const leftEye = getEyeCenter(landmarks, "left");
       const rightEye = getEyeCenter(landmarks, "right");
       const gazeX = (leftEye.x + rightEye.x) / 2;
       const gazeY = (leftEye.y + rightEye.y) / 2;
       setGazePos({ x: gazeX, y: gazeY });
 
+      setStatus("Face detected ✅");
       requestAnimationFrame(predict);
     };
 
@@ -92,7 +101,6 @@ const EyeTracker: React.FC = () => {
     return () => { faceLandmarkerRef.current?.close(); };
   }, []);
 
-  // EAR Calculation
   function calculateEyeAspectRatio(landmarks: NormalizedLandmark[], side: "left" | "right"): number {
     const indices = side === "left"
       ? [33, 160, 158, 133, 153, 144]
@@ -123,17 +131,15 @@ const EyeTracker: React.FC = () => {
     return { x: centerX, y: centerY };
   }
 
-  // Simple head orientation estimation using eyes and nose bridge
   function estimateHeadFocus(landmarks: NormalizedLandmark[]): number {
     const nose = landmarks[1];
     const leftEye = landmarks[33];
     const rightEye = landmarks[263];
     const eyeCenterX = (leftEye.x + rightEye.x) / 2;
     const deviation = Math.abs(nose.x - eyeCenterX);
-    return Math.max(0, 1 - deviation * 5);  // scale sensitivity
+    return Math.max(0, 1 - deviation * 5);
   }
 
-  // Convert gaze 0-1 to pixel coordinates
   const pointerX = gazePos.x * 640;
   const pointerY = gazePos.y * 480;
 
