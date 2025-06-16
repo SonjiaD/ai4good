@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.session import initialize_session_state, display_status, earn_reward
+from streamlit_app.utils.session import initialize_session_state, display_status, earn_reward
 
 st.set_page_config(page_title="Store – ReadingBuddy.AI", layout="wide")
 st.title("🛍️ Avatar Store")
