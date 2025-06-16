@@ -29,7 +29,7 @@ const EyeTracker = () => {
         drawDot(data.x, data.y);
       });
 
-      webgazer.showVideo(true);
+      webgazer.showVideo(false);
       webgazer.showPredictionPoints(false);
       await webgazer.begin();
     };

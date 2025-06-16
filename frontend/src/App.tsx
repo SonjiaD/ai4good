@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import PdfUpload from './pages/5_PDF';
 import FocusTracker from './pages/FocusTracker';
+import ReadingAssistant from './pages/ReadingAssistant';
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
         <Link to="/pdf">PDF Upload</Link>
         <Link to ="/focus" style={{ marginLeft: '1rem' }}>Focus Tracker</Link>
+        <Link to ="/reading" style={{ marginLeft: '1rem' }}>Reading Assistant</Link>
       </nav>
 
       <Routes>
@@ -43,6 +45,8 @@ function App() {
         />
         <Route path="/pdf" element={<PdfUpload />} />
         <Route path="/focus" element={<FocusTracker />} />
+        <Route path="/reading" element={<ReadingAssistant />} />
+
       </Routes>
     </Router>
   );
