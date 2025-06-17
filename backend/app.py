@@ -201,6 +201,32 @@ def transcribe_audio():
         transcription = result['text']
     return jsonify({'transcription': transcription})
 
+#qa assistant .tsx page
+# Free-form QA assistant based on uploaded story
+@app.route('/api/qa-chat', methods=['POST'])
+def qa_chat():
+    data = request.get_json()
+    story = data.get("text", "")[:1500]
+    user_question = data.get("question", "")
+
+    chat_prompt = f"""
+You are an assistant that answers reading comprehension questions for children aged 7-10. Use only the information from the provided story.
+
+Story:
+\"\"\"{story}\"\"\"
+
+Question: {user_question}
+
+Answer:
+"""
+
+    llm = ChatOllama(model="llama3", temperature=0.3)
+    answer = llm.predict(chat_prompt)
+
+    return jsonify({"answer": answer})
+
+
+
 #route for logging to flask focus
 @app.route('/api/log-focus', methods=['POST'])
 def log_focus():

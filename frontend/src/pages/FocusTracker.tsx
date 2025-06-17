@@ -6,18 +6,11 @@ const EyeTracker: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const [focusScore, setFocusScore] = useState(0);
-  const [smoothedScore, setSmoothedScore] = useState(0);
-  const [prevLandmarks, setPrevLandmarks] = useState<NormalizedLandmark[] | null>(null);
   const [status, setStatus] = useState("Loading...");
-
-  // EMA smoothing memory
-  const lastSmoothed = useRef<number>(0);
 
   useEffect(() => {
     const init = async () => {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
+      const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
 
       faceLandmarkerRef.current = await FaceLandmarker.createFromOptions(vision, {
         baseOptions: {
@@ -29,80 +22,58 @@ const EyeTracker: React.FC = () => {
         numFaces: 1
       });
 
-      await startCamera();
+      startCamera();
     };
 
     const startCamera = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
-
-          const waitUntilVideoReady = () => {
-            if (videoRef.current?.videoWidth && videoRef.current?.videoHeight) {
-              if (canvasRef.current) {
-                canvasRef.current.width = videoRef.current.videoWidth;
-                canvasRef.current.height = videoRef.current.videoHeight;
-              }
-              requestAnimationFrame(predict);
-            } else {
-              requestAnimationFrame(waitUntilVideoReady);
-            }
-          };
-
-          waitUntilVideoReady();
+          if (canvasRef.current && videoRef.current) {
+            canvasRef.current.width = videoRef.current.videoWidth;
+            canvasRef.current.height = videoRef.current.videoHeight;
+          }
+          requestAnimationFrame(predict);
         };
       }
     };
 
     const predict = async () => {
-      if (!faceLandmarkerRef.current || !videoRef.current) return;
+      try {
+        if (!faceLandmarkerRef.current || !videoRef.current) {
+          requestAnimationFrame(predict);
+          return;
+        }
 
-      const results = await faceLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
-      const ctx = canvasRef.current?.getContext('2d');
-      if (!ctx || !canvasRef.current) return;
+        const results = await faceLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
+        const ctx = canvasRef.current?.getContext('2d');
+        if (!ctx || !canvasRef.current) {
+          requestAnimationFrame(predict);
+          return;
+        }
 
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      const drawingUtils = new DrawingUtils(ctx);
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        const drawingUtils = new DrawingUtils(ctx);
 
-      if (results.faceLandmarks.length === 0) {
-        setStatus("No face detected ❌");
-        requestAnimationFrame(predict);
-        return;
+        if (!results.faceLandmarks || results.faceLandmarks.length === 0) {
+          setStatus("No face detected ❌");
+          requestAnimationFrame(predict);
+          return;
+        }
+
+        const landmarks = results.faceLandmarks[0];
+        drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, { color: '#00FF00', lineWidth: 2 });
+        drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, { color: '#00FF00', lineWidth: 2 });
+
+        const score = calculateFocusScore(landmarks);
+        setFocusScore(score);
+        setStatus("Tracking ✅");
+      } catch (err) {
+        console.warn("Error during prediction:", err);
+        setStatus("Prediction Error ❌");
       }
-
-      const landmarks = results.faceLandmarks[0];
-      setStatus("Face detected ✅");
-
-      drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, { color: '#00FF00', lineWidth: 2 });
-      drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, { color: '#00FF00', lineWidth: 2 });
-      drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LIPS, { color: '#FF0000', lineWidth: 2 });
-
-      const leftEAR = calculateEyeAspectRatio(landmarks, "left");
-      const rightEAR = calculateEyeAspectRatio(landmarks, "right");
-      const averageEAR = (leftEAR + rightEAR) / 2;
-      const EARScore = Math.min((averageEAR - 0.15) / 0.1, 1);
-
-      const headPoseScore = estimateHeadFocus(landmarks);
-      const irisScore = estimateIrisVisibility(landmarks);
-      const jitterPenalty = estimateJitterPenalty(landmarks, prevLandmarks);
-
-      setPrevLandmarks(landmarks);
-
-      const rawScore = Math.max(0, Math.min(1,
-        EARScore * 0.4 + headPoseScore * 0.3 + irisScore * 0.3 - jitterPenalty * 0.1
-      ));
-
-      setFocusScore(rawScore);
-
-      // Exponential Moving Average smoothing
-      const alpha = 0.25; // smoothing factor (adjust to make more or less responsive)
-      const smooth = alpha * rawScore + (1 - alpha) * lastSmoothed.current;
-      lastSmoothed.current = smooth;
-      setSmoothedScore(smooth);
-
       requestAnimationFrame(predict);
     };
 
@@ -110,23 +81,43 @@ const EyeTracker: React.FC = () => {
     return () => { faceLandmarkerRef.current?.close(); };
   }, []);
 
-  // ---- Helper Functions ----
+  function calculateFocusScore(landmarks: NormalizedLandmark[]): number {
+    if (landmarks.length < 470) return 0;
 
-  function calculateEyeAspectRatio(landmarks: NormalizedLandmark[], side: "left" | "right"): number {
+    // EAR calculation
+    const EAR = (calculateEAR(landmarks, "left") + calculateEAR(landmarks, "right")) / 2;
+    let score = Math.min(Math.max((EAR - 0.15) / 0.1, 0), 1);
+
+    // Head pose penalty
+    const nose = landmarks[1];
+    const eyeCenterX = (landmarks[33].x + landmarks[263].x) / 2;
+    const deviation = Math.abs(nose.x - eyeCenterX);
+    score *= (1 - Math.min(deviation * 5, 1));
+
+    // Iris visibility penalty
+    const leftIris = landmarks[468];
+    const rightIris = landmarks[473];
+    const irisPenalty = (isIrisVisible(leftIris) && isIrisVisible(rightIris)) ? 1 : 0.5;
+    score *= irisPenalty;
+
+    return Math.round(score * 100);
+  }
+
+  function isIrisVisible(iris: NormalizedLandmark): boolean {
+    return iris.z > -0.15; // heuristic depth check
+  }
+
+  function calculateEAR(landmarks: NormalizedLandmark[], side: "left" | "right"): number {
     const indices = side === "left"
       ? [33, 160, 158, 133, 153, 144]
       : [362, 385, 387, 263, 373, 380];
 
-    const p1 = landmarks[indices[0]];
-    const p2 = landmarks[indices[1]];
-    const p3 = landmarks[indices[2]];
-    const p4 = landmarks[indices[3]];
-    const p5 = landmarks[indices[4]];
-    const p6 = landmarks[indices[5]];
+    const [p1, p2, p3, p4, p5, p6] = indices.map(i => landmarks[i]);
 
     const distV1 = distance(p2, p6);
     const distV2 = distance(p3, p5);
     const distH = distance(p1, p4);
+
     return (distV1 + distV2) / (2.0 * distH);
   }
 
@@ -134,52 +125,11 @@ const EyeTracker: React.FC = () => {
     return Math.hypot(a.x - b.x, a.y - b.y);
   }
 
-  function estimateHeadFocus(landmarks: NormalizedLandmark[]): number {
-    const nose = landmarks[1];
-    const leftEye = landmarks[33];
-    const rightEye = landmarks[263];
-    const eyeCenterX = (leftEye.x + rightEye.x) / 2;
-    const deviation = Math.abs(nose.x - eyeCenterX);
-
-    const threshold = 0.03;  // dead zone tolerance
-    const normalizedDeviation = Math.max(0, deviation - threshold);
-    return Math.max(0, 1 - normalizedDeviation * 10);
-  }
-
-  function estimateIrisVisibility(landmarks: NormalizedLandmark[]): number {
-    const irisLeft = landmarks[468];
-    const irisRight = landmarks[473];
-    const leftEyeCenter = getEyeCenter(landmarks, "left");
-    const rightEyeCenter = getEyeCenter(landmarks, "right");
-
-    const irisLeftDist = distance(irisLeft, leftEyeCenter);
-    const irisRightDist = distance(irisRight, rightEyeCenter);
-
-    if (irisLeftDist < 0.005 || irisRightDist < 0.005) return 0;
-    return 1;
-  }
-
-  function getEyeCenter(landmarks: NormalizedLandmark[], side: "left" | "right"): NormalizedLandmark {
-    const indices = side === "left" ? [33, 133] : [362, 263];
-    const centerX = (landmarks[indices[0]].x + landmarks[indices[1]].x) / 2;
-    const centerY = (landmarks[indices[0]].y + landmarks[indices[1]].y) / 2;
-    const centerZ = (landmarks[indices[0]].z + landmarks[indices[1]].z) / 2;
-    return { x: centerX, y: centerY, z: centerZ, visibility: 1.0 };
-  }
-
-  function estimateJitterPenalty(current: NormalizedLandmark[], previous: NormalizedLandmark[] | null): number {
-    if (!previous) return 0;
-    const deltas = current.map((p, i) => distance(p, previous[i]));
-    const avgDelta = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
-    return Math.min(avgDelta * 50, 1);
-  }
-
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection v3.0</h2>
+      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection (v4.0 Stable)</h2>
       <p>Status: {status}</p>
-      <p>Raw Score: {(focusScore * 100).toFixed(1)}%</p>
-      <p>Smoothed Focus Score: {(smoothedScore * 100).toFixed(1)}%</p>
+      <p>Focus Score: {focusScore}%</p>
 
       <div style={{ position: 'relative', width: '640px', height: '480px' }}>
         <video ref={videoRef} autoPlay muted style={{ position: 'absolute', top: 0, left: 0 }} width="640" height="480" />
