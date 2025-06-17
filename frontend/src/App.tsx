@@ -3,6 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ReadingPage from './pages/ReadingPage';
 import FocusTracker from './pages/FocusTracker';
 import OutfitShop from './pages/OutfitShop';
+import Questionnaire from './pages/Questionnaire';
+import Welcome from './pages/Welcome';
+import Home from './pages/Home';
+import LoginSignup from './pages/LoginSignup';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 
 function App() {
@@ -25,6 +31,10 @@ function App() {
         <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
         <Link to="/pdf">PDF Upload</Link>
         <Link to ="/focus" style={{ marginLeft: '1rem' }}>Focus Tracker</Link>
+        <Link to="/questionnaire" style={{ marginLeft: '1rem' }}>Questionnaire</Link>
+        <Link to="/welcome" style={{ marginLeft: '1rem' }}>Welcome</Link>
+        <Link to="/home" style={{ marginLeft: '1rem' }}>HomePage</Link>
+        <Link to="/loginsignup" style={{ marginLeft: '1rem' }}>Login/Signup</Link>
         <Link to="/outfit-shop" style={{ marginLeft: '1rem' }}>Outfit Shop</Link>
         <Link to="/reading" style={{ marginLeft: '1rem' }}>Reading</Link>
       </nav>
@@ -33,6 +43,12 @@ function App() {
         <Route path="/" element={<div>Welcome to the Home Page!</div>} />
         <Route path="/reading" element={<ReadingPage />} />
         <Route path="/focus" element={<FocusTracker />} />
+        <Route path="/questionnaire" element={<Questionnaire />} />
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/loginsignup" element={<LoginSignup />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/outfit-shop" element={<OutfitShop />} />
         <Route path="/reading" element={<ReadingPage />} />
       </Routes>

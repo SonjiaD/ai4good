@@ -1,0 +1,65 @@
+.welcome-container {
+  font-family: 'Poppins', sans-serif;
+  color: #1a1a1a;
+}
+
+.welcome-main {
+  text-align: center;
+  padding-top: 0rem;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  padding-bottom: 4rem; /* This causes scrollbar in case that's an issue in the future */
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  width: 250px;
+  margin-right: 0.5rem;
+}
+
+.welcome-main h1 {
+  font-size: 3rem;
+}
+
+.welcome-main h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-weight:500;
+}
+
+.file-btn {
+  background-color: #ffd800;
+  border: none;
+  padding: 1.3rem 7rem;
+  font-size: 1.7rem;
+  font-weight: bold;
+  border-radius: 40px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.file-btn:hover {
+  transform: scale(1.05);
+}
+
+.reading-buddies-img {
+  position: fixed;
+  bottom: 0;
+  left: 50%; /* This + transform centers the image horizontally */
+  transform: translateX(-50%);
+  width: 800px;
+  pointer-events: none;
+  z-index: -1;
+}
