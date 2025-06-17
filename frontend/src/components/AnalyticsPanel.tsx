@@ -1,19 +1,22 @@
-// /src/components/AnalyticsPanel.tsx
-
 import React from 'react';
 
 const AnalyticsPanel: React.FC = () => {
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">Focus Analytics</h2>
+      <h2>Focus Analytics</h2>
       <div className="space-y-3">
-        <div className="flex justify-between bg-slate-50 rounded-md p-3">
-          <p className="text-sm font-medium">Eye Tracking</p>
-          <span className="text-sm font-semibold text-green-500">Active</span>
+        <div className="flex justify-between p-3 bg-slate-50 rounded">
+          <div className="flex items-center gap-2">
+            👁️ Eye Tracking
+          </div>
+          <span className="text-green-600 font-semibold">Active</span>
         </div>
-        <div className="flex justify-between bg-slate-50 rounded-md p-3">
-          <p className="text-sm font-medium">Mouse Idle Time</p>
-          <span className="text-sm text-gray-500">0s</span>
+
+        <div className="flex justify-between p-3 bg-slate-50 rounded">
+          <div className="flex items-center gap-2">
+            🖱️ Mouse Idle
+          </div>
+          <span className="text-gray-500">2 seconds</span>
         </div>
       </div>
     </div>
