@@ -70,22 +70,42 @@ const QuizSection: React.FC = () => {
     }
   };
 
-  const handleReadFeedback = async (index: number) => {
+  // const handleReadFeedback = async (index: number) => {
+  //   try {
+  //     const response = await fetch('http://localhost:5000/api/tts', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ text: feedbacks[index] }),
+  //     });
+
+  //     const blob = await response.blob();
+  //     const audioUrl = URL.createObjectURL(blob);
+
+  //     const updatedUrls = [...audioUrls];
+  //     updatedUrls[index] = audioUrl;
+  //     setAudioUrls(updatedUrls);
+  //   } catch (err) {
+  //     setError('TTS failed for feedback');
+  //   }
+  // };
+  const handleReadFeedback = async (idx: number) => {
+    if (!feedbacks[idx]) return;
+
     try {
-      const response = await fetch('http://localhost:5000/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: feedbacks[index] }),
+      const response = await fetch("http://localhost:5000/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: feedbacks[idx] }),
       });
 
-      const blob = await response.blob();
-      const audioUrl = URL.createObjectURL(blob);
-
-      const updatedUrls = [...audioUrls];
-      updatedUrls[index] = audioUrl;
-      setAudioUrls(updatedUrls);
+      if (response.ok) {
+        const data = await response.json();
+        const fullUrl = `http://localhost:5000${data.audio_url}?nocache=${Date.now()}`;
+        const audio = new Audio(fullUrl);
+        await audio.play();
+      }
     } catch (err) {
-      setError('TTS failed for feedback');
+      console.error("TTS failed:", err);
     }
   };
 
