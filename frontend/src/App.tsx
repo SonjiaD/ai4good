@@ -1,37 +1,28 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import ReadingPage from './pages/ReadingPage';
+import FocusTracker from './pages/FocusTracker';
+// import OutfitShop from './pages/OutfitShop';
 import './App.css';
-import PDFUploader from './components/PDFUploader';
-import ExtractedText from './components/ExtractedText';
-import QAAssistant from './components/QAAssistant';
-import QuizSection from './components/QuizSection';
-import EyeTracker from './components/EyeTracker';
-import AnalyticsPanel from './components/AnalyticsPanel';
-import { ReadingProvider } from './context/ReadingContext';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <ReadingProvider>
-      <div className="app">
-        <header className="header">
-          <h1>ReadingBudd.Ai</h1>
-        </header>
+    <Router>
+      <nav style={{ marginBottom: '1rem' }}>
+        <Link to="/">Home</Link>
+        <Link to="/reading">Reading App</Link>
+        <Link to="/focus">Focus Tracker</Link>
+        <Link to="/outfit-shop">Outfit Shop</Link>
+      </nav>
 
-        <div className="split-screen">
-          <div className="left-panel">
-            <PDFUploader />
-            <ExtractedText />
-            <QAAssistant />
-            <QuizSection />
-          </div>
-
-          <div className="right-panel">
-            <EyeTracker />
-            <AnalyticsPanel />
-          </div>
-        </div>
-      </div>
-    </ReadingProvider>
+      <Routes>
+        <Route path="/" element={<div>Welcome to the Home Page!</div>} />
+        <Route path="/reading" element={<ReadingPage />} />
+        <Route path="/focus" element={<FocusTracker />} />
+        {/* <Route path="/outfit-shop" element={<OutfitShop />} /> */}
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
