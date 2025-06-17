@@ -13,7 +13,7 @@ function App() {
     <ReadingProvider>
       <div className="app">
         <header className="header">
-          <h1>📖 ReadWise AI Tutor</h1>
+          <h1>ReadingBudd.Ai</h1>
         </header>
 
         <div className="split-screen">
