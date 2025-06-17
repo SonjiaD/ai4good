@@ -145,29 +145,53 @@ async def send_tts_message(text):
         print(f"Received: {response}")
         return response
 
-#matcha-tts
+
+import time
+
 @app.route('/api/tts', methods=['POST'])
 def tts():
     data = request.get_json()
-    text = data.get("text", "")[:300]  # limit length
+    text = data.get("text", "")[:1000]
 
     try:
-        # Run the async websocket client inside Flask sync route
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        response = loop.run_until_complete(send_tts_message(text))
+        loop.run_until_complete(send_tts_message(text))
 
-        #after synthesis, taking the server file back
-        if os.path.exists("utterance_001.wav"):
-            return send_file("utterance_001.wav", mimetype="audio/wav")
-        else:
-            return jsonify({"error": "TTS audio not found"}), 500
-    
+        # 🕐 Now the file is fully ready
+        while not os.path.exists("utterance_001.wav"):
+            time.sleep(0.1)  # tiny wait loop to ensure file exists
+
+        # ✅ Return file URL
+        timestamp = int(time.time())
+        return jsonify({"audio_url": f"/api/tts/file?ts={timestamp}"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# #matcha-tts v2 old
+# @app.route('/api/tts', methods=['POST'])
+# def tts():
+#     data = request.get_json()
+#     text = data.get("text", "")[:300]  # limit length
 
-#OLD VERSION
+#     try:
+#         # Run the async websocket client inside Flask sync route
+#         loop = asyncio.new_event_loop()
+#         asyncio.set_event_loop(loop)
+#         response = loop.run_until_complete(send_tts_message(text))
+
+#         #after synthesis, taking the server file back
+
+#         if os.path.exists("utterance_001.wav"):
+#             return send_file("utterance_001.wav", mimetype="audio/wav")
+#         else:
+#             return jsonify({"error": "TTS audio not found"}), 500
+    
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
+#matcha-tts v1 old
 # @app.route('/api/tts', methods=['POST'])
 # def tts():
 #     data = request.get_json()
@@ -224,6 +248,7 @@ Answer:
     answer = llm.predict(chat_prompt)
 
     return jsonify({"answer": answer})
+
 
 
 
