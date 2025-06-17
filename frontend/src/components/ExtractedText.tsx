@@ -19,3 +19,5 @@ const ExtractedText: React.FC = () => {
 };
 
 export default ExtractedText;
+
+// before adding matcha-tts/whisper asr
