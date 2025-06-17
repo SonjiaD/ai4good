@@ -1,55 +1,35 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import PdfUpload from './pages/5_PDF';
-import FocusTracker from './pages/FocusTracker';
-import ReadingAssistant from './pages/ReadingAssistant';
+import React from "react";
+import ReadingAssistant from "./pages/ReadingAssistant";
+import { ReadingProvider } from "./context/ReadingContext";
+import "./App.css";
 
-
-function App() {
-  const [msg, setMsg] = useState('');
-  const [response, setResponse] = useState('');
-
-  const handleSend = async () => {
-    const res = await fetch("http://localhost:5000/api/echo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg })
-    });
-    const data = await res.json();
-    setResponse(data.response);
-  };
-
+const App: React.FC = () => {
   return (
-    <Router>
-
-      {/* navigation bar */}
-      <nav style={{ marginBottom: '1rem' }}>
-        <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
-        <Link to="/pdf">PDF Upload</Link>
-        <Link to ="/focus" style={{ marginLeft: '1rem' }}>Focus Tracker</Link>
-        <Link to ="/reading" style={{ marginLeft: '1rem' }}>Reading Assistant</Link>
-      </nav>
-
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div style={{ padding: '2rem' }}>
-              <h1>React + Flask Example</h1>
-              <textarea value={msg} onChange={(e) => setMsg(e.target.value)} />
-              <br />
-              <button onClick={handleSend}>Send to Flask</button>
-              <p><strong>Flask says:</strong> {response}</p>
-            </div>
-          }
-        />
-        <Route path="/pdf" element={<PdfUpload />} />
-        <Route path="/focus" element={<FocusTracker />} />
-        <Route path="/reading" element={<ReadingAssistant />} />
-
-      </Routes>
-    </Router>
+    <ReadingProvider>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex flex-1 p-6 gap-6 @container/main bg-[var(--background-light)]">
+          <ReadingAssistant />
+        </main>
+      </div>
+    </ReadingProvider>
   );
-}
+};
+
+const Header: React.FC = () => (
+  <header className="sticky top-0 z-20 flex items-center justify-between whitespace-nowrap border-b border-[var(--border-color)] bg-[var(--card-background)] px-6 py-4 shadow-sm">
+    <div className="flex items-center gap-3 text-[var(--text-primary)]">
+      <span className="material-symbols-outlined text-[var(--primary-color)] text-3xl">
+        auto_stories
+      </span>
+      <h1 className="text-2xl font-bold">ReadWise</h1>
+    </div>
+    <nav className="flex items-center gap-6">
+      <a className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary-color)]" href="#">My Library</a>
+      <a className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary-color)]" href="#">Explore</a>
+      <a className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary-color)]" href="#">Settings</a>
+    </nav>
+  </header>
+);
 
 export default App;

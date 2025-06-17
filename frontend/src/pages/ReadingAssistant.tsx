@@ -1,67 +1,48 @@
 // src/pages/ReadingAssistant.tsx
 
-import React from 'react';
-import { ReadingProvider } from '../context/ReadingContext';
-import PDFUploader from '../components/PDFUploader';
-import ExtractedText from '../components/ExtractedText';
-import QAAssistant from '../components/QAAssistant';
-import EyeTracker from '../components/EyeTracker';
-import AnalyticsPanel from '../components/AnalyticsPanel';
-import QuizSection from '../components/QuizSection';
+import React from "react";
+import PDFUploader from "../components/PDFUploader";
+import ExtractedText from "../components/ExtractedText";
+import QAAssistant from "../components/QAAssistant";
+import QuizSection from "../components/QuizSection";
+import EyeTracker from "../components/EyeTracker";
+import AnalyticsPanel from "../components/AnalyticsPanel";
 
 const ReadingAssistant: React.FC = () => {
   return (
-    <ReadingProvider>
-      <div className="min-h-screen bg-[#f7fafd] p-6">
-        <div className="max-w-[1300px] mx-auto grid grid-cols-3 gap-6">
-
-          {/* LEFT PANEL */}
-          <div className="col-span-2 space-y-4">
-
-            {/* Story Time */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">📖 Story Time</h2>
-                <PDFUploader />
-              </div>
-              <ExtractedText />
-              <div className="flex justify-center mt-4">
-              </div>
-            </div>
-
-            {/* Q&A Assistant */}
-            <QAAssistant />
+    <div className="flex flex-1 p-6 gap-6 @container/main bg-[var(--background-light)]">
+      <div className="flex flex-col w-full @[1024px]/main:w-3/5 gap-6">
+        <div className="card">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)]">Story Time</h2>
+            <PDFUploader />
           </div>
+          <ExtractedText />
+        </div>
 
-          {/* RIGHT PANEL */}
-          <div className="col-span-1 space-y-4">
+        <div className="card">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Q&A Assistant</h2>
+          <QAAssistant />
+        </div>
 
-            {/* Webcam Feed */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold mb-2">Webcam Feed</h3>
-              <EyeTracker />
-            </div>
-
-            {/* Focus Analytics */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <AnalyticsPanel />
-            </div>
-
-            {/* Quiz Section */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <QuizSection />
-            </div>
-
-            {/* Focus Alerts */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold mb-2">Focus Alerts</h3>
-              <p className="text-sm text-gray-600">No alerts right now. Keep up the great work!</p>
-            </div>
-          </div>
-
+        <div className="card">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Test Your Understanding</h2>
+          <QuizSection />
         </div>
       </div>
-    </ReadingProvider>
+
+      <div className="flex flex-col w-full @[1024px]/main:w-2/5 gap-6">
+        <div className="card">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Webcam Feed</h2>
+          <EyeTracker />
+        </div>
+
+        <div className="card">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Focus Analytics</h2>
+          <AnalyticsPanel />
+        </div>
+      </div>
+    </div>
   );
 };
 
