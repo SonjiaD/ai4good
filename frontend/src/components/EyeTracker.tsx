@@ -1,6 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FilesetResolver, FaceLandmarker, DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
-import { useReadingContext } from '../context/ReadingContext';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  FilesetResolver,
+  FaceLandmarker,
+  DrawingUtils,
+  NormalizedLandmark,
+} from "@mediapipe/tasks-vision";
+import { useReadingContext } from "../context/ReadingContext";
 
 const EyeTracker: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -9,26 +14,35 @@ const EyeTracker: React.FC = () => {
   const [focusScore, setFocusScore] = useState(0);
   const [status, setStatus] = useState("Loading...");
   const { setIsEyeTracking } = useReadingContext();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const init = async () => {
-      const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      );
 
-      faceLandmarkerRef.current = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
-        },
-        runningMode: "VIDEO",
-        outputFaceBlendshapes: false,
-        outputFacialTransformationMatrixes: true,
-        numFaces: 1
-      });
+      faceLandmarkerRef.current = await FaceLandmarker.createFromOptions(
+        vision,
+        {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+          },
+          runningMode: "VIDEO",
+          outputFaceBlendshapes: false,
+          outputFacialTransformationMatrixes: true,
+          numFaces: 1,
+        }
+      );
 
       startCamera();
     };
 
     const startCamera = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 },
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
@@ -49,8 +63,11 @@ const EyeTracker: React.FC = () => {
           return;
         }
 
-        const results = await faceLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
-        const ctx = canvasRef.current?.getContext('2d');
+        const results = await faceLandmarkerRef.current.detectForVideo(
+          videoRef.current,
+          performance.now()
+        );
+        const ctx = canvasRef.current?.getContext("2d");
         if (!ctx || !canvasRef.current) {
           requestAnimationFrame(predict);
           return;
@@ -67,8 +84,16 @@ const EyeTracker: React.FC = () => {
         }
 
         const landmarks = results.faceLandmarks[0];
-        drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, { color: '#00FF00', lineWidth: 2 });
-        drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, { color: '#00FF00', lineWidth: 2 });
+        drawingUtils.drawConnectors(
+          landmarks,
+          FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
+          { color: "#00FF00", lineWidth: 2 }
+        );
+        drawingUtils.drawConnectors(
+          landmarks,
+          FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
+          { color: "#00FF00", lineWidth: 2 }
+        );
 
         const score = calculateFocusScore(landmarks);
         setFocusScore(score);
@@ -83,26 +108,30 @@ const EyeTracker: React.FC = () => {
     };
 
     init();
-    return () => { faceLandmarkerRef.current?.close(); };
+    return () => {
+      faceLandmarkerRef.current?.close();
+    };
   }, [setIsEyeTracking]);
 
   function calculateFocusScore(landmarks: NormalizedLandmark[]): number {
     if (landmarks.length < 470) return 0;
 
     // EAR calculation
-    const EAR = (calculateEAR(landmarks, "left") + calculateEAR(landmarks, "right")) / 2;
+    const EAR =
+      (calculateEAR(landmarks, "left") + calculateEAR(landmarks, "right")) / 2;
     let score = Math.min(Math.max((EAR - 0.15) / 0.1, 0), 1);
 
     // Head pose penalty
     const nose = landmarks[1];
     const eyeCenterX = (landmarks[33].x + landmarks[263].x) / 2;
     const deviation = Math.abs(nose.x - eyeCenterX);
-    score *= (1 - Math.min(deviation * 5, 1));
+    score *= 1 - Math.min(deviation * 5, 1);
 
     // Iris visibility penalty
     const leftIris = landmarks[468];
     const rightIris = landmarks[473];
-    const irisPenalty = (isIrisVisible(leftIris) && isIrisVisible(rightIris)) ? 1 : 0.5;
+    const irisPenalty =
+      isIrisVisible(leftIris) && isIrisVisible(rightIris) ? 1 : 0.5;
     score *= irisPenalty;
 
     return Math.round(score * 100);
@@ -112,12 +141,16 @@ const EyeTracker: React.FC = () => {
     return iris.z > -0.15; // heuristic depth check
   }
 
-  function calculateEAR(landmarks: NormalizedLandmark[], side: "left" | "right"): number {
-    const indices = side === "left"
-      ? [33, 160, 158, 133, 153, 144]
-      : [362, 385, 387, 263, 373, 380];
+  function calculateEAR(
+    landmarks: NormalizedLandmark[],
+    side: "left" | "right"
+  ): number {
+    const indices =
+      side === "left"
+        ? [33, 160, 158, 133, 153, 144]
+        : [362, 385, 387, 263, 373, 380];
 
-    const [p1, p2, p3, p4, p5, p6] = indices.map(i => landmarks[i]);
+    const [p1, p2, p3, p4, p5, p6] = indices.map((i) => landmarks[i]);
 
     const distV1 = distance(p2, p6);
     const distV2 = distance(p3, p5);
@@ -130,15 +163,63 @@ const EyeTracker: React.FC = () => {
     return Math.hypot(a.x - b.x, a.y - b.y);
   }
 
+  // return (
+  //   <div className="card">
+  //     <h2 className="text-xl font-semibold mb-4">Focus Detection</h2>
+  //     <p>Status: {status}</p>
+  //     <p>Focus Score: {focusScore}%</p>
+
+  //     <div style={{ position: 'relative', width: '640px', height: '480px' }}>
+  //       <video ref={videoRef} autoPlay muted style={{ position: 'absolute', top: 0, left: 0 }} width="640" height="480" />
+  //       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
+  //     </div>
+  //   </div>
+  // );
+  
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">Focus Detection</h2>
-      <p>Status: {status}</p>
-      <p>Focus Score: {focusScore}%</p>
+      <h2 className="text-xl font-semibold mb-4">
+        Focus Detection
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          style={{
+            float: "right",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "1.25rem",
+          }}
+          aria-label={isCollapsed ? "Expand" : "Collapse"}
+        >
+          {isCollapsed ? "▼" : "▲"}
+        </button>
+      </h2>
 
-      <div style={{ position: 'relative', width: '640px', height: '480px' }}>
-        <video ref={videoRef} autoPlay muted style={{ position: 'absolute', top: 0, left: 0 }} width="640" height="480" />
-        <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
+      <div
+        className="focus-content"
+        style={{
+          visibility: isCollapsed ? "hidden" : "visible",
+          height: isCollapsed ? 0 : "auto",
+          overflow: "hidden",
+          transition: "all 0.3s ease",
+        }}
+      >
+        <p>Status: {status}</p>
+        <p>Focus Score: {focusScore}%</p>
+        <div style={{ position: "relative", width: "640px", height: "480px" }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            style={{ position: "absolute", top: 0, left: 0 }}
+            width="640"
+            height="480"
+          />
+          <canvas
+            ref={canvasRef}
+            style={{ position: "absolute", top: 0, left: 0 }}
+          />
+        </div>
       </div>
     </div>
   );
