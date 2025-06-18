@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FilesetResolver, FaceLandmarker, DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
+import { useReadingContext } from '../context/ReadingContext';
 
 const EyeTracker: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -7,6 +8,7 @@ const EyeTracker: React.FC = () => {
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const [focusScore, setFocusScore] = useState(0);
   const [status, setStatus] = useState("Loading...");
+  const { setIsEyeTracking } = useReadingContext();
 
   useEffect(() => {
     const init = async () => {
@@ -59,6 +61,7 @@ const EyeTracker: React.FC = () => {
 
         if (!results.faceLandmarks || results.faceLandmarks.length === 0) {
           setStatus("No face detected ❌");
+          setIsEyeTracking(false); // marked as inactive in focus analytics window
           requestAnimationFrame(predict);
           return;
         }
@@ -70,16 +73,18 @@ const EyeTracker: React.FC = () => {
         const score = calculateFocusScore(landmarks);
         setFocusScore(score);
         setStatus("Tracking ✅");
+        setIsEyeTracking(true); // mark as active in focus analytics window
       } catch (err) {
         console.warn("Error during prediction:", err);
         setStatus("Prediction Error ❌");
+        setIsEyeTracking(false); // handle prediction err as inactive
       }
       requestAnimationFrame(predict);
     };
 
     init();
     return () => { faceLandmarkerRef.current?.close(); };
-  }, []);
+  }, [setIsEyeTracking]);
 
   function calculateFocusScore(landmarks: NormalizedLandmark[]): number {
     if (landmarks.length < 470) return 0;

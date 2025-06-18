@@ -1,21 +1,39 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PDFUploader from '../components/PDFUploader';
 import ExtractedText from '../components/ExtractedText';
 import QAAssistant from '../components/QAAssistant';
 import QuizSection from '../components/QuizSection';
 import EyeTracker from '../components/EyeTracker';
 import AnalyticsPanel from '../components/AnalyticsPanel';
-import { ReadingProvider } from '../context/ReadingContext';
+import { ReadingProvider, useReadingContext } from '../context/ReadingContext';
 import '../App.css';  // keep your existing CSS
 import './ReadingPage.css';
 
-const ReadingPage: React.FC = () => {
+const ReadingPageContent: React.FC = () => {
+  const {setMouseIdleTime } = useReadingContext();
+  useEffect(() => {
+    let lastMoveTime = Date.now();
+
+    const updateIdle = () => {
+      lastMoveTime = Date.now();
+    };
+
+    const interval = setInterval(() => {
+      const idleTimeSec = Math.floor((Date.now() - lastMoveTime) / 1000);
+      setMouseIdleTime(idleTimeSec);
+    }, 1000);
+
+    window.addEventListener('mousemove', updateIdle);
+    return () => {
+      window.removeEventListener('mousemove', updateIdle);
+      clearInterval(interval);
+    };
+  }, [setMouseIdleTime]);
+  
   return (
-    <ReadingProvider>
       <div className="app">
         <header className="header">
           <img src="/logo.png" alt="ReadingBudd.AI logo" className="app-logo"></img>
-          {/* <h1>ReadingBudd.Ai</h1> */}
         </header>
 
         <div className="split-screen">
@@ -58,8 +76,11 @@ const ReadingPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </ReadingProvider>
   );
 };
-
+const ReadingPage: React.FC = () => (
+  <ReadingProvider>
+    <ReadingPageContent />
+  </ReadingProvider>
+);
 export default ReadingPage;

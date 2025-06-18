@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
+
 interface ReadingContextProps {
   file: File | null;
   setFile: (file: File | null) => void;
@@ -13,6 +14,10 @@ interface ReadingContextProps {
   setAnswers: (answers: string[]) => void;
   feedbacks: string[];
   setFeedbacks: (feedbacks: string[]) => void;
+  isEyeTracking: boolean;
+  setIsEyeTracking: (isActive: boolean) => void;
+  mouseIdleTime: number;
+  setMouseIdleTime: (time: number) => void;
 }
 
 const ReadingContext = createContext<ReadingContextProps | undefined>(undefined);
@@ -23,14 +28,17 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
   const [questions, setQuestions] = useState<string[]>([]);
   const [answers, setAnswers] = useState<string[]>([]);
   const [feedbacks, setFeedbacks] = useState<string[]>([]);
-
+  const [isEyeTracking, setIsEyeTracking] = useState(true);
+  const [mouseIdleTime, setMouseIdleTime] = useState(0);
   return (
     <ReadingContext.Provider value={{
       file, setFile,
       text, setText,
       questions, setQuestions,
       answers, setAnswers,
-      feedbacks, setFeedbacks
+      feedbacks, setFeedbacks,
+      isEyeTracking, setIsEyeTracking,
+      mouseIdleTime, setMouseIdleTime
     }}>
       {children}
     </ReadingContext.Provider>
