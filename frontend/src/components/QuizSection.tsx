@@ -58,7 +58,7 @@ const QuizSection: React.FC = () => {
   };
 
   return (
-    <div className="card">
+    <div className="card quiz-section">
       <h2>Test Your Understanding</h2>
       <button onClick={generateQuiz} className="primary" disabled={loading}>
         {loading ? "Generating..." : "Generate Quiz"}

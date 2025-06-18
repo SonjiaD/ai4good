@@ -1,0 +1,28 @@
+/* src/pages/ReadingAssistant.module.css */
+
+
+.read-aloud-btn {
+  background-color: #34d399; 
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  letter-spacing: 0.25px;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.readAloudBtn:hover {
+  background-color: #059669;
+}
+
+.playIcon {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
