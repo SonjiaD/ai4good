@@ -8,7 +8,9 @@ import Home from './pages/Home';
 import LoginSignup from './pages/LoginSignup';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-
+import TeacherHome from './pages/TeacherHome';
+import MyClass from './pages/MyClass';
+import StudentOverview from './pages/StudentOverview';
 
 function App() {
   const [msg, setMsg] = useState('');
@@ -36,6 +38,7 @@ function App() {
         <Link to="/welcome" style={{ marginLeft: '1rem' }}>Welcome</Link>
         <Link to="/home" style={{ marginLeft: '1rem' }}>HomePage</Link>
         <Link to="/loginsignup" style={{ marginLeft: '1rem' }}>Login/Signup</Link>
+        <Link to="/teacherhome" style={{ marginLeft: '1rem' }}>Teacher Home</Link>
       </nav>
 
       <Routes>
@@ -59,6 +62,10 @@ function App() {
         <Route path="/loginsignup" element={<LoginSignup />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/teacherhome" element={<TeacherHome />} />
+        <Route path="/myclass" element={<MyClass />} />
+        <Route path="/studentoverview" element={<StudentOverview />} />
+        
       </Routes>
     </Router>
   );

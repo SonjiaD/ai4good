@@ -106,6 +106,7 @@ const Questionnaire: React.FC = () => {
             <div className="button-group">
               <button className="role-btn" onClick={() => handleRoleSelect('Parent')}>Parent</button>
               <button className="role-btn" onClick={() => handleRoleSelect('Child')}>Child</button>
+              <button className="role-btn" onClick={() => navigate('/TeacherHome')}>Teacher</button>
             </div>
           </>
         ) : (
