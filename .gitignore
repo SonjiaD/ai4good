@@ -1,5 +1,24 @@
-.env
-.venv/
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.npy
+*.npz
+*.wav
+*.png
+
+# Virtual environments
+venv/
+env/
+.venv/
 .venv310/
+.env
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Mac/Windows system files
+.DS_Store
+Thumbs.db

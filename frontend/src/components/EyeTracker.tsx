@@ -127,7 +127,7 @@ const EyeTracker: React.FC = () => {
 
   return (
     <div className="card">
-      <h2 className="text-xl font-semibold mb-4">🧠 Focus Detection (v4.0 Stable)</h2>
+      <h2 className="text-xl font-semibold mb-4">Focus Detection</h2>
       <p>Status: {status}</p>
       <p>Focus Score: {focusScore}%</p>
 

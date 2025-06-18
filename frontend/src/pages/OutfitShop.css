@@ -1,0 +1,129 @@
+body {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+.outfit-shop {
+    text-align: center;
+    padding: 40px;
+    background-color: #fff;
+  }
+  
+  .outfit-shop h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    font-size: 18px;
+    margin-bottom: 40px;
+    color: #555;
+  }
+  
+  .outfit-container {
+    background-color: #fde4b3;
+    border-radius: 40px;
+    padding: 60px 80px;
+    margin: 40px auto;
+    max-width: 1400px;
+    min-height: 500px;  /* force height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .outfit-grid {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+    
+  .outfit-card {
+    background-color: #fcd99e;
+    border-radius: 40px;
+    padding: 40px 20px;
+    width: 240px;      
+    height: 420px;     
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.2s;
+  }
+  
+  .outfit-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .outfit-image {
+    flex-grow: 1;
+    max-height: calc(100% - 80px);  /* card height minus space for text */
+    width: auto;
+    object-fit: contain;
+  }
+  
+
+  .outfit-name {
+    font-size: 24px;   
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .outfit-price {
+    font-size: 20px;   
+    color: #333;
+    margin-bottom: 0px;
+  }
+  
+  .outfit-card:hover {
+    transform: scale(1.05);
+  }
+
+  @keyframes popIn {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+    80% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  .checkmark {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    animation: popIn 0.25s ease-out;
+  }
+  
+  .coin-display {
+    position: absolute;
+    top: 40px;
+    right: 60px;
+    background-color: #fedf99;
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  
+  .coin-icon {
+    height: 24px;
+  }
+  
+  .coin-count {
+    font-size: 20px;
+    color: #333;
+  }
+  

@@ -1,4 +1,3 @@
-# backend/app.py
 
 from flask import Flask, request, jsonify 
 from flask_cors import CORS
@@ -12,7 +11,14 @@ from flask import send_file, Flask, request, jsonify
 #matcha-tts
 import subprocess
 import traceback
+#websocket-client logic
+import asyncio
+import websockets
+import json
 
+#whisper
+import whisper
+import tempfile
 
 app = Flask(__name__) #creates new flask web application 
 CORS(app)  # Allow requests from frontend
@@ -21,6 +27,10 @@ CORS(app)  # Allow requests from frontend
 #matcha-tts
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
 
+#whisper
+# Hardcode ffmpeg path for Whisper to find it
+os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
+model = whisper.load_model("base")  # Load the Whisper model
 
 @app.route("/") #defines home route like homepage of server
 def home():
@@ -122,28 +132,124 @@ Student Answer: {answer}
 
     return jsonify({"feedback": feedback})
 
-#matcha-tts
-import subprocess
+#helper function to send message to local websocket server
+async def send_tts_message(text):
+    uri = "ws://localhost:1000"
+    async with websockets.connect(uri) as websocket:
+        message = {"text": text}
+        message_json = json.dumps(message)
+        await websocket.send(message_json)
+        print(f"Sent: {message_json})")
+
+        response = await websocket.recv()
+        print(f"Received: {response}")
+        return response
+
+
+import time
 
 @app.route('/api/tts', methods=['POST'])
 def tts():
     data = request.get_json()
-    text = data.get("text", "")[:300]  # limit length
+    text = data.get("text", "")[:1000]
 
     try:
-        subprocess.run([
-            "matcha-tts",
-            "--text", text,
-            "--output_folder", "."
-        ], check=True)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(send_tts_message(text))
 
-        if os.path.exists("utterance_001.wav"):
-            return send_file("utterance_001.wav", mimetype="audio/wav")
-        else:
-            return jsonify({"error": "TTS audio not found"}), 500
+        # 🕐 Now the file is fully ready
+        while not os.path.exists("utterance_001.wav"):
+            time.sleep(0.1)  # tiny wait loop to ensure file exists
 
-    except subprocess.CalledProcessError as e:
+        # ✅ Return file URL
+        timestamp = int(time.time())
+        return jsonify({"audio_url": f"/api/tts/file?ts={timestamp}"})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# #matcha-tts v2 old
+# @app.route('/api/tts', methods=['POST'])
+# def tts():
+#     data = request.get_json()
+#     text = data.get("text", "")[:300]  # limit length
+
+#     try:
+#         # Run the async websocket client inside Flask sync route
+#         loop = asyncio.new_event_loop()
+#         asyncio.set_event_loop(loop)
+#         response = loop.run_until_complete(send_tts_message(text))
+
+#         #after synthesis, taking the server file back
+
+#         if os.path.exists("utterance_001.wav"):
+#             return send_file("utterance_001.wav", mimetype="audio/wav")
+#         else:
+#             return jsonify({"error": "TTS audio not found"}), 500
+    
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
+#matcha-tts v1 old
+# @app.route('/api/tts', methods=['POST'])
+# def tts():
+#     data = request.get_json()
+#     text = data.get("text", "")[:300]  # limit length
+
+#     try:
+#         subprocess.run([
+#             "matcha-tts",
+#             "--text", text,
+#             # need to change form message = text;
+#             # copy hit_server.py format into here
+#             # doing it with websockets
+#             "--play"
+#         ], check=True)
+
+#         if os.path.exists("utterance_001.wav"):
+#             return send_file("utterance_001.wav", mimetype="audio/wav")
+#         else:
+#             return jsonify({"error": "TTS audio not found"}), 500
+
+#     except subprocess.CalledProcessError as e:
+#         return jsonify({"error": str(e)}), 500
+
+#whisper
+@app.route('/api/transcribe-audio', methods=['POST'])
+def transcribe_audio():
+    file = request.files['audio']
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp:
+        file.save(temp.name)
+        result = model.transcribe(temp.name)
+        transcription = result['text']
+    return jsonify({'transcription': transcription})
+
+#qa assistant .tsx page
+# Free-form QA assistant based on uploaded story
+@app.route('/api/qa-chat', methods=['POST'])
+def qa_chat():
+    data = request.get_json()
+    story = data.get("text", "")[:1500]
+    user_question = data.get("question", "")
+
+    chat_prompt = f"""
+You are an assistant that answers reading comprehension questions for children aged 7-10. Use only the information from the provided story.
+
+Story:
+\"\"\"{story}\"\"\"
+
+Question: {user_question}
+
+Answer:
+"""
+
+    llm = ChatOllama(model="llama3", temperature=0.3)
+    answer = llm.predict(chat_prompt)
+
+    return jsonify({"answer": answer})
+
+
 
 
 #route for logging to flask focus

@@ -9,7 +9,7 @@ An AI-powered reading companion designed for neurodivergent children. Children c
 | Version       | Description                               |
 |---------------|-------------------------------------------|
 | `streamlit_app/` | Rapid prototype with local TTS and LLM |
-| `frontend/ + backend/` | Production-ready full-stack version (React + Flask API) |
+| `frontend/ + backend/` | Production-ready full-stack version (React (Typescript) + Flask (Python) API) |
 
 ---
 

@@ -1,38 +1,88 @@
-.App {
-  text-align: center;
+body {
+  margin: 0;
+  font-family: 'Lexend', 'Noto Sans', sans-serif;
+  background-color: #f0f9ff;
+  color: #1e293b;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  min-height: 100vh;
+}
+
+.header {
+  background-color: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  font-weight: bold;
+  font-size: 1.75rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.split-screen {
+  display: flex;
+  flex: 1;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+.left-panel {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.right-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+button {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary {
+  background-color: #19a1e5;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+button.secondary {
+  background-color: #4ade80;
+  color: white;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.read-aloud-btn {
+  background-color: #34d399;
+  color: white;
+  font-weight: 600;
+  padding: 0.85rem 2rem;
+  font-size: 1.05rem;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.read-aloud-btn:hover {
+  background-color: #059669;
 }

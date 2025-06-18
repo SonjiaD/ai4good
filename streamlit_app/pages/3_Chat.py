@@ -5,7 +5,7 @@ from gtts import gTTS
 from dotenv import load_dotenv
 import subprocess #matcha-tts
 
-from utils.session import initialize_session_state, display_status
+from streamlit_app.utils.session import initialize_session_state, display_status
 
 from langchain.chat_models import ChatOllama
 from langchain.chains import LLMChain
