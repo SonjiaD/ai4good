@@ -1,7 +1,6 @@
 // /src/context/ReadingContext.tsx
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-
+import React, { createContext, useState, useContext, ReactNode } from "react";
 
 interface ReadingContextProps {
   file: File | null;
@@ -18,28 +17,55 @@ interface ReadingContextProps {
   setIsEyeTracking: (isActive: boolean) => void;
   mouseIdleTime: number;
   setMouseIdleTime: (time: number) => void;
+  focusAlert: boolean;
+  setFocusAlert: (value: boolean) => void;
+  focusScore: number;
+  setFocusScore: (score: number) => void;
+  alertReason: "face" | "mouse" | null;
+  setAlertReason: (reason: "face" | "mouse" | null) => void;
 }
 
-const ReadingContext = createContext<ReadingContextProps | undefined>(undefined);
+const ReadingContext = createContext<ReadingContextProps | undefined>(
+  undefined
+);
 
 export const ReadingProvider = ({ children }: { children: ReactNode }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [text, setText] = useState<string>('');
+  const [text, setText] = useState<string>("");
   const [questions, setQuestions] = useState<string[]>([]);
   const [answers, setAnswers] = useState<string[]>([]);
   const [feedbacks, setFeedbacks] = useState<string[]>([]);
   const [isEyeTracking, setIsEyeTracking] = useState(true);
   const [mouseIdleTime, setMouseIdleTime] = useState(0);
+  const [focusAlert, setFocusAlert] = useState(false);
+  const [focusScore, setFocusScore] = useState(0);
+  const [alertReason, setAlertReason] = useState<"face" | "mouse" | null>(null);
+
   return (
-    <ReadingContext.Provider value={{
-      file, setFile,
-      text, setText,
-      questions, setQuestions,
-      answers, setAnswers,
-      feedbacks, setFeedbacks,
-      isEyeTracking, setIsEyeTracking,
-      mouseIdleTime, setMouseIdleTime
-    }}>
+    <ReadingContext.Provider
+      value={{
+        file,
+        setFile,
+        text,
+        setText,
+        questions,
+        setQuestions,
+        answers,
+        setAnswers,
+        feedbacks,
+        setFeedbacks,
+        isEyeTracking,
+        setIsEyeTracking,
+        mouseIdleTime,
+        setMouseIdleTime,
+        focusAlert,
+        setFocusAlert,
+        focusScore,
+        setFocusScore,
+        alertReason,
+        setAlertReason,
+      }}
+    >
       {children}
     </ReadingContext.Provider>
   );
@@ -47,6 +73,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
 
 export const useReadingContext = () => {
   const context = useContext(ReadingContext);
-  if (!context) throw new Error("useReadingContext must be used within ReadingProvider");
+  if (!context)
+    throw new Error("useReadingContext must be used within ReadingProvider");
   return context;
 };

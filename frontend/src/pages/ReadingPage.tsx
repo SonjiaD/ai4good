@@ -1,16 +1,17 @@
-import React, { useEffect } from 'react';
-import PDFUploader from '../components/PDFUploader';
-import ExtractedText from '../components/ExtractedText';
-import QAAssistant from '../components/QAAssistant';
-import QuizSection from '../components/QuizSection';
-import EyeTracker from '../components/EyeTracker';
-import AnalyticsPanel from '../components/AnalyticsPanel';
-import { ReadingProvider, useReadingContext } from '../context/ReadingContext';
-import '../App.css';  // keep your existing CSS
-import './ReadingPage.css';
+import React, { useEffect } from "react";
+import PDFUploader from "../components/PDFUploader";
+import ExtractedText from "../components/ExtractedText";
+import QAAssistant from "../components/QAAssistant";
+import QuizSection from "../components/QuizSection";
+import EyeTracker from "../components/EyeTracker";
+import AnalyticsPanel from "../components/AnalyticsPanel";
+import { ReadingProvider, useReadingContext } from "../context/ReadingContext";
+import "../App.css"; // keep your existing CSS
+import "./ReadingPage.css";
+import FocusAlerts from "../components/FocusAlerts";
 
 const ReadingPageContent: React.FC = () => {
-  const {setMouseIdleTime } = useReadingContext();
+  const { setMouseIdleTime } = useReadingContext();
   useEffect(() => {
     let lastMoveTime = Date.now();
 
@@ -23,59 +24,61 @@ const ReadingPageContent: React.FC = () => {
       setMouseIdleTime(idleTimeSec);
     }, 1000);
 
-    window.addEventListener('mousemove', updateIdle);
+    window.addEventListener("mousemove", updateIdle);
     return () => {
-      window.removeEventListener('mousemove', updateIdle);
+      window.removeEventListener("mousemove", updateIdle);
       clearInterval(interval);
     };
   }, [setMouseIdleTime]);
-  
+
   return (
-      <div className="app">
-        <header className="header">
-          <img src="/logo.png" alt="ReadingBudd.AI logo" className="app-logo"></img>
-        </header>
+    <div className="app">
+      <header className="header">
+        <img
+          src="/logo.png"
+          alt="ReadingBudd.AI logo"
+          className="app-logo"
+        ></img>
+      </header>
 
-        <div className="split-screen">
-          <div className="left-panel">
+      <div className="split-screen">
+        <div className="left-panel">
           <div className="card story-time-card">
-          <div className="story-time-top">
-            <h2 className="section-title">Story Time</h2>
-            <div className="story-time-header">
-              <PDFUploader />
+            <div className="story-time-top">
+              <h2 className="section-title">Story Time</h2>
+              <div className="story-time-header">
+                <PDFUploader />
+              </div>
             </div>
+            <div className="story-box">
+              <p>Upload a PDF to view your story here!</p>
+            </div>
+            <div className="read-aloud-container">
+              <button className="read-aloud-btn">
+                <span className="icon">▶</span> Read Aloud
+              </button>
+            </div>
+
+            <div className="card qa-card">
+              <h2 className="qa-title">Q&A Assistant</h2>
+              <QAAssistant />
+            </div>
+            <QuizSection />
           </div>
-          <div className="story-box">
-            <p>Upload a PDF to view your story here!</p>
-          </div>
-          <div className="read-aloud-container">
-            <button className="read-aloud-btn">
-              <span className="icon">▶</span> Read Aloud
-            </button>
-          </div>
-          
-          <div className="card qa-card">
-          <h2 className="qa-title">Q&A Assistant</h2>
-          <QAAssistant />
-        </div>
-          <QuizSection />
-        </div>
 
-
-
-
-            {/* <PDFUploader />
+          {/* <PDFUploader />
             <ExtractedText />
             <QAAssistant />
             <QuizSection /> */}
-          </div>
+        </div>
 
-          <div className="right-panel">
-            <EyeTracker />
-            <AnalyticsPanel />
-          </div>
+        <div className="right-panel">
+          <EyeTracker />
+          <AnalyticsPanel />
+          <FocusAlerts />
         </div>
       </div>
+    </div>
   );
 };
 const ReadingPage: React.FC = () => (

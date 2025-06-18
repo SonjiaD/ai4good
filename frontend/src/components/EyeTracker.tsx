@@ -11,9 +11,13 @@ const EyeTracker: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
-  const [focusScore, setFocusScore] = useState(0);
+  // const [focusScore, setFocusScore] = useState(0);
+  const { focusScore, setFocusScore } = useReadingContext();
+  const [faceDetected, setFaceDetected] = useState(true);
   const [status, setStatus] = useState("Loading...");
-  const { setIsEyeTracking } = useReadingContext();
+  // const { setIsEyeTracking } = useReadingContext();
+  const { setIsEyeTracking, mouseIdleTime, setFocusAlert, setAlertReason } =
+    useReadingContext();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
@@ -78,12 +82,15 @@ const EyeTracker: React.FC = () => {
 
         if (!results.faceLandmarks || results.faceLandmarks.length === 0) {
           setStatus("No face detected ❌");
+          setFaceDetected(false);
           setIsEyeTracking(false); // marked as inactive in focus analytics window
+          setFocusScore(0); // focus score is 0 when no face is detected
           requestAnimationFrame(predict);
           return;
         }
 
         const landmarks = results.faceLandmarks[0];
+        setFaceDetected(true);
         drawingUtils.drawConnectors(
           landmarks,
           FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
@@ -98,6 +105,7 @@ const EyeTracker: React.FC = () => {
         const score = calculateFocusScore(landmarks);
         setFocusScore(score);
         setStatus("Tracking ✅");
+        // setFaceDetected(true);
         setIsEyeTracking(true); // mark as active in focus analytics window
       } catch (err) {
         console.warn("Error during prediction:", err);
@@ -112,6 +120,26 @@ const EyeTracker: React.FC = () => {
       faceLandmarkerRef.current?.close();
     };
   }, [setIsEyeTracking]);
+
+  // detecting whether face is in frame/mouse is too idle for focus alerts
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const isMouseIdle = mouseIdleTime > 15;
+
+      if (!faceDetected) {
+        setFocusAlert(true);
+        setAlertReason("face");
+      } else if (isMouseIdle) {
+        setFocusAlert(true);
+        setAlertReason("mouse");
+      } else {
+        setFocusAlert(false);
+        setAlertReason(null);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [faceDetected, mouseIdleTime, setFocusAlert, setAlertReason]);
 
   function calculateFocusScore(landmarks: NormalizedLandmark[]): number {
     if (landmarks.length < 470) return 0;
@@ -175,7 +203,7 @@ const EyeTracker: React.FC = () => {
   //     </div>
   //   </div>
   // );
-  
+
   return (
     <div className="card">
       <h2 className="text-xl font-semibold mb-4">
