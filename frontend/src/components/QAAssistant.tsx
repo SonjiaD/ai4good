@@ -26,29 +26,59 @@ const QAAssistant: React.FC = () => {
   };
 
   const handleRecord = async () => {
-    const recordResponse = await fetch('http://localhost:5000/api/record', { method: 'POST' });
-    const recordData = await recordResponse.json();
-    setQuestion(recordData.transcription);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.webm');
+
+        const res = await fetch('http://localhost:5000/api/transcribe-audio', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        setQuestion(data.transcription);  // update question field with transcribed audio
+      };
+
+      mediaRecorder.start();
+      setTimeout(() => {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }, 5000);  // record 5 seconds
+    } catch (err) {
+      console.error("Mic access denied or failed", err);
+      alert("Please allow microphone access to use this feature.");
+    }
   };
 
-//   return (
-//     <div className="card">
-//       <h2>Q&A Assistant</h2>
-//       <div style={{ display: "flex", gap: "1rem" }}>
-//         <input value={question} onChange={e => setQuestion(e.target.value)} className="form-input-custom" placeholder="Ask a question..." />
-//         <button className="primary" onClick={handleAsk} disabled={loading}>
-//           {loading ? "Asking..." : "Ask"}
-//         </button>
-//         <button className="secondary" onClick={handleRecord}>🎙️</button>
-//       </div>
 
-//       {answer && (
-//         <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.75rem" }}>
-//           <b>Answer:</b> {answer}
-//         </div>
-//       )}
-//     </div>
-//   );
+  return (
+    <div>
+      {/* <h2>Q&A Assistant</h2> */}
+      <div style={{ display: "flex", gap: "1rem" }}>
+        <input value={question} onChange={e => setQuestion(e.target.value)} className="form-input-custom" placeholder="Ask a question..." />
+        <button className="primary" onClick={handleAsk} disabled={loading}>
+          {loading ? "Asking..." : "Ask"}
+        </button>
+        <button className="secondary" onClick={handleRecord}>🎙️</button>
+      </div>
+
+      {answer && (
+        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.75rem" }}>
+          <b>Answer:</b> {answer}
+        </div>
+      )}
+    </div>
+  );
 // };
 
 return (
@@ -73,5 +103,9 @@ return (
     )}
   </div>
 );
+
+
 };
+
+
 export default QAAssistant;

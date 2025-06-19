@@ -39,13 +39,51 @@ const QuizSection: React.FC = () => {
     setFeedbacks(updatedFeedbacks);
   };
 
+  // const handleRecord = async (index: number) => {
+  //   const res = await fetch('http://localhost:5000/api/record', { method: 'POST' });
+  //   const data = await res.json();
+  //   const updatedAnswers = [...answers];
+  //   updatedAnswers[index] = data.transcription;
+  //   setAnswers(updatedAnswers);
+  // };
+
   const handleRecord = async (index: number) => {
-    const res = await fetch('http://localhost:5000/api/record', { method: 'POST' });
-    const data = await res.json();
-    const updatedAnswers = [...answers];
-    updatedAnswers[index] = data.transcription;
-    setAnswers(updatedAnswers);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.webm');
+
+        const res = await fetch('http://localhost:5000/api/transcribe-audio', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        const updatedAnswers = [...answers];
+        updatedAnswers[index] = data.transcription;
+        setAnswers(updatedAnswers);
+      };
+
+      mediaRecorder.start();
+      setTimeout(() => {
+        mediaRecorder.stop();
+        stream.getTracks().forEach((track) => track.stop());
+      }, 5000);
+    } catch (err) {
+      console.error("Mic access error", err);
+      alert("Please allow mic access to record your answer.");
+    }
   };
+
 
   const handleReadFeedback = async (index: number) => {
     await fetch('http://localhost:5000/api/tts', {
