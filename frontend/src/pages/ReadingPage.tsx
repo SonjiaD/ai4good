@@ -33,13 +33,13 @@ const ReadingPageContent: React.FC = () => {
 
   return (
     <div className="app">
-      <header className="header">
+      {/* <header className="header">
         <img
           src="/logo.png"
           alt="ReadingBudd.AI logo"
           className="app-logo"
         ></img>
-      </header>
+      </header> */}
 
       <div className="split-screen">
         <div className="left-panel">
