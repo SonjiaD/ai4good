@@ -50,14 +50,21 @@ const ReadingPageContent: React.FC = () => {
                 <PDFUploader />
               </div>
             </div>
-            <div className="story-box">
+            {/* <div className="story-box">
               <p>Upload a PDF to view your story here!</p>
+            </div> */}
+
+            {/* text extraction showing now */}
+            <div className="story-box" style={{ whiteSpace: "pre-wrap" }}>
+              <ExtractedText />
             </div>
-            <div className="read-aloud-container">
+
+
+            {/* <div className="read-aloud-container">
               <button className="read-aloud-btn">
                 <span className="icon">▶</span> Read Aloud
               </button>
-            </div>
+            </div> */}
 
             <div className="card qa-card">
               <h2 className="qa-title">Q&A Assistant</h2>

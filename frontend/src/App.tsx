@@ -29,8 +29,8 @@ function App() {
     <Router>
       <nav style={{ marginBottom: '1rem' }}>
         <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
-        <Link to="/pdf">PDF Upload</Link>
-        <Link to ="/focus" style={{ marginLeft: '1rem' }}>Focus Tracker</Link>
+        {/* <Link to="/pdf">PDF Upload</Link>
+        <Link to ="/focus" style={{ marginLeft: '1rem' }}>Focus Tracker</Link> */}
         <Link to="/questionnaire" style={{ marginLeft: '1rem' }}>Questionnaire</Link>
         <Link to="/welcome" style={{ marginLeft: '1rem' }}>Welcome</Link>
         <Link to="/home" style={{ marginLeft: '1rem' }}>HomePage</Link>
@@ -42,7 +42,7 @@ function App() {
       <Routes>
         <Route path="/" element={<div>Welcome to the Home Page!</div>} />
         <Route path="/reading" element={<ReadingPage />} />
-        <Route path="/focus" element={<FocusTracker />} />
+        {/* <Route path="/focus" element={<FocusTracker />} /> */}
         <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/home" element={<Home />} />
@@ -50,7 +50,6 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/outfit-shop" element={<OutfitShop />} />
-        <Route path="/reading" element={<ReadingPage />} />
       </Routes>
     </Router>
   );
