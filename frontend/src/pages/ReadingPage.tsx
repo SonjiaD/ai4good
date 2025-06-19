@@ -33,6 +33,9 @@ const ReadingPageContent: React.FC = () => {
 
   return (
     <div className="app">
+
+      {/* Uncomment the header if you want to display the logo */}
+
       {/* <header className="header">
         <img
           src="/logo.png"

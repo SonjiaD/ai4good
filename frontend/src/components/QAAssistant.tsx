@@ -61,6 +61,7 @@ const QAAssistant: React.FC = () => {
   };
 
 
+  // OLD DESIGN 
   // return (
   //   <div>
   //     {/* <h2>Q&A Assistant</h2> */}

@@ -11,6 +11,8 @@ from flask import send_file, Flask, request, jsonify
 #matcha-tts
 import subprocess
 import traceback
+import time
+
 #websocket-client logic
 import asyncio
 import websockets
@@ -32,6 +34,67 @@ os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespe
 os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
 model = whisper.load_model("base")  # Load the Whisper model
 
+#matcha-tts clarity prompt 
+def insert_clarity_tags(text):
+    clarity_prompt = (
+        "You are an expert in English phonetics helping a TTS system improve intelligibility.\n"
+        "Please identify words in the text that are **tense-lax vowel minimal pairs**, like:\n"
+        "- pill/peel\n"
+        "- pull/pool\n"
+        "- bit/beet\n"
+        "and wrap these words in exclamation marks (!!) to activate clarity mode in a TTS system.\n"
+        "Example:\n"
+        "Original: I heard them say pill not peel over by the pool.\n"
+        "Tagged: I heard them say !pill! not !peel! over by the !pool!.\n\n"
+        f"Here is the input:\n{text}\n\nReturn only the modified text."
+    )
+
+    response = ollama_chat.invoke([
+        {"role": "user", "content": clarity_prompt}
+    ])
+    return response.content.strip()
+
+#extremely detailed to be explicit 
+# def insert_clarity_tags(raw: str) -> str:
+#     """
+#     Wraps clarity-sensitive minimal-pair words with ! !.
+#     Uses Ollama (Llama-3) to decide which words need help.
+#     """
+
+#     prompt = f"""
+# You are a speech-clarity enhancer.  
+# Given SENTENCE, return **the same sentence** but wrap any
+# vowel-confusable minimal-pair words in exclamation marks
+# (**!word!**).  
+# Only tag when it will help a listener tell pairs apart.
+# NEVER delete or change words; keep punctuation.
+
+# ### English minimal-pair patterns to watch
+# | Tense vs Lax | Example pair |
+# |--------------|--------------|
+# | /i/ vs /ɪ/   | peel / pill  |
+# | /u/ vs /ʊ/   | pool / pull  |
+# | /e/ vs /ɛ/   | bait / bet   |
+# | /o/ vs /ɔ/   | coat / cot   |
+
+# ### Tagging examples
+# Input ➜ Output
+# 1. “Pass me the peel not the pill.” ➜  
+#    “Pass me the !peel! not the !pill!.”
+# 2. “He jumped in the pool.” ➜  
+#    “He jumped in the !pool!.”   (because ‘pool’ could be confused with ‘pull’)
+# 3. “The sun is hot.” ➜  
+#    “The sun is hot.”            (no tagging needed)
+
+# SENTENCE: {raw}
+# ONLY return the transformed sentence – no extra text.
+# """
+
+#     llm = ChatOllama(model="llama3", temperature=0.2)
+#     return llm.predict(prompt).strip()
+
+
+
 @app.route("/") #defines home route like homepage of server
 def home():
     return jsonify(message="Flask backend is running!") 
@@ -44,6 +107,8 @@ def home():
 # API endpoint to echo back the message sent from the frontend
 # this is a simple example of how the backend can process data
 # and return a response
+
+
 
 #adding new app route for the PyMuPDF
 @app.route('/api/upload-pdf', methods=['POST'])
@@ -146,74 +211,71 @@ async def send_tts_message(text):
         return response
 
 
-import time
-
+#new matcha-tts clarity tags
 @app.route('/api/tts', methods=['POST'])
 def tts():
     data = request.get_json()
-    text = data.get("text", "")[:1000]
+    text = data.get("text", "")[:1000]  # safety limit
+    print("🔊 TTS receives:", text)
 
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(send_tts_message(text))
-
-        # 🕐 Now the file is fully ready
-        while not os.path.exists("utterance_001.wav"):
-            time.sleep(0.1)  # tiny wait loop to ensure file exists
-
-        # ✅ Return file URL
-        timestamp = int(time.time())
-        return jsonify({"audio_url": f"/api/tts/file?ts={timestamp}"})
+        return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# #matcha-tts v2 old
+
+#matcha-tts past version WITHOUT clarity tags
 # @app.route('/api/tts', methods=['POST'])
 # def tts():
 #     data = request.get_json()
-#     text = data.get("text", "")[:300]  # limit length
+#     text = data.get("text", "")[:1000] 
+#     #length limit to prevent abuse of the audio player
 
 #     try:
-#         # Run the async websocket client inside Flask sync route
 #         loop = asyncio.new_event_loop()
 #         asyncio.set_event_loop(loop)
-#         response = loop.run_until_complete(send_tts_message(text))
+#         loop.run_until_complete(send_tts_message(text))
 
-#         #after synthesis, taking the server file back
+#         # 🕐 Now the file is fully ready
+#         while not os.path.exists("utterance_001.wav"):
+#             time.sleep(0.1)  # tiny wait loop to ensure file exists
 
-#         if os.path.exists("utterance_001.wav"):
-#             return send_file("utterance_001.wav", mimetype="audio/wav")
-#         else:
-#             return jsonify({"error": "TTS audio not found"}), 500
-    
+#         # ✅ Return file URL
+#         timestamp = int(time.time())
+#         return jsonify({"audio_url": f"/api/tts/file?ts={timestamp}"})
 #     except Exception as e:
 #         return jsonify({"error": str(e)}), 500
 
 
-#matcha-tts v1 old
-# @app.route('/api/tts', methods=['POST'])
-# def tts():
-#     data = request.get_json()
-#     text = data.get("text", "")[:300]  # limit length
+# ── Clarify-text endpoint ──────────────────────────────────────────────────
+@app.route('/api/clarify-text', methods=['POST'])
+def clarify_text():
+    data = request.get_json()
+    input_text = data.get("text", "")
 
-#     try:
-#         subprocess.run([
-#             "matcha-tts",
-#             "--text", text,
-#             # need to change form message = text;
-#             # copy hit_server.py format into here
-#             # doing it with websockets
-#             "--play"
-#         ], check=True)
+    clarity_prompt = (
+        "Your job is to add exclamation marks (!) around words that are minimal pairs "
+        "often confused by language learners or in noisy settings (e.g. pill vs peel, pool vs pull).\n\n"
+        "Examples:\n"
+        "- 'I said pill not peel' → 'I said !pill! not !peel!'\n"
+        "- 'She saw a pool next to the pull-up bar' → 'She saw a !pool! next to the !pull!-up bar'\n\n"
+        f"Input:\n{input_text}\n\n"
+        "Return only the revised text with single !word! tags."
+    )
 
-#         if os.path.exists("utterance_001.wav"):
-#             return send_file("utterance_001.wav", mimetype="audio/wav")
-#         else:
-#             return jsonify({"error": "TTS audio not found"}), 500
+    llm = ChatOllama(model="llama3", temperature=0.3)
+    clarified_text = llm.predict(clarity_prompt).strip()
 
-#     except subprocess.CalledProcessError as e:
-#         return jsonify({"error": str(e)}), 500
+    # 🧼 Clean up unexpected bold or double !! if present
+    clarified_text = clarified_text.replace("**", "").replace("!!", "!")
+
+    print("[CLARIFIED TEXT]", clarified_text)
+    print("[ORIGINAL TEXT]", input_text)
+
+    return jsonify({"text": clarified_text})
 
 #whisper
 @app.route('/api/transcribe-audio', methods=['POST'])

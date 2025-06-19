@@ -86,14 +86,44 @@ const QuizSection: React.FC = () => {
 
 
   const handleReadFeedback = async (index: number) => {
-    await fetch('http://localhost:5000/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: feedbacks[index] }),
-    });
-    const audio = new Audio('http://localhost:5000/api/tts/file');
-    audio.play();
+    if (!feedbacks[index]) return;
+
+    try {
+      // Step 1: Ask server to add clarity tags
+      const clarifyRes = await fetch('http://localhost:5000/api/clarify-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: feedbacks[index] }),
+      });
+
+      const clarifyData = await clarifyRes.json();
+      let clarifiedText = clarifyData.text;
+
+      // 🧼 Optional: Strip extra formatting like **!!word!!**
+      clarifiedText = clarifiedText.replace(/\*+/g, '').replace(/!!/g, '!');
+
+      console.log("Clarified Feedback Text:", clarifiedText);
+
+      // Step 2: Send to TTS server
+      const ttsRes = await fetch('http://localhost:5000/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: clarifiedText }),
+      });
+
+      if (!ttsRes.ok) {
+        throw new Error("TTS server error");
+      }
+
+      // Step 3: Play audio file (if using file playback)
+      const audio = new Audio('http://localhost:5000/api/tts/file');
+      audio.play();
+    } catch (err) {
+      console.error("Error reading feedback aloud:", err);
+      alert("There was a problem generating the audio. Check the backend logs.");
+    }
   };
+
 
   return (
     <div className="card quiz-section">

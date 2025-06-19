@@ -5,25 +5,55 @@ const ExtractedText: React.FC = () => {
   const { text } = useReadingContext();
   const [loading, setLoading] = useState(false);
 
+  // const handleReadAloud = async () => {
+  //   if (!text) return;
+
+  //   setLoading(true);
+  //   try {
+  //     await fetch('http://localhost:5000/api/tts', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ text }),
+  //     });
+
+  //     const audio = new Audio('http://localhost:5000/api/tts/file');
+  //     audio.play();
+  //   } catch (err) {
+  //     console.error('TTS failed:', err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleReadAloud = async () => {
     if (!text) return;
-
     setLoading(true);
+
     try {
-      await fetch('http://localhost:5000/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      // Step 1: Get clarified version with !word! tags
+      const clarifyResponse = await fetch("http://localhost:5000/api/clarify-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
+      const clarifyData = await clarifyResponse.json();
+      const clarifiedText = clarifyData.text;
 
-      const audio = new Audio('http://localhost:5000/api/tts/file');
+      // Step 2: Send clarified text to TTS
+      await fetch("http://localhost:5000/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clarifiedText }),
+      });
+      const audio = new Audio("http://localhost:5000/api/tts/file");
       audio.play();
+
     } catch (err) {
-      console.error('TTS failed:', err);
+      console.error("Error reading aloud:", err);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     text ? (
