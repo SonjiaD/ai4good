@@ -98,41 +98,79 @@ const QuizSection: React.FC = () => {
   return (
     <div className="card quiz-section">
       <h2>Test Your Understanding</h2>
-      <button onClick={generateQuiz} className="primary" disabled={loading}>
+      {/* <button onClick={generateQuiz} className="primary mb-4" disabled={loading}>
         {loading ? "Generating..." : "Generate Quiz"}
-      </button>
+      </button> */}
+
+      <div style={{ marginBottom: "1rem" }}>
+        <button
+          onClick={generateQuiz}
+          className="primary"
+          disabled={loading}
+        >
+          {loading ? "Generating..." : "Generate Quiz"}
+        </button>
+      </div>
+
+      
 
       {questions.map((q, i) => (
-        <div key={i} className="mt-4">
-          <p><b>Q{i + 1}:</b> {q}</p>
-          <div className="flex gap-2 mt-2">
+        <div key={i} className="qa-box mt-6">           {/* outer wrapper */}
+          <p className="font-medium">
+            <b>Q{i + 1}:</b> {q}
+          </p>
+
+          {/* ✨ new unified input row */}
+          <div className="qa-input-section">
             <input
-              className="form-input-custom flex-grow"
-              placeholder="Your answer"
+              className="qa-input flex-grow"
+              placeholder="Your answer…"
               value={answers[i]}
-              onChange={e => {
+              onChange={(e) => {
                 const newAns = [...answers];
                 newAns[i] = e.target.value;
                 setAnswers(newAns);
               }}
             />
-            <button className="primary" onClick={() => submitAnswer(i)}>Submit</button>
-            <button className="secondary" onClick={() => handleRecord(i)}>🎙️</button>
-            
+
+            {/* same colour/shape as the Assistant’s ▶ button */}
+            <button
+              className="qa-button"
+              onClick={() => submitAnswer(i)}
+              disabled={loading}
+            >
+              {loading ? "…" : "Submit"}
+            </button>
+
+            {/* use the green mic style for consistency */}
+            <button
+              className="secondary"
+              onClick={() => handleRecord(i)}
+              aria-label="Record answer"
+            >
+              🎙️
+            </button>
           </div>
 
+          {/* feedback block stays the same */}
           {feedbacks[i] && (
             <>
-              <div className="mt-2 p-2 bg-green-100 border rounded">
+              <div className="qa-answer mt-2">
                 <strong>Feedback:</strong> {feedbacks[i]}
               </div>
-              <button className="mt-2 px-3 py-1 bg-yellow-500 text-white rounded" onClick={() => handleReadFeedback(i)}>
+              <button
+                className="mt-2 px-3 py-1 bg-yellow-500 text-white rounded"
+                onClick={() => handleReadFeedback(i)}
+              >
                 🔊 Read Feedback
               </button>
             </>
           )}
         </div>
       ))}
+
+
+      
     </div>
   );
 };
