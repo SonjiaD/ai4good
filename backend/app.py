@@ -257,14 +257,16 @@ def clarify_text():
     input_text = data.get("text", "")
 
     clarity_prompt = (
-        "Your job is to add exclamation marks (!) around words that are minimal pairs "
-        "often confused by language learners or in noisy settings (e.g. pill vs peel, pool vs pull).\n\n"
+        "Wrap minimal pair words (e.g. pill/peel, pool/pull, bit/beat) with single exclamation marks, like !pill!. "
+        "These are words often confused in speech by language learners or in noisy environments.\n\n"
         "Examples:\n"
-        "- 'I said pill not peel' → 'I said !pill! not !peel!'\n"
-        "- 'She saw a pool next to the pull-up bar' → 'She saw a !pool! next to the !pull!-up bar'\n\n"
+        "- I said pill not peel → I said !pill! not !peel!\n"
+        "- She saw a pool next to the pull-up bar → She saw a !pool! next to the !pull!-up bar\n"
+        "- Not the nut → !Not! the !nut!\n\n"
         f"Input:\n{input_text}\n\n"
-        "Return only the revised text with single !word! tags."
+        "Return only the revised text with !word! tags. Do not explain or comment."
     )
+
 
     llm = ChatOllama(model="llama3", temperature=0.3)
     clarified_text = llm.predict(clarity_prompt).strip()
