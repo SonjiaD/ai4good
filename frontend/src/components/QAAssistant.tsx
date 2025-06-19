@@ -61,25 +61,27 @@ const QAAssistant: React.FC = () => {
   };
 
 
-  return (
-    <div>
-      {/* <h2>Q&A Assistant</h2> */}
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <input value={question} onChange={e => setQuestion(e.target.value)} className="form-input-custom" placeholder="Ask a question..." />
-        <button className="primary" onClick={handleAsk} disabled={loading}>
-          {loading ? "Asking..." : "Ask"}
-        </button>
-        <button className="secondary" onClick={handleRecord}>🎙️</button>
-      </div>
+  // return (
+  //   <div>
+  //     {/* <h2>Q&A Assistant</h2> */}
+  //     <div style={{ display: "flex", gap: "1rem" }}>
+  //       <input value={question} onChange={e => setQuestion(e.target.value)} className="form-input-custom" placeholder="Ask a question..." />
+  //       <button className="primary" onClick={handleAsk} disabled={loading}>
+  //         {loading ? "Asking..." : "Ask"}
+  //       </button>
+  //       <button className="secondary" onClick={handleRecord}>🎙️</button>
+  //     </div>
 
-      {answer && (
-        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.75rem" }}>
-          <b>Answer:</b> {answer}
-        </div>
-      )}
-    </div>
-  );
+  //     {answer && (
+  //       <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.75rem" }}>
+  //         <b>Answer:</b> {answer}
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 // };
+
+// take this style and use it in the test your understanding section
 
 return (
   <div className="qa-box">
@@ -93,7 +95,7 @@ return (
       <button className="qa-button" onClick={handleAsk} disabled={loading}>
         {loading ? '...' : '▶'}
       </button>
-      <button className="mic-button" onClick={handleRecord}>🎤</button>
+      <button className="secondary" onClick={handleRecord}>🎙️</button>
     </div>
 
     {answer && (

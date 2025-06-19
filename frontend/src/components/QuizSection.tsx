@@ -116,8 +116,9 @@ const QuizSection: React.FC = () => {
                 setAnswers(newAns);
               }}
             />
-            <button className="secondary" onClick={() => handleRecord(i)}>🎙️</button>
             <button className="primary" onClick={() => submitAnswer(i)}>Submit</button>
+            <button className="secondary" onClick={() => handleRecord(i)}>🎙️</button>
+            
           </div>
 
           {feedbacks[i] && (
