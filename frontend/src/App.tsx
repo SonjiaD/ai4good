@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import LoginSignup from './pages/LoginSignup';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
         <Link to="/loginsignup" style={{ marginLeft: '1rem' }}>Login/Signup</Link>
         <Link to="/outfit-shop" style={{ marginLeft: '1rem' }}>Outfit Shop</Link>
         <Link to="/reading" style={{ marginLeft: '1rem' }}>Reading</Link>
+        <Link to="/profile" style={{ marginLeft: '1rem' }}>Profile</Link>
       </nav>
 
       <Routes>
@@ -50,6 +52,8 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/outfit-shop" element={<OutfitShop />} />
+        <Route path="/profile" element={<Profile />} />
+        {/* Add more routes as needed */}
       </Routes>
     </Router>
   );

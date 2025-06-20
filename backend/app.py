@@ -22,24 +22,93 @@ import json
 import whisper
 import tempfile
 
+#questionnaire copying
+import shutil
+
 app = Flask(__name__) #creates new flask web application 
 
-PROFILE_PATH = "user_data/profile.json" #path to the profile file
+PROFILE_PATH = os.path.join("user_data", "profile.json")
 
 CORS(app)  # Allow requests from frontend
 #makes sure frontend can talk to backend
 
-#load user profile data
+
+#will delete after
+import os
+import json
+import shutil
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+PROFILE_PATH = "user_data/profile.json"
+
 def _load_profile():
     if not os.path.exists(PROFILE_PATH):
         return {"questionnaire": {}, "struggles": []}
     with open(PROFILE_PATH, "r") as f:
         return json.load(f)
 
+import os
+import json
+
+PROFILE_PATH = os.path.join(os.path.dirname(__file__), "profile.json")
+
+def _load_profile():
+    if os.path.exists(PROFILE_PATH):
+        with open(PROFILE_PATH, "r") as f:
+            return json.load(f)
+    else:
+        return {"questionnaire": {}, "struggles": []}
+
 def _save_profile(data):
-    os.makedirs(os.path.dirname(PROFILE_PATH), exist_ok=True)
     with open(PROFILE_PATH, "w") as f:
         json.dump(data, f, indent=2)
+
+@app.route("/api/save-questionnaire", methods=["POST"])
+def save_questionnaire():
+    try:
+        answers = request.get_json()
+        print("[📨 Received questionnaire]", answers)
+
+        profile = _load_profile()
+        profile["questionnaire"] = answers
+        _save_profile(profile)
+
+        # ✅ NEW: Copy to frontend/public/profile.json
+        import shutil
+        shutil.copy("profile.json", "../frontend/public/profile.json")
+
+        return jsonify({"msg": "questionnaire stored"})
+
+    except Exception as e:
+        import traceback
+        print("❌ ERROR in /api/save-questionnaire:")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/profile", methods=["GET"])
+def get_profile():
+    try:
+        profile = _load_profile()
+        return jsonify(profile)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+#load user profile data
+# def _load_profile():
+#     if not os.path.exists(PROFILE_PATH):
+#         return {"questionnaire": {}, "struggles": []}
+#     with open(PROFILE_PATH, "r") as f:
+#         return json.load(f)
+
+# def _save_profile(data):
+#     os.makedirs(os.path.dirname(PROFILE_PATH), exist_ok=True)
+#     with open(PROFILE_PATH, "w") as f:
+#         json.dump(data, f, indent=2)
 
 #matcha-tts
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
@@ -55,15 +124,20 @@ def home():
     return jsonify(message="Flask backend is running!") 
 #when someone visits the local host they will get back this JSON message
 
-@app.route("/api/echo", methods=["POST"]) #listens for POST requests at /api/echo
-# this is where the frontend will send data to the backend
-# the frontend will send a JSON object with a "message" key
+# @app.route("/api/echo", methods=["POST"]) #listens for POST requests at /api/echo
+# # this is where the frontend will send data to the backend
+# # the frontend will send a JSON object with a "message" key
 
-# API endpoint to echo back the message sent from the frontend
-# this is a simple example of how the backend can process data
-# and return a response
+# # API endpoint to echo back the message sent from the frontend
+# # this is a simple example of how the backend can process data
+# # and return a response
 
 
+
+
+@app.route("/api/hello")
+def hello():
+    return "👋 Hello!"
 
 #adding new app route for the PyMuPDF
 @app.route('/api/upload-pdf', methods=['POST'])
@@ -165,6 +239,15 @@ async def send_tts_message(text):
         print(f"Received: {response}")
         return response
 
+
+# @app.route("/api/profile", methods=["GET"])
+# def get_profile():
+#     try:
+#         profile = _load_profile()
+#         return jsonify(profile)
+#     except Exception as e:
+#         print("❌ ERROR in /api/profile:", e)
+#         return jsonify({"error": str(e)}), 500
 
 #new matcha-tts clarity tags
 @app.route('/api/tts', methods=['POST'])
@@ -268,25 +351,32 @@ Answer:
     return jsonify({"answer": answer})
 
 #api for questionnaire
-@app.route("/api/save-questionnaire", methods=["POST"])
-def save_questionnaire():
-    try:
-        answers = request.get_json()
-        print("[📨 Received questionnaire]", answers)
+# @app.route("/api/save-questionnaire", methods=["POST"])
+# def save_questionnaire():
+#     try:
+#         answers = request.get_json()
+#         print("[📨 Received questionnaire]", answers)
 
-        profile = _load_profile()
-        profile["questionnaire"] = answers
-        _save_profile(profile)
+#         profile = _load_profile()
+#         profile["questionnaire"] = answers
+#         _save_profile(profile)
 
-        return jsonify({"msg": "questionnaire stored"})
+#         # ✅ Also copy to frontend/public for React to read
+#         # Get absolute path to frontend/public
+#         frontend_public_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public'))
 
-    except Exception as e:
-        import traceback
-        print("❌ ERROR in /api/save-questionnaire:")
-        traceback.print_exc()  # This prints a full error log
-        return jsonify({"error": str(e)}), 500
+#         # Ensure destination directory exists
+#         os.makedirs(frontend_public_path, exist_ok=True)
 
+#         # Copy profile.json there
+#         shutil.copy("user_data/profile.json", os.path.join(frontend_public_path, "profile.json"))
+#         return jsonify({"msg": "questionnaire stored"})
 
+#     except Exception as e:
+#         import traceback
+#         print("❌ ERROR in /api/save-questionnaire:")
+#         traceback.print_exc()  # This prints a full error log
+#         return jsonify({"error": str(e)}), 500
 
 #route for logging to flask focus
 @app.route('/api/log-focus', methods=['POST'])
@@ -295,9 +385,7 @@ def log_focus():
     print(f"[FOCUS] {data['status']} at {data['timestamp']}")
     return jsonify({"status": "ok"})
 
-def echo():
-    data = request.get_json()
-    return jsonify(response=f"You said: {data.get('message', '')}")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

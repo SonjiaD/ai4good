@@ -52,6 +52,8 @@ const Questionnaire: React.FC = () => {
           // await axios.post("/api/save-questionnaire", finalAnswers);
           await axios.post(`${API_BASE}/api/save-questionnaire`, finalAnswers);
 
+          localStorage.setItem("readingbuddy_profile", JSON.stringify(finalAnswers)); // ✅ Save to localStorage
+
           console.log("✅ Questionnaire data sent to backend.");
         } catch (err) {
           console.error("❌ Failed to send questionnaire to backend:", err);
@@ -83,6 +85,9 @@ const Questionnaire: React.FC = () => {
       try {
         // await axios.post("/api/save-questionnaire", finalAnswers);
         await axios.post(`${API_BASE}/api/save-questionnaire`, finalAnswers);
+
+        localStorage.setItem("readingbuddy_profile", JSON.stringify(finalAnswers)); // ✅ Save to localStorage
+
 
         console.log("✅ Skipped questionnaire sent to backend.");
       } catch (err) {

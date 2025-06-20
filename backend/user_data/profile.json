@@ -2,16 +2,16 @@
   "questionnaire": {
     "role": "Child",
     "reading_style": [
-      "I like listening"
+      "I like pictures"
     ],
     "reading_time": [
-      "Sometimes!"
+      "No"
     ],
     "reading_preferences": [
-      "Magic/Adventure"
+      "Funny"
     ],
     "reading_difficulties": [
-      "Pictures and audio help me understand better!"
+      "I get distracted/it\u2019s hard to focus"
     ]
   },
   "struggles": []
