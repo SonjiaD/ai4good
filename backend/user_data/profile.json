@@ -1,17 +1,17 @@
 {
   "questionnaire": {
-    "role": "Child",
+    "role": "Parent",
     "reading_style": [
-      "I like pictures"
+      "Independently"
     ],
     "reading_time": [
-      "No"
+      "20+ minutes"
     ],
-    "reading_preferences": [
-      "Funny"
+    "reading_supports": [
+      "Unsure"
     ],
-    "reading_difficulties": [
-      "I get distracted/it\u2019s hard to focus"
+    "reading_challenges": [
+      "Dyslexia or other reading challenges"
     ]
   },
   "struggles": []
