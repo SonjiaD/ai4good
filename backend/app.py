@@ -24,33 +24,14 @@ import tempfile
 
 #questionnaire copying
 import shutil
+import os
+import json
+from flask import Flask, request, jsonify
 
 app = Flask(__name__) #creates new flask web application 
 
-PROFILE_PATH = os.path.join("user_data", "profile.json")
-
 CORS(app)  # Allow requests from frontend
 #makes sure frontend can talk to backend
-
-
-#will delete after
-import os
-import json
-import shutil
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
-PROFILE_PATH = "user_data/profile.json"
-
-def _load_profile():
-    if not os.path.exists(PROFILE_PATH):
-        return {"questionnaire": {}, "struggles": []}
-    with open(PROFILE_PATH, "r") as f:
-        return json.load(f)
-
-import os
-import json
 
 PROFILE_PATH = os.path.join(os.path.dirname(__file__), "profile.json")
 
@@ -98,17 +79,36 @@ def get_profile():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-#load user profile data
-# def _load_profile():
-#     if not os.path.exists(PROFILE_PATH):
-#         return {"questionnaire": {}, "struggles": []}
-#     with open(PROFILE_PATH, "r") as f:
-#         return json.load(f)
 
-# def _save_profile(data):
-#     os.makedirs(os.path.dirname(PROFILE_PATH), exist_ok=True)
-#     with open(PROFILE_PATH, "w") as f:
-#         json.dump(data, f, indent=2)
+#helper to turn saved questionnaire into short context string
+# ----------  PROFILE → CONTEXT  ----------
+def _profile_context() -> str:
+    """Return a compact, human-readable summary of the questionnaire."""
+    profile = _load_profile()
+    q = profile.get("questionnaire", {})
+    if not q:
+        return ""                       # nothing yet
+
+    key_map = {
+        "role":           "Role",
+        "reading_style":  "Prefers",
+        "reading_time":   "Typical session",
+        "reading_supports": "Helpful supports",
+        "reading_challenges": "Challenges"
+        # add more keys as you create them
+    }
+
+    lines = []
+    for k, label in key_map.items():
+        v = q.get(k)
+        if v:
+            if isinstance(v, list):
+                lines.append(f"{label}: {', '.join(v)}")
+            else:
+                lines.append(f"{label}: {v}")
+    return "\n".join(lines)
+# -----------------------------------------
+
 
 #matcha-tts
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
@@ -122,17 +122,6 @@ model = whisper.load_model("base")  # Load the Whisper model
 @app.route("/") #defines home route like homepage of server
 def home():
     return jsonify(message="Flask backend is running!") 
-#when someone visits the local host they will get back this JSON message
-
-# @app.route("/api/echo", methods=["POST"]) #listens for POST requests at /api/echo
-# # this is where the frontend will send data to the backend
-# # the frontend will send a JSON object with a "message" key
-
-# # API endpoint to echo back the message sent from the frontend
-# # this is a simple example of how the backend can process data
-# # and return a response
-
-
 
 
 @app.route("/api/hello")
@@ -240,15 +229,6 @@ async def send_tts_message(text):
         return response
 
 
-# @app.route("/api/profile", methods=["GET"])
-# def get_profile():
-#     try:
-#         profile = _load_profile()
-#         return jsonify(profile)
-#     except Exception as e:
-#         print("❌ ERROR in /api/profile:", e)
-#         return jsonify({"error": str(e)}), 500
-
 #new matcha-tts clarity tags
 @app.route('/api/tts', methods=['POST'])
 def tts():
@@ -263,29 +243,6 @@ def tts():
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-#matcha-tts past version WITHOUT clarity tags
-# @app.route('/api/tts', methods=['POST'])
-# def tts():
-#     data = request.get_json()
-#     text = data.get("text", "")[:1000] 
-#     #length limit to prevent abuse of the audio player
-
-#     try:
-#         loop = asyncio.new_event_loop()
-#         asyncio.set_event_loop(loop)
-#         loop.run_until_complete(send_tts_message(text))
-
-#         # 🕐 Now the file is fully ready
-#         while not os.path.exists("utterance_001.wav"):
-#             time.sleep(0.1)  # tiny wait loop to ensure file exists
-
-#         # ✅ Return file URL
-#         timestamp = int(time.time())
-#         return jsonify({"audio_url": f"/api/tts/file?ts={timestamp}"})
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
 
 #clarify text for matcha-tts
 @app.route('/api/clarify-text', methods=['POST'])
@@ -334,8 +291,18 @@ def qa_chat():
     story = data.get("text", "")[:1500]
     user_question = data.get("question", "")
 
+    #pull user context 
+    learner_ctx = _profile_context()
+
     chat_prompt = f"""
-You are an assistant that answers reading comprehension questions for children aged 7-10. Use only the information from the provided story.
+You are an assistant that answers reading-comprehension questions for children aged 7-10.
+Use only the information from the provided story, **but** keep the following profile in mind
+to tailor explanations:
+
+=== Learner profile ===
+{learner_ctx or "No profile data yet."} 
+=======================
+
 
 Story:
 \"\"\"{story}\"\"\"
@@ -344,39 +311,11 @@ Question: {user_question}
 
 Answer:
 """
-
     llm = ChatOllama(model="llama3", temperature=0.3)
     answer = llm.predict(chat_prompt)
+    
 
     return jsonify({"answer": answer})
-
-#api for questionnaire
-# @app.route("/api/save-questionnaire", methods=["POST"])
-# def save_questionnaire():
-#     try:
-#         answers = request.get_json()
-#         print("[📨 Received questionnaire]", answers)
-
-#         profile = _load_profile()
-#         profile["questionnaire"] = answers
-#         _save_profile(profile)
-
-#         # ✅ Also copy to frontend/public for React to read
-#         # Get absolute path to frontend/public
-#         frontend_public_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'public'))
-
-#         # Ensure destination directory exists
-#         os.makedirs(frontend_public_path, exist_ok=True)
-
-#         # Copy profile.json there
-#         shutil.copy("user_data/profile.json", os.path.join(frontend_public_path, "profile.json"))
-#         return jsonify({"msg": "questionnaire stored"})
-
-#     except Exception as e:
-#         import traceback
-#         print("❌ ERROR in /api/save-questionnaire:")
-#         traceback.print_exc()  # This prints a full error log
-#         return jsonify({"error": str(e)}), 500
 
 #route for logging to flask focus
 @app.route('/api/log-focus', methods=['POST'])
@@ -384,8 +323,6 @@ def log_focus():
     data = request.get_json()
     print(f"[FOCUS] {data['status']} at {data['timestamp']}")
     return jsonify({"status": "ok"})
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
