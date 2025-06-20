@@ -34,66 +34,6 @@ os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespe
 os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
 model = whisper.load_model("base")  # Load the Whisper model
 
-#matcha-tts clarity prompt 
-def insert_clarity_tags(text):
-    clarity_prompt = (
-        "You are an expert in English phonetics helping a TTS system improve intelligibility.\n"
-        "Please identify words in the text that are **tense-lax vowel minimal pairs**, like:\n"
-        "- pill/peel\n"
-        "- pull/pool\n"
-        "- bit/beet\n"
-        "and wrap these words in exclamation marks (!!) to activate clarity mode in a TTS system.\n"
-        "Example:\n"
-        "Original: I heard them say pill not peel over by the pool.\n"
-        "Tagged: I heard them say !pill! not !peel! over by the !pool!.\n\n"
-        f"Here is the input:\n{text}\n\nReturn only the modified text."
-    )
-
-    response = ollama_chat.invoke([
-        {"role": "user", "content": clarity_prompt}
-    ])
-    return response.content.strip()
-
-#extremely detailed to be explicit 
-# def insert_clarity_tags(raw: str) -> str:
-#     """
-#     Wraps clarity-sensitive minimal-pair words with ! !.
-#     Uses Ollama (Llama-3) to decide which words need help.
-#     """
-
-#     prompt = f"""
-# You are a speech-clarity enhancer.  
-# Given SENTENCE, return **the same sentence** but wrap any
-# vowel-confusable minimal-pair words in exclamation marks
-# (**!word!**).  
-# Only tag when it will help a listener tell pairs apart.
-# NEVER delete or change words; keep punctuation.
-
-# ### English minimal-pair patterns to watch
-# | Tense vs Lax | Example pair |
-# |--------------|--------------|
-# | /i/ vs /ɪ/   | peel / pill  |
-# | /u/ vs /ʊ/   | pool / pull  |
-# | /e/ vs /ɛ/   | bait / bet   |
-# | /o/ vs /ɔ/   | coat / cot   |
-
-# ### Tagging examples
-# Input ➜ Output
-# 1. “Pass me the peel not the pill.” ➜  
-#    “Pass me the !peel! not the !pill!.”
-# 2. “He jumped in the pool.” ➜  
-#    “He jumped in the !pool!.”   (because ‘pool’ could be confused with ‘pull’)
-# 3. “The sun is hot.” ➜  
-#    “The sun is hot.”            (no tagging needed)
-
-# SENTENCE: {raw}
-# ONLY return the transformed sentence – no extra text.
-# """
-
-#     llm = ChatOllama(model="llama3", temperature=0.2)
-#     return llm.predict(prompt).strip()
-
-
 
 @app.route("/") #defines home route like homepage of server
 def home():
@@ -250,7 +190,7 @@ def tts():
 #         return jsonify({"error": str(e)}), 500
 
 
-# ── Clarify-text endpoint ──────────────────────────────────────────────────
+#clarify text for matcha-tts
 @app.route('/api/clarify-text', methods=['POST'])
 def clarify_text():
     data = request.get_json()
@@ -271,7 +211,8 @@ def clarify_text():
     llm = ChatOllama(model="llama3", temperature=0.3)
     clarified_text = llm.predict(clarity_prompt).strip()
 
-    # 🧼 Clean up unexpected bold or double !! if present
+    # Clean up unexpected bold or double !! if present
+    #sometimes the model might return text with **bold** or !!double exclamations!!
     clarified_text = clarified_text.replace("**", "").replace("!!", "!")
 
     print("[CLARIFIED TEXT]", clarified_text)
