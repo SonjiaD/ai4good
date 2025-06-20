@@ -35,7 +35,7 @@ const Questionnaire: React.FC = () => {
     );
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const questionId = questions[step].id;
     setAnswers((prev) => ({ ...prev, [questionId]: selectedOptions }));
     setSelectedOptions([]);
@@ -43,26 +43,50 @@ const Questionnaire: React.FC = () => {
     if (step < questions.length - 1) {
         setStep(step + 1);
     } else {
-        //Logging to console for now, can be replaced later by sending to backend or saving profile
-        console.log("✅ Final Answers:", { role, ...answers, [questionId]: selectedOptions });
-        //Add logic to save profile or redirect ?
-        //For now just show thank you message
+
+        const finalAnswers = { role, ...answers, [questionId]: selectedOptions };
+
+        try {
+          await axios.post("/api/save-questionnaire", finalAnswers);
+          console.log("✅ Questionnaire data sent to backend.");
+        } catch (err) {
+          console.error("❌ Failed to send questionnaire to backend:", err);
+        }
+
         setShowThankYou(true);
+
+        // OLD VERSION Final step, log the answers
+
+        // //Logging to console for now, can be replaced later by sending to backend or saving profile
+        // console.log("✅ Final Answers:", { role, ...answers, [questionId]: selectedOptions });
+        // //Add logic to save profile or redirect ?
+        // //For now just show thank you message
+        // setShowThankYou(true);
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     const questionId = questions[step].id;
-    setAnswers((prev) => ({ ...prev, [questionId]: 'skipped' }));
+    const skippedAnswers = { ...answers, [questionId]: 'skipped' };
+
+    setAnswers(skippedAnswers);
     setSelectedOptions([]);
+
     if (step < questions.length - 1) {
       setStep(step + 1);
-    }
-    else {
-        console.log("✅ Final Answers:", { role, ...answers, [questionId]: 'skipped' });
-        setShowThankYou(true);
+    } else {
+      const finalAnswers = { role, ...skippedAnswers };
+      try {
+        await axios.post("/api/save-questionnaire", finalAnswers);
+        console.log("✅ Skipped questionnaire sent to backend.");
+      } catch (err) {
+        console.error("❌ Failed to send skipped questionnaire:", err);
+      }
+
+      setShowThankYou(true);
     }
   };
+
 
   const handleBack = () => {
     if (step > 0) {
