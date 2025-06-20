@@ -7,6 +7,8 @@ import buddCheer from '../assets/budd-cheer.png';
 import './Questionnaire.css';
 import { parentQuestions } from '../data/parentQuestions';
 import { childQuestions } from '../data/childQuestions';
+// for post request
+import axios from 'axios';
 
 type Role = 'Parent' | 'Child' | null;
 type AnswerMap = Record<string, string[] | string>;
