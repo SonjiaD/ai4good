@@ -9,6 +9,8 @@ import { parentQuestions } from '../data/parentQuestions';
 import { childQuestions } from '../data/childQuestions';
 // for post request
 import axios from 'axios';
+const API_BASE = "http://127.0.0.1:5000";
+
 
 type Role = 'Parent' | 'Child' | null;
 type AnswerMap = Record<string, string[] | string>;
@@ -47,7 +49,9 @@ const Questionnaire: React.FC = () => {
         const finalAnswers = { role, ...answers, [questionId]: selectedOptions };
 
         try {
-          await axios.post("/api/save-questionnaire", finalAnswers);
+          // await axios.post("/api/save-questionnaire", finalAnswers);
+          await axios.post(`${API_BASE}/api/save-questionnaire`, finalAnswers);
+
           console.log("✅ Questionnaire data sent to backend.");
         } catch (err) {
           console.error("❌ Failed to send questionnaire to backend:", err);
@@ -77,7 +81,9 @@ const Questionnaire: React.FC = () => {
     } else {
       const finalAnswers = { role, ...skippedAnswers };
       try {
-        await axios.post("/api/save-questionnaire", finalAnswers);
+        // await axios.post("/api/save-questionnaire", finalAnswers);
+        await axios.post(`${API_BASE}/api/save-questionnaire`, finalAnswers);
+
         console.log("✅ Skipped questionnaire sent to backend.");
       } catch (err) {
         console.error("❌ Failed to send skipped questionnaire:", err);

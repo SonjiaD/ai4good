@@ -23,8 +23,23 @@ import whisper
 import tempfile
 
 app = Flask(__name__) #creates new flask web application 
+
+PROFILE_PATH = "user_data/profile.json" #path to the profile file
+
 CORS(app)  # Allow requests from frontend
 #makes sure frontend can talk to backend
+
+#load user profile data
+def _load_profile():
+    if not os.path.exists(PROFILE_PATH):
+        return {"questionnaire": {}, "struggles": []}
+    with open(PROFILE_PATH, "r") as f:
+        return json.load(f)
+
+def _save_profile(data):
+    os.makedirs(os.path.dirname(PROFILE_PATH), exist_ok=True)
+    with open(PROFILE_PATH, "w") as f:
+        json.dump(data, f, indent=2)
 
 #matcha-tts
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
@@ -166,7 +181,6 @@ def tts():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 #matcha-tts past version WITHOUT clarity tags
 # @app.route('/api/tts', methods=['POST'])
 # def tts():
@@ -206,7 +220,6 @@ def clarify_text():
         f"Input:\n{input_text}\n\n"
         "Return only the revised text with !word! tags. Do not explain or comment."
     )
-
 
     llm = ChatOllama(model="llama3", temperature=0.3)
     clarified_text = llm.predict(clarity_prompt).strip()
@@ -254,6 +267,24 @@ Answer:
 
     return jsonify({"answer": answer})
 
+#api for questionnaire
+@app.route("/api/save-questionnaire", methods=["POST"])
+def save_questionnaire():
+    try:
+        answers = request.get_json()
+        print("[📨 Received questionnaire]", answers)
+
+        profile = _load_profile()
+        profile["questionnaire"] = answers
+        _save_profile(profile)
+
+        return jsonify({"msg": "questionnaire stored"})
+
+    except Exception as e:
+        import traceback
+        print("❌ ERROR in /api/save-questionnaire:")
+        traceback.print_exc()  # This prints a full error log
+        return jsonify({"error": str(e)}), 500
 
 
 

@@ -1,0 +1,18 @@
+{
+  "questionnaire": {
+    "role": "Child",
+    "reading_style": [
+      "I like listening"
+    ],
+    "reading_time": [
+      "Sometimes!"
+    ],
+    "reading_preferences": [
+      "Magic/Adventure"
+    ],
+    "reading_difficulties": [
+      "Pictures and audio help me understand better!"
+    ]
+  },
+  "struggles": []
+}
