@@ -5,31 +5,56 @@ import './Highlight.css';  // New: separate CSS file
 const ExtractedText: React.FC = () => {
   const { text } = useReadingContext();
   const [loading, setLoading] = useState(false);
+  
+  // for text highlighting
   const [highlights, setHighlights] = useState<{ start: number; end: number; text: string }[]>([]);
+
+  // for vocab searching
+  const [vocabMode, setVocabMode] = useState(false);
+  const [selectedWord, setSelectedWord] = useState("");
+  const [definition, setDefinition] = useState("");
 
   const handleTextClick = () => {
     const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) return;
+    const selectedText = selection?.toString().trim();
 
-    const range = selection.getRangeAt(0);
-    const selectedText = selection.toString();
+    if (!selectedText) return;
 
-    if (!selectedText.trim()) return;
+    if (vocabMode) {
+      if (selectedText.split(" ").length > 1) {
+        alert("Please select only one word.");
+        return;
+      }
+      setSelectedWord(selectedText);
+    } else {
+      // highlighting logic from before (unchanged)
+      const range = selection!.getRangeAt(0);
+      const preSelectionRange = range.cloneRange();
+      preSelectionRange.selectNodeContents(document.querySelector(".storybook-text")!);
+      preSelectionRange.setEnd(range.startContainer, range.startOffset);
+      const start = preSelectionRange.toString().length;
+      const end = start + selectedText.length;
 
-    // Get position of selected text inside the full text string
-    const preSelectionRange = range.cloneRange();
-    preSelectionRange.selectNodeContents(document.querySelector(".storybook-text")!);
-    preSelectionRange.setEnd(range.startContainer, range.startOffset);
-    const start = preSelectionRange.toString().length;
-    const end = start + selectedText.length;
-
-    // Add to highlights if not already in
-    if (!highlights.some(h => h.start === start && h.end === end)) {
-      setHighlights(prev => [...prev, { start, end, text: selectedText }]);
+      if (!highlights.some(h => h.start === start && h.end === end)) {
+        setHighlights(prev => [...prev, { start, end, text: selectedText }]);
+      }
     }
 
-    selection.removeAllRanges();
+    selection?.removeAllRanges();
   };
+
+  const fetchDefinition = async () => {
+    if (!selectedWord) return;
+
+    const response = await fetch("http://localhost:5000/api/define", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ word: selectedWord }),
+    });
+    const data = await response.json();
+    setDefinition(data.definition || "No definition found.");
+  };
+
 
 
   const getHighlightedText = (text: string) => {
@@ -96,16 +121,35 @@ const ExtractedText: React.FC = () => {
         {getHighlightedText(text.slice(0, 1000))}
       </div>
 
-      {/* Buttons: Read Aloud + Clear Highlights */}
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+
+      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
         <button onClick={handleReadAloud} className="secondary">
           {loading ? "Loading..." : "Read Aloud"}
         </button>
-
-        <button onClick={() => setHighlights([])} className="secondary">
-          Clear Highlights
+        <button onClick={() => setHighlights([])} className="secondary">Clear Highlights</button>
+        <button onClick={() => { setVocabMode(true); setSelectedWord(""); setDefinition(""); }} className="secondary">
+          📘 Vocab
+        </button>
+        <button
+          onClick={fetchDefinition}
+          className="secondary"
+          disabled={!vocabMode || !selectedWord}
+          style={{ opacity: !selectedWord ? 0.5 : 1 }}
+        >
+          🔍 Search Definition
         </button>
       </div>
+      {selectedWord && definition && (
+        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.5rem" }}>
+          <strong>Definition of <em>{selectedWord}</em>:</strong>
+          <p>{definition}</p>
+        </div>
+      )}
+
+
+
+      {/* Buttons: Read Aloud + Clear Highlights */}
+      
     </div>
   ) : null;
 

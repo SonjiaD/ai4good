@@ -321,6 +321,26 @@ Answer:
 
     return jsonify({"answer": answer})
 
+#api call for definition feature on extracted text page
+@app.route("/api/define", methods=["POST"])
+def define_word():
+    data = request.get_json()
+    word = data.get("word", "").strip()
+
+    if not word:
+        return jsonify({"error": "No word provided"}), 400
+
+    prompt = f"""
+You are a helpful English tutor for children aged 7–10. Please provide a simple, friendly definition of the following word:
+Word: {word}
+Explain in plain language suitable for a young learner. Answer in a as short and clear way as possible.
+"""
+    llm = ChatOllama(model="llama3", temperature=0.3)
+    result = llm.predict(prompt)
+
+    return jsonify({"definition": result.strip()})
+
+
 #route for logging to flask focus
 @app.route('/api/log-focus', methods=['POST'])
 def log_focus():
