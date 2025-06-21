@@ -325,15 +325,30 @@ Answer:
 @app.route("/api/define", methods=["POST"])
 def define_word():
     data = request.get_json()
+    story = data.get("text", "")[:1500]
     word = data.get("word", "").strip()
 
     if not word:
         return jsonify({"error": "No word provided"}), 400
 
     prompt = f"""
-You are a helpful English tutor for children aged 7–10. Please provide a simple, friendly definition of the following word:
-Word: {word}
-Explain in plain language suitable for a young learner. Answer in a as short and clear way as possible.
+You are a friendly English tutor for children aged 7–10.
+
+Below is a story and a word that appears in it. Explain what the word means in the context of the story, using simple language that a child would understand.
+
+Word: "{word}"
+
+Story:
+\"\"\"{story}\"\"\"
+
+Your job:
+- Give a short, clear definition of the word.
+- Use examples or clues from the story if helpful.
+- Do not explain all possible meanings — only what it means in this story.
+- Keep it friendly, simple, and just 1–2 short sentences.
+
+Answer:
+
 """
     llm = ChatOllama(model="llama3", temperature=0.3)
     result = llm.predict(prompt)
