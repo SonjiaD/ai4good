@@ -296,16 +296,20 @@ def qa_chat():
 
     chat_prompt = f"""
 You are an assistant that answers reading-comprehension questions for children aged 7-10.
-Use only the information from the provided story, **but** keep the following profile in mind
+Use only the information from the provided story. Do not summarize the story if the user asks.
+If the user asks to summarize, politely decline and say you can only answer questions about the story.
+Your role is to answer reading comprehension questions based on the following user profile in mind
 to tailor explanations:
 
+
 === Learner profile ===
-{learner_ctx or "No profile data yet."} 
+{learner_ctx or "No profile data yet."}
 =======================
 
 
 Story:
 \"\"\"{story}\"\"\"
+
 
 Question: {user_question}
 
