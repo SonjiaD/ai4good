@@ -28,6 +28,10 @@ import os
 import json
 from flask import Flask, request, jsonify
 
+#paragraph structuring
+import re
+
+
 app = Flask(__name__) #creates new flask web application 
 
 CORS(app)  # Allow requests from frontend
@@ -92,7 +96,7 @@ def _profile_context() -> str:
     key_map = {
         "role":           "Role",
         "reading_style":  "Prefers",
-        "reading_time":   "Typical session",
+        "reading_time":   "Typical session lasts this amount of time",
         "reading_supports": "Helpful supports",
         "reading_challenges": "Challenges"
         # add more keys as you create them
@@ -129,6 +133,31 @@ def hello():
     return "👋 Hello!"
 
 # adding new app route for the PyMuPDF
+# @app.route('/api/upload-pdf', methods=['POST'])
+# def upload_pdf():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'No file uploaded'}), 400
+
+#     file = request.files['file']
+    
+#     if not file.filename.endswith('.pdf'):
+#         return jsonify({'error': 'Invalid file format'}), 400
+
+#     # Save temporarily
+#     filepath = os.path.join('temp', file.filename)
+#     os.makedirs('temp', exist_ok=True)
+#     file.save(filepath)
+
+#     # Extract text
+#     try:
+#         doc = fitz.open(filepath)
+#         text = "\n".join([page.get_text() for page in doc])
+#         doc.close()
+#         os.remove(filepath)
+#         return jsonify({'text': text})
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 @app.route('/api/upload-pdf', methods=['POST'])
 def upload_pdf():
     if 'file' not in request.files:
@@ -144,16 +173,45 @@ def upload_pdf():
     os.makedirs('temp', exist_ok=True)
     file.save(filepath)
 
-    # Extract text
     try:
         doc = fitz.open(filepath)
-        text = "\n".join([page.get_text() for page in doc])
+        raw_text = "\n".join([page.get_text() for page in doc])
         doc.close()
         os.remove(filepath)
-        return jsonify({'text': text})
+
+        # Split lines, extract title
+        lines = [line.strip() for line in raw_text.strip().splitlines() if line.strip()]
+        title = lines[0] if lines else "Untitled"
+        combined = "\n".join(lines[1:]) if len(lines) > 1 else ""
+
+        # Split paragraphs (double newlines or quotes)
+        raw_paragraphs = re.split(r'\n\s*\n|(?=\n["“])', combined)
+
+        # Replace inner line breaks with space to fix weird splits like "With\na smile"
+        paragraphs = [
+            re.sub(r"\s*\n\s*", " ", p).strip()
+            for p in raw_paragraphs if p.strip()
+        ]
+
+        # Replace all internal newlines with spaces before splitting
+        cleaned_text = combined.replace("\n", " ")
+
+        # Naively split paragraphs by sentence breaks for now
+        # You can improve this later using NLP or by detecting longer pauses
+        raw_paragraphs = re.split(r'(?<=[.?!])\s+(?=[A-Z“"])', cleaned_text)
+
+        paragraphs = [p.strip() for p in raw_paragraphs if p.strip()]
+
+        print("[PARAGRAPHS]", paragraphs)
+
+        return jsonify({
+            "text": raw_text,
+            "title": title,
+            "paragraphs": paragraphs
+        })
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 
 

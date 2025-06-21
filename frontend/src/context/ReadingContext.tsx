@@ -23,6 +23,12 @@ interface ReadingContextProps {
   setFocusScore: (score: number) => void;
   alertReason: "face" | "mouse" | null;
   setAlertReason: (reason: "face" | "mouse" | null) => void;
+
+  //interface ReadingContextProps
+  title: string;
+  setTitle: (t: string) => void;
+  paragraphs: string[];
+  setParagraphs: (p: string[]) => void;
 }
 
 const ReadingContext = createContext<ReadingContextProps | undefined>(
@@ -41,6 +47,8 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
   const [focusScore, setFocusScore] = useState(0);
   const [alertReason, setAlertReason] = useState<"face" | "mouse" | null>(null);
 
+  const [title,       setTitle]       = useState<string>("");
+  const [paragraphs,  setParagraphs]  = useState<string[]>([]);
   return (
     <ReadingContext.Provider
       value={{
@@ -48,6 +56,8 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
         setFile,
         text,
         setText,
+        title, setTitle,
+        paragraphs, setParagraphs,
         questions,
         setQuestions,
         answers,

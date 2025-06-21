@@ -47,6 +47,7 @@ const ReadingPageContent: React.FC = () => {
       <div className="split-screen">
         <div className="left-panel">
           <div className="card story-time-card">
+            
             <div className="story-time-top">
               <h2 className="section-title">Story Time</h2>
               <div className="story-time-header">

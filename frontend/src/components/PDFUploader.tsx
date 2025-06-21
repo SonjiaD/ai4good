@@ -3,9 +3,11 @@ import { useReadingContext } from '../context/ReadingContext';
 
 
 const PDFUploader: React.FC = () => {
-  const { setText } = useReadingContext();
+  // const { setText } = useReadingContext();
   const [loading, setLoading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  const { setText, setTitle, setParagraphs } = useReadingContext();
+
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -19,6 +21,8 @@ const PDFUploader: React.FC = () => {
       const response = await fetch('http://localhost:5000/api/upload-pdf', { method: 'POST', body: formData });
       const data = await response.json();
       setText(data.text);
+      setTitle(data.title);        // 🆕
+      setParagraphs(data.paragraphs); // 🆕
       setUploaded(true);
       setTimeout(() => setUploaded(false), 3000); // resetting after 3s
     } catch (err) {
