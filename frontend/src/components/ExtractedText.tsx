@@ -122,23 +122,52 @@ const ExtractedText: React.FC = () => {
       </div>
 
 
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
-        <button onClick={handleReadAloud} className="secondary">
-          {loading ? "Loading..." : "Read Aloud"}
-        </button>
-        <button onClick={() => setHighlights([])} className="secondary">Clear Highlights</button>
-        <button onClick={() => { setVocabMode(true); setSelectedWord(""); setDefinition(""); }} className="secondary">
-          📘 Vocab
-        </button>
-        <button
-          onClick={fetchDefinition}
-          className="secondary"
-          disabled={!vocabMode || !selectedWord}
-          style={{ opacity: !selectedWord ? 0.5 : 1 }}
-        >
-          🔍 Search Definition
-        </button>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "1rem",
+          marginTop: "1rem",
+        }}
+      >
+        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+          <button onClick={handleReadAloud} className="secondary" style={{ width: "100%" }}>
+            {loading ? "Loading..." : "Read Aloud"}
+          </button>
+        </div>
+
+        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+          <button onClick={() => setHighlights([])} className="secondary" style={{ width: "100%" }}>
+            Clear Highlights
+          </button>
+        </div>
+
+        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+          <button
+            onClick={() => {
+              setVocabMode(true);
+              setSelectedWord("");
+              setDefinition("");
+            }}
+            className="secondary"
+            style={{ width: "100%" }}
+          >
+            📘 Vocab
+          </button>
+        </div>
+
+        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+          <button
+            onClick={fetchDefinition}
+            className="secondary"
+            disabled={!vocabMode || !selectedWord}
+            style={{ width: "100%", opacity: !selectedWord ? 0.5 : 1 }}
+          >
+            🔍 Search Definition
+          </button>
+        </div>
       </div>
+
       {selectedWord && definition && (
         <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.5rem" }}>
           <strong>Definition of <em>{selectedWord}</em>:</strong>

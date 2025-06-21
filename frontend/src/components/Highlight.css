@@ -1,4 +1,4 @@
-button.secondary {
+/* button.secondary {
   background-color: #f97316;
   color: white;
   border: none;
@@ -11,7 +11,7 @@ button.secondary {
 
 button.secondary:hover {
   background-color: #ea580c;
-}
+} */
 
 /* Highlight.css */
 mark {
