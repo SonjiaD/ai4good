@@ -110,8 +110,9 @@ const ExtractedText: React.FC = () => {
   };
 
   return text ? (
-    <div className="card">
-      <h2>Extracted Text</h2>
+    // <div className="card">
+    <div>
+      {/* <h2>Extracted Text</h2> */}
 
       {/* Story text box with highlighting */}
       <div
@@ -167,7 +168,6 @@ const ExtractedText: React.FC = () => {
           </button>
         </div>
       </div>
-
       {selectedWord && definition && (
         <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.5rem" }}>
           <strong>Definition of <em>{selectedWord}</em>:</strong>
@@ -176,7 +176,7 @@ const ExtractedText: React.FC = () => {
       )}
 
 
-
+ 
       {/* Buttons: Read Aloud + Clear Highlights */}
       
     </div>

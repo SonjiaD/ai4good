@@ -128,7 +128,7 @@ def home():
 def hello():
     return "👋 Hello!"
 
-#adding new app route for the PyMuPDF
+# adding new app route for the PyMuPDF
 @app.route('/api/upload-pdf', methods=['POST'])
 def upload_pdf():
     if 'file' not in request.files:
@@ -153,6 +153,9 @@ def upload_pdf():
         return jsonify({'text': text})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
 
 #generating quiz questions
 @app.route('/api/generate-quiz', methods=['POST'])
