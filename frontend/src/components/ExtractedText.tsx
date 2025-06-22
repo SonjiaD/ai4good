@@ -260,6 +260,8 @@ const ExtractedText: React.FC = () => {
         </button>
       </div>
 
+      {/* definition display section */}
+
       {selectedWord && definition && (
         <aside
           style={{

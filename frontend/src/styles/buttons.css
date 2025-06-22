@@ -10,6 +10,14 @@
   transition: transform 0.05s ease;
 }
 
+.rb-btn {
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+
 .rb-btn:active {
   transform: translateY(1px);
 }
