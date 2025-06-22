@@ -144,15 +144,15 @@ const ExtractedText: React.FC = () => {
           marginBottom: "1rem",
         }}
       >
-        <h2 className="text-2xl font-bold">Story Time 📖</h2>
+        {/* <h2 className="text-2xl font-bold">Story Time 📖</h2> */}
 
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}
           <VocabToggle enabled={vocabMode} onChange={setVocabMode} />
-          <PDFUploader />
+          {/* <PDFUploader /> */}
         </div>
       </div>
 
-      {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}
 
 
       {/* ---------- Story paragraphs with accurate highlights ---------- */}
