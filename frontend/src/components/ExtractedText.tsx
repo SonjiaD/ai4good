@@ -121,19 +121,7 @@ const ExtractedText: React.FC = () => {
   };
 
   return text ? (
-    // <div className="card">
-    <div>
-      {/* <h2>Extracted Text</h2> */}
-
-      {/* Story text box with highlighting */}
-      {/* <div
-        className="storybook-text p-4 bg-slate-50 rounded-lg min-h-[200px]"
-        onMouseUp={handleTextClick}
-      >
-        {getHighlightedText(text.slice(0, 1000))}
-      </div> */}
-
-        {/* top of return block */}
+    <>
       <div
         style={{
           display: "flex",
@@ -144,32 +132,13 @@ const ExtractedText: React.FC = () => {
           marginBottom: "1rem",
         }}
       >
-        {/* <h2 className="text-2xl font-bold">Story Time 📖</h2> */}
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            marginBottom: "1rem",
-            gap: "1rem",
-          }}
-        >
-          {title && (
-            <h3 className="text-xl font-bold mb-0" style={{ margin: 0 }}>
-              {title}
-            </h3>
-          )}
-
-          <div style={{ marginLeft: "auto" }}>
-            <VocabToggle enabled={vocabMode} onChange={setVocabMode} />
-          </div>
-        </div>
-
+        {title && (
+          <h3 className="text-xl font-bold mb-0" style={{ margin: 0 }}>
+            {title}
+          </h3>
+        )}
+        <VocabToggle enabled={vocabMode} onChange={setVocabMode} />
       </div>
-
-
 
       {/* ---------- Story paragraphs with accurate highlights ---------- */}
       <div
@@ -177,26 +146,21 @@ const ExtractedText: React.FC = () => {
         onMouseUp={handleTextClick}
       >
         {(() => {
-          // removes the title from the text, as it's already rendered separately
           const blocks = [text.replace(title, "").trim()];
-          
-          // running character offset inside the FULL rendered text
           let runningOffset = 0;
 
           return blocks.map((block, i) => {
             const blockStart = runningOffset;
-            const blockEnd   = blockStart + block.length;
+            const blockEnd = blockStart + block.length;
 
-            // highlights that live inside this paragraph
             const localHls = highlights
               .filter(h => h.start >= blockStart && h.end <= blockEnd)
               .map(h => ({
                 ...h,
                 start: h.start - blockStart,
-                end:   h.end   - blockStart
+                end: h.end - blockStart,
               }));
 
-            // advance offset (+1 for the implicit newline the browser puts after <p>)
             runningOffset = blockEnd + 1;
 
             return (
@@ -258,18 +222,13 @@ const ExtractedText: React.FC = () => {
           <p style={{ marginTop: "0.5rem" }}>{definition}</p>
         </aside>
       )}
-
-
-
- 
-      {/* Buttons: Read Aloud + Clear Highlights */}
-      
-    </div>
+    </>
   ) : (
     <div style={{ padding: "2rem" }}>
       <GettingStartedGuide />
     </div>
   );
+
 
 };
 
