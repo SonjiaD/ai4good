@@ -146,11 +146,27 @@ const ExtractedText: React.FC = () => {
       >
         {/* <h2 className="text-2xl font-bold">Story Time 📖</h2> */}
 
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}
-          <VocabToggle enabled={vocabMode} onChange={setVocabMode} />
-          {/* <PDFUploader /> */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            marginBottom: "1rem",
+            gap: "1rem",
+          }}
+        >
+          {title && (
+            <h3 className="text-xl font-bold mb-0" style={{ margin: 0 }}>
+              {title}
+            </h3>
+          )}
+
+          <div style={{ marginLeft: "auto" }}>
+            <VocabToggle enabled={vocabMode} onChange={setVocabMode} />
+          </div>
         </div>
+
       </div>
 
 
