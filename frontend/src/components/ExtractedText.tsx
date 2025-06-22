@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useReadingContext } from '../context/ReadingContext';
 import './Highlight.css';  // New: separate CSS file
 import GettingStartedGuide from "./GettingStartedGuide";
+import "../styles/buttons.css";
+import VocabToggle from "./VocabToggle";
+import PDFUploader from "./PDFUploader";
 
 const ExtractedText: React.FC = () => {
   const { text, title, paragraphs } = useReadingContext();
@@ -130,9 +133,27 @@ const ExtractedText: React.FC = () => {
         {getHighlightedText(text.slice(0, 1000))}
       </div> */}
 
-      {title && (
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-      )}
+        {/* top of return block */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem",
+          marginBottom: "1rem",
+        }}
+      >
+        <h2 className="text-2xl font-bold">Story Time 📖</h2>
+
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <VocabToggle enabled={vocabMode} onChange={setVocabMode} />
+          <PDFUploader />
+        </div>
+      </div>
+
+      {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}
+
 
       {/* ---------- Story paragraphs with accurate highlights ---------- */}
       <div
@@ -171,57 +192,57 @@ const ExtractedText: React.FC = () => {
         })()}
       </div>
 
+      {/* ---------- action bar ---------- */}
       <div
         style={{
-          display: "flex",
-          flexWrap: "wrap",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
           gap: "1rem",
-          marginTop: "1rem",
+          marginTop: "1.25rem",
         }}
       >
-        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-          <button onClick={handleReadAloud} className="secondary" style={{ width: "100%" }}>
-            {loading ? "Loading..." : "Read Aloud"}
-          </button>
-        </div>
+        <button
+          className="rb-btn rb-btn--accent"
+          disabled={!vocabMode || !selectedWord}
+          onClick={fetchDefinition}
+        >
+          🔍 Search Definition
+        </button>
 
-        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-          <button onClick={() => setHighlights([])} className="secondary" style={{ width: "100%" }}>
-            Clear Highlights
-          </button>
-        </div>
+        <button
+          className="rb-btn rb-btn--primary"
+          onClick={handleReadAloud}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "▶ Read Aloud"}
+        </button>
 
-        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-          <button
-            onClick={() => {
-              setVocabMode(true);
-              setSelectedWord("");
-              setDefinition("");
-            }}
-            className="secondary"
-            style={{ width: "100%" }}
-          >
-            📘 Vocab
-          </button>
-        </div>
-
-        <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-          <button
-            onClick={fetchDefinition}
-            className="secondary"
-            disabled={!vocabMode || !selectedWord}
-            style={{ width: "100%", opacity: !selectedWord ? 0.5 : 1 }}
-          >
-            🔍 Search Definition
-          </button>
-        </div>
+        <button
+          className="rb-btn rb-btn--secondary"
+          style={{ gridColumn: "span 2" }}
+          onClick={() => setHighlights([])}
+        >
+          ✖︎ Clear Highlights
+        </button>
       </div>
+
       {selectedWord && definition && (
-        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.5rem" }}>
-          <strong>Definition of <em>{selectedWord}</em>:</strong>
-          <p>{definition}</p>
-        </div>
+        <aside
+          style={{
+            marginTop: "1.25rem",
+            padding: "1rem",
+            background: "#f1f8ff",
+            borderLeft: "4px solid #2196f3",
+            borderRadius: "0.75rem",
+          }}
+        >
+          <strong>
+            Definition of <em>{selectedWord}</em>:
+          </strong>
+          <p style={{ marginTop: "0.5rem" }}>{definition}</p>
+        </aside>
       )}
+
 
 
  

@@ -1,0 +1,21 @@
+.rb-btn {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.05s ease;
+}
+
+.rb-btn:active {
+  transform: translateY(1px);
+}
+
+.rb-btn--primary  { background: #36c06c; color: #fff; }
+.rb-btn--accent   { background: #2196f3; color: #fff; }
+.rb-btn--secondary{ background: #edf3f7; color: #222; }
+
+.rb-btn:disabled  { opacity: 0.45; cursor: not-allowed; }

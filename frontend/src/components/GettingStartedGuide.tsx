@@ -26,12 +26,12 @@ export default function GettingStartedGuide() {
       </Card>
 
       <Card step={2} title="Turn on Vocab Mode">
-        • Press <strong>Vocab</strong> then click <strong>🔍 Search Definition</strong> to get a kid-friendly
+        Press <strong>Vocab</strong> then click <strong>🔍 Search Definition</strong> to get a kid-friendly
         meaning. <br />
       </Card>
 
       <Card step={3} title="Listen to the Story">
-        • Press <strong>▶ Read Aloud</strong> to hear the story.
+        Press <strong>▶ Read Aloud</strong> to hear the story.
       </Card>
     </div>
   );
