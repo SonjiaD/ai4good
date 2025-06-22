@@ -18,6 +18,9 @@ const ExtractedText: React.FC = () => {
   const [selectedWord, setSelectedWord] = useState("");
   const [definition, setDefinition] = useState("");
 
+  //for reading aloud definition
+  const [definitionLoading, setDefinitionLoading] = useState(false);
+
   const handleTextClick = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -152,6 +155,25 @@ const ExtractedText: React.FC = () => {
     }
   };
 
+  //reading aloud definition function
+  const handleDefinitionReadAloud = async () => {
+    if (!definition) return;
+    setDefinitionLoading(true);
+    try {
+      await fetch("http://localhost:5000/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: definition }),
+    });
+      const audio = new Audio("http://localhost:5000/api/tts/file");
+      audio.play();
+    } catch (err) {
+      console.error("Error reading definition aloud:", err);
+    } finally {
+      setDefinitionLoading(false);
+    }
+  }
+
   return text ? (
     <>
       <div
@@ -248,12 +270,44 @@ const ExtractedText: React.FC = () => {
             borderRadius: "0.75rem",
           }}
         >
-          <strong>
-            Definition of <em>{selectedWord}</em>:
-          </strong>
-          <p style={{ marginTop: "0.5rem" }}>{definition}</p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "1rem",
+              flexWrap: "wrap",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <strong style={{ fontSize: "1.1rem" }}>
+              Definition of <em>{selectedWord}</em>:
+            </strong>
+
+            <button
+              onClick={handleDefinitionReadAloud}
+              disabled={definitionLoading}
+              style={{
+                backgroundColor: "#22c55e",
+                color: "white",
+                border: "none",
+                borderRadius: "0.5rem",
+                padding: "0.4rem 0.75rem",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {definitionLoading ? "🔊..." : "▶ Read Aloud"}
+            </button>
+          </div>
+
+          <p style={{ marginTop: "0.5rem", lineHeight: "1.6" }}>{definition}</p>
         </aside>
       )}
+
+
+
     </>
   ) : (
     <div style={{ padding: "2rem" }}>
