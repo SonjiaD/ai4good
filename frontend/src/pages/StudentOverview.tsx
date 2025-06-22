@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
 import './StudentOverview.css';
 import bearPfp from '../assets/bear-pfp.png'; 
 import logo from '../assets/logo.png';
 import chartPlaceholder from '../assets/chart-placeholder.png'; // Placeholder for chart image
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const StudentOverview: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div className="overview-container">
       <header className="navbar">
@@ -16,6 +18,7 @@ const StudentOverview: React.FC = () => {
           <a href="#">Assignment</a>
           <a href="#">Troubleshoot</a>
           <a href="#">Settings</a>
+          <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
         </nav>
       </header>
 
@@ -58,7 +61,6 @@ const StudentOverview: React.FC = () => {
         </div>
 
         <div className="chart-box">
-          {/* Static image or chart component can go here */}
           <img src={chartPlaceholder} alt="Reading Trend" className="trend-chart" />
         </div>
       </div>

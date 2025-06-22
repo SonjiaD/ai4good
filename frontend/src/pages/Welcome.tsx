@@ -1,7 +1,7 @@
 import React from 'react';
 import './Welcome.css';
 import logo from '../assets/logo.png';
-import readingBuddies from '../assets/reading-buddies.png'; // ← your combined image
+import readingBuddies from '../assets/reading-buddies.png';
 import { useNavigate } from 'react-router-dom';
 
 const Welcome: React.FC = () => {
@@ -18,7 +18,7 @@ const Welcome: React.FC = () => {
       <main className="welcome-main">
         <h1>Welcome, Lily!</h1>
         <h2>Upload a PDF to start reading!</h2>
-        <button className="file-btn" onClick={() => navigate('/pdf')}>
+        <button className="file-btn" onClick={() => navigate('/reading')}>
               Let's Go!
         </button>
         <img src={readingBuddies} alt="Reading Buddies" className="reading-buddies-img" />

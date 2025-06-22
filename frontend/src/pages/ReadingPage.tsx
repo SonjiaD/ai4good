@@ -8,14 +8,26 @@ import AnalyticsPanel from '../components/AnalyticsPanel';
 import { ReadingProvider } from '../context/ReadingContext';
 import '../App.css';  // keep your existing CSS
 import './ReadingPage.css';
+import logo from '../assets/logo.png';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const ReadingPage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <ReadingProvider>
       <div className="app">
-        <header className="header">
-          <img src="/logo.png" alt="ReadingBudd.AI logo" className="app-logo"></img>
-          {/* <h1>ReadingBudd.Ai</h1> */}
+        <header className="navbar">
+          <div className="logo">
+            <img src={logo} alt="Logo" className="logo-img" />
+          </div>
+          <nav>
+            <Link to={'/home'} className="nav-link">{'Dashboard'}</Link>
+            <Link to={'/outfit-shop'} className="nav-link">{'Outfit Shop'}</Link>
+            <Link to={'/avatar'} className="nav-link">{'Customize Avatar'}</Link>
+            <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
+          </nav>
         </header>
 
         <div className="split-screen">

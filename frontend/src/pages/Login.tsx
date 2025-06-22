@@ -26,7 +26,7 @@ const Login: React.FC = () => {
             <form className="login-form">
               <input type="email" placeholder="Email" className="input blue" />
               <input type="password" placeholder="Password…" className="input purple" />
-              <button type="submit" className="submit-btn" onClick={() => navigate('/Questionnaire')}>Log In</button>
+              <button type="submit" className="submit-btn" onClick={() => navigate('/Home')}>Log In</button>
             </form>
 
             <p className="signup-text">

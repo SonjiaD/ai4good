@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import './MyClass.css';
 import bearPfp from '../assets/bear-pfp.png'; 
 import logo from '../assets/logo.png';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 
 const MyClass: React.FC = () => {
   const [students, setStudents] = useState<string[]>(['Lily', 'Ashley']);
   const [showModal, setShowModal] = useState(false);
   const [newStudentEmail, setNewStudentEmail] = useState('');
+  const navigate = useNavigate();
 
   const handleAdd = () => {
     const name = newStudentEmail.split('@')[0]; // just splits email to get a name for simplicity
@@ -33,6 +34,7 @@ const MyClass: React.FC = () => {
                   <a href="#">Assignment</a>
                   <a href="#">Troubleshoot</a>
                   <a href="#">Settings</a>
+                  <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
               </nav>
           </header>
       </div>

@@ -19,6 +19,7 @@ const TeacherHome: React.FC = () => {
           <a href="#">Assignment</a>
           <a href="#">Troubleshoot</a>
           <a href="#">Settings</a>
+          <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
         </nav>
       </header>
 

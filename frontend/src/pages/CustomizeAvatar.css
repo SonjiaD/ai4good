@@ -47,6 +47,10 @@
   padding: 2rem;
 }
 
+.outfit-img:hover{
+  transform: scale(1.05);
+}
+
 
 .outfit-row {
   display: flex;

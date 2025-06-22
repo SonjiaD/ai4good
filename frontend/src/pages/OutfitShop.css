@@ -4,8 +4,6 @@ body {
   
 .outfit-shop {
     text-align: center;
-    padding: 40px;
-    background-color: #fff;
   }
   
   .outfit-shop h1 {
@@ -15,7 +13,6 @@ body {
   
   .subtitle {
     font-size: 18px;
-    margin-bottom: 40px;
     color: #555;
   }
   
@@ -36,6 +33,7 @@ body {
     justify-content: center;
     gap: 40px;
     flex-wrap: wrap;
+    margin-top: 2rem;
   }
     
   .outfit-card {
@@ -104,26 +102,9 @@ body {
   }
   
   .coin-display {
-    position: absolute;
-    top: 40px;
-    right: 60px;
-    background-color: #fedf99;
-    border-radius: 999px;
-    padding: 10px 20px;
-    font-weight: 600;
-    font-size: 20px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  }
-  
-  .coin-icon {
-    height: 24px;
-  }
-  
-  .coin-count {
-    font-size: 20px;
-    color: #333;
-  }
+    justify-content: right;
+    margin-right: 5%;
+    margin-top: -5rem;
+}
   
