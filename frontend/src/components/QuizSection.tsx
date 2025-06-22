@@ -192,7 +192,7 @@ const QuizSection: React.FC = () => {
       {/* === Questions + Input + Feedback === */}
       {questions.map((q, i) => (
         <div key={i} className="qa-box mt-6">
-          <p className="font-medium">
+          <p className="font-medium" style={{ fontSize: "1.2rem" }}>
             <b>Q{i + 1}:</b> {q}
           </p>
 
