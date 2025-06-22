@@ -1,0 +1,18 @@
+{
+  "questionnaire": {
+    "role": "Parent",
+    "reading_style": [
+      "With visuals"
+    ],
+    "reading_time": [
+      "<5 minutes"
+    ],
+    "reading_supports": [
+      "Text To Speech"
+    ],
+    "reading_challenges": [
+      "Attention differences (ADHD)"
+    ]
+  },
+  "struggles": []
+}

@@ -108,3 +108,23 @@ body {
     margin-top: -5rem;
 }
   
+  .warning-popup {
+    background-color: #ffe0e0;
+    color: #b00020;
+    padding: 14px 20px;
+    margin: 20px auto;
+    width: fit-content;
+    border-radius: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    animation: fadeInOut 2.5s ease-in-out;
+  }
+  
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-10px); }
+  }
+  

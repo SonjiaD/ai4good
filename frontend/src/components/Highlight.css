@@ -1,0 +1,21 @@
+/* button.secondary {
+  background-color: #f97316;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button.secondary:hover {
+  background-color: #ea580c;
+} */
+
+/* Highlight.css */
+mark {
+  background-color: #fef08a;     /* soft yellow */
+  padding: 0.1em 0.25em;
+  border-radius: 0.25em;
+}

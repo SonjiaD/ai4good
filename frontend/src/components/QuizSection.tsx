@@ -39,61 +39,168 @@ const QuizSection: React.FC = () => {
     setFeedbacks(updatedFeedbacks);
   };
 
+  // const handleRecord = async (index: number) => {
+  //   const res = await fetch('http://localhost:5000/api/record', { method: 'POST' });
+  //   const data = await res.json();
+  //   const updatedAnswers = [...answers];
+  //   updatedAnswers[index] = data.transcription;
+  //   setAnswers(updatedAnswers);
+  // };
+
   const handleRecord = async (index: number) => {
-    const res = await fetch('http://localhost:5000/api/record', { method: 'POST' });
-    const data = await res.json();
-    const updatedAnswers = [...answers];
-    updatedAnswers[index] = data.transcription;
-    setAnswers(updatedAnswers);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.webm');
+
+        const res = await fetch('http://localhost:5000/api/transcribe-audio', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        const updatedAnswers = [...answers];
+        updatedAnswers[index] = data.transcription;
+        setAnswers(updatedAnswers);
+      };
+
+      mediaRecorder.start();
+      setTimeout(() => {
+        mediaRecorder.stop();
+        stream.getTracks().forEach((track) => track.stop());
+      }, 5000);
+    } catch (err) {
+      console.error("Mic access error", err);
+      alert("Please allow mic access to record your answer.");
+    }
   };
 
+
   const handleReadFeedback = async (index: number) => {
-    await fetch('http://localhost:5000/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: feedbacks[index] }),
-    });
-    const audio = new Audio('http://localhost:5000/api/tts/file');
-    audio.play();
+    if (!feedbacks[index]) return;
+
+    try {
+      // Step 1: Ask server to add clarity tags
+      const clarifyRes = await fetch('http://localhost:5000/api/clarify-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: feedbacks[index] }),
+      });
+
+      const clarifyData = await clarifyRes.json();
+      let clarifiedText = clarifyData.text;
+
+      // 🧼 Optional: Strip extra formatting like **!!word!!**
+      clarifiedText = clarifiedText.replace(/\*+/g, '').replace(/!!/g, '!');
+
+      console.log("Clarified Feedback Text:", clarifiedText);
+
+      // Step 2: Send to TTS server
+      const ttsRes = await fetch('http://localhost:5000/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: clarifiedText }),
+      });
+
+      if (!ttsRes.ok) {
+        throw new Error("TTS server error");
+      }
+
+      // Step 3: Play audio file (if using file playback)
+      const audio = new Audio('http://localhost:5000/api/tts/file');
+      audio.play();
+    } catch (err) {
+      console.error("Error reading feedback aloud:", err);
+      alert("There was a problem generating the audio. Check the backend logs.");
+    }
   };
+
 
   return (
     <div className="card quiz-section">
       <h2>Test Your Understanding</h2>
-      <button onClick={generateQuiz} className="primary" disabled={loading}>
+      {/* <button onClick={generateQuiz} className="primary mb-4" disabled={loading}>
         {loading ? "Generating..." : "Generate Quiz"}
-      </button>
+      </button> */}
+
+      <div style={{ marginBottom: "1rem" }}>
+        <button
+          onClick={generateQuiz}
+          className="primary"
+          disabled={loading}
+        >
+          {loading ? "Generating..." : "Generate Quiz"}
+        </button>
+      </div>
+
+      
 
       {questions.map((q, i) => (
-        <div key={i} className="mt-4">
-          <p><b>Q{i + 1}:</b> {q}</p>
-          <div className="flex gap-2 mt-2">
+        <div key={i} className="qa-box mt-6">           {/* outer wrapper */}
+          <p className="font-medium">
+            <b>Q{i + 1}:</b> {q}
+          </p>
+
+          {/* ✨ new unified input row */}
+          <div className="qa-input-section">
             <input
-              className="form-input-custom flex-grow"
-              placeholder="Your answer"
+              className="qa-input flex-grow"
+              placeholder="Your answer…"
               value={answers[i]}
-              onChange={e => {
+              onChange={(e) => {
                 const newAns = [...answers];
                 newAns[i] = e.target.value;
                 setAnswers(newAns);
               }}
             />
-            <button className="secondary" onClick={() => handleRecord(i)}>🎙️</button>
-            <button className="primary" onClick={() => submitAnswer(i)}>Submit</button>
+
+            {/* same colour/shape as the Assistant’s ▶ button */}
+            <button
+              className="qa-button"
+              onClick={() => submitAnswer(i)}
+              disabled={loading}
+            >
+              {loading ? "…" : "Submit"}
+            </button>
+
+            {/* use the green mic style for consistency */}
+            <button
+              className="secondary"
+              onClick={() => handleRecord(i)}
+              aria-label="Record answer"
+            >
+              🎙️
+            </button>
           </div>
 
+          {/* feedback block stays the same */}
           {feedbacks[i] && (
             <>
-              <div className="mt-2 p-2 bg-green-100 border rounded">
+              <div className="qa-answer mt-2">
                 <strong>Feedback:</strong> {feedbacks[i]}
               </div>
-              <button className="mt-2 px-3 py-1 bg-yellow-500 text-white rounded" onClick={() => handleReadFeedback(i)}>
+              <button
+                className="mt-2 px-3 py-1 bg-yellow-500 text-white rounded"
+                onClick={() => handleReadFeedback(i)}
+              >
                 🔊 Read Feedback
               </button>
             </>
           )}
         </div>
       ))}
+
+
+      
     </div>
   );
 };

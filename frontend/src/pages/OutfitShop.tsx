@@ -7,27 +7,28 @@ import coinCount from '../assets/coin-count.png';
 const outfits = [
   {
     name: 'Astronaut Outfit',
-    price: 400,
+    price: 50,
     image: '/images/astronaut.png',
   },
   {
     name: 'Wizard',
-    price: 300,
+    price: 40,
     image: '/images/wizard.png',
   },
   {
     name: 'Bee',
-    price: 300,
+    price: 30,
     image: '/images/bee.png',
   },
   {
     name: 'SuperBudd',
-    price: 300,
+    price: 30,
     image: '/images/superbudd.png',
   },
 ];
 
 export default function OutfitShop() {
+  const [coins, setCoins] = useState<number>(100);
   const [selectedOutfit, setSelectedOutfit] = useState<string>('');
   const navigate = useNavigate();
 
@@ -48,35 +49,67 @@ export default function OutfitShop() {
 
       <h1>Outfit Shop</h1>
       <p className="subtitle">Outfits rotate weekly— Grab them while you can!</p>
+
       <div className="coin-display">
             <img src={coinCount} alt="Coins" className="coin-img" />
       </div>
 
+      {showWarning && (
+        <div className="warning-popup">
+          Not enough coins! 🪙<br />
+          <span style={{ fontSize: '14px' }}>Read more to earn coins.</span>
+        </div>
+      )}
+
       <div className="outfit-grid">
-        {outfits.map((outfit) => (
-          <div
-            className="outfit-card"
-            key={outfit.name}
-            onClick={() => setSelectedOutfit(outfit.name)}
-            style={{ position: 'relative', cursor: 'pointer' }}
-          >
-            <img src={outfit.image} alt={outfit.name} className="outfit-image" />
-            <div className="outfit-name">{outfit.name}</div>
-            <div className="outfit-price">
-              <span role="img" aria-label="coin">💰</span> {outfit.price}
+        {outfits.map((outfit) => {
+          const isPurchased = purchased.includes(outfit.name);
+          const isSelected = selectedOutfit === outfit.name;
+
+          return (
+            <div
+              className="outfit-card"
+              key={outfit.name}
+              onClick={() => handlePurchase(outfit)}
+              style={{
+                position: 'relative',
+                cursor: isSelected ? 'default' : 'pointer',
+                opacity: isSelected ? 0.95 : 1,
+              }}
+            >
+              <img src={outfit.image} alt={outfit.name} className="outfit-image" />
+              <div className="outfit-name">{outfit.name}</div>
+              <div className="outfit-price">
+                <span role="img" aria-label="coin">💰</span> {outfit.price}
+              </div>
+
+              {isPurchased && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 12,
+                  left: 12,
+                  backgroundColor: '#fff3cd',
+                  color: '#333',
+                  padding: '4px 8px',
+                  fontSize: '14px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                }}>
+                  Unlocked
+                </div>
+              )}
+
+              {isSelected && (
+                <img
+                  src="/images/checkmark.svg"
+                  alt="Selected"
+                  className="checkmark"
+                />
+              )}
             </div>
-            {selectedOutfit === outfit.name && (
-              <img
-                src="/images/checkmark.svg"  
-                alt="Selected"
-                className="checkmark"
-              />
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
-
-
