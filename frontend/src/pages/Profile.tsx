@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./Profile.css";
 
 export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
@@ -11,35 +12,44 @@ export default function Profile() {
   }, []);
 
   if (!profile) {
-    return <div style={{ padding: "2rem" }}>No profile yet – please fill in the questionnaire!</div>;
+    return (
+      <div className="profile-wrapper">
+        <div className="profile-card empty">
+          <p>No profile yet – please fill in the questionnaire!</p>
+        </div>
+      </div>
+    );
   }
 
   const renderField = (label: string, value: string[] | string) => (
-    <div style={{ marginBottom: "1rem" }}>
-      <strong>{label}:</strong>{" "}
-      {Array.isArray(value) ? (
-        <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem" }}>
-          {value.map((v, i) => (
-            <li key={i}>{v}</li>
-          ))}
-        </ul>
-      ) : (
-        <span>{value}</span>
-      )}
+    <div className="profile-field">
+      <div className="bubble-label">{label}</div>
+      <div className="bubble-value">
+        {Array.isArray(value) ? (
+          <ul className="bubble-list">
+            {value.map((v, i) => (
+              <li key={i}>{v}</li>
+            ))}
+          </ul>
+        ) : (
+          <span>{value}</span>
+        )}
+      </div>
     </div>
   );
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "1.5rem" }}>👤 User Profile</h1>
+    <div className="profile-wrapper">
+      <div className="profile-card colorful">
+        <h1 className="profile-title">👤 Your Reading Profile </h1>
+        <p className="profile-subtitle">Here’s what we learned from your questionnaire:</p>
 
-      <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>📝 Questionnaire Info</h2>
-
-      {renderField("Role", profile.role)}
-      {renderField("Reading Style", profile.reading_style)}
-      {renderField("Reading Time", profile.reading_time)}
-      {renderField("Reading Supports", profile.reading_supports)}
-      {renderField("Reading Challenges", profile.reading_challenges)}
+        {renderField("Role", profile.role)}
+        {renderField("Reading Style", profile.reading_style)}
+        {renderField("Reading Time", profile.reading_time)}
+        {renderField("Reading Supports", profile.reading_supports)}
+        {renderField("Reading Challenges", profile.reading_challenges)}
+      </div>
     </div>
   );
 }
