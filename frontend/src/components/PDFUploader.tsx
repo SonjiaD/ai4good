@@ -48,15 +48,18 @@ const PDFUploader: React.FC = () => {
 // };
 
 return (
-  <label className="upload-btn" style={{ cursor: "pointer" }}>
-    {uploaded ? "✅ Uploaded!" : loading ? "Uploading..." : <>📄 Upload PDF</>}
-    <input
-      type="file"
-      accept=".pdf"
-      onChange={handleFileUpload}
-      style={{ display: "none" }}
-    />
-  </label>
+  <div style={{ width: "100%", maxWidth: "300px" }}>
+    <label className="rb-btn rb-btn--accent" style={{ cursor: "pointer", textAlign: "center" }}>
+      {uploaded ? "✅ Uploaded!" : loading ? "Uploading..." : <>📄 Upload PDF</>}
+      <input
+        type="file"
+        accept=".pdf"
+        onChange={handleFileUpload}
+        style={{ display: "none" }}
+      />
+    </label>
+  </div>
+
 );
 };
 
