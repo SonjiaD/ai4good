@@ -253,7 +253,8 @@ const QuizSection: React.FC = () => {
                   ▶ Read Aloud
                 </button>
               </div>
-              <p>{feedbacks[i]}</p>
+              <p dangerouslySetInnerHTML={{ __html: feedbacks[i].replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />
+
             </div>
           )}
         </div>
