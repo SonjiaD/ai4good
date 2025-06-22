@@ -25,6 +25,7 @@ const QAAssistant: React.FC = () => {
     setLoading(false);
   };
 
+  //whisper recording function
   const handleRecord = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -60,6 +61,25 @@ const QAAssistant: React.FC = () => {
     }
   };
 
+  //matcha-tts 
+  const handleAnswerReadAloud = async () => {
+    if (!answer) return;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: answer }),
+      });
+
+      const data = await response.json();
+      const audio = new Audio("http://localhost:5000/audio/" + data.filename);
+      audio.play();
+    } catch (err) {
+      console.error("Error reading answer aloud:", err);
+    }
+  }
+
 return (
   <div className="qa-box">
     <div className="qa-input-section">
@@ -77,9 +97,38 @@ return (
 
     {answer && (
       <div className="qa-answer">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "0.5rem",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <strong style={{ fontSize: "1.1rem" }}>Answer:</strong>
+
+          <button
+            onClick={handleAnswerReadAloud}
+            style={{
+              backgroundColor: "#22c55e",  // same green
+              color: "white",
+              border: "none",
+              borderRadius: "0.5rem",
+              padding: "0.4rem 0.75rem",
+              fontSize: "0.9rem",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ▶ Read Aloud
+          </button>
+        </div>
         <p>{answer}</p>
       </div>
     )}
+
   </div>
 );
 
