@@ -53,7 +53,7 @@ export default function Profile() {
     <div className="profile-wrapper">
       <div className="profile-card colorful" style={{ padding: "1.8rem" }}>
         <h1 className="profile-title" style={{ fontSize: "1.7rem", marginBottom: "0.6rem" }}>
-          👤 Your Reading Profile
+            Your Reading Profile
         </h1>
         <p className="profile-subtitle" style={{ fontSize: "1rem", marginBottom: "1rem" }}>
           Here’s what we learned from your questionnaire:
