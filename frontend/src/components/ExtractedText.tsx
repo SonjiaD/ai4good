@@ -290,7 +290,7 @@ const ExtractedText: React.FC = () => {
               onClick={handleDefinitionReadAloud}
               disabled={definitionLoading}
               style={{
-                backgroundColor: "#22c55e",
+                backgroundColor: "#4BDE81",
                 color: "white",
                 border: "none",
                 borderRadius: "0.5rem",

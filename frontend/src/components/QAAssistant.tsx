@@ -112,7 +112,7 @@ return (
           <button
             onClick={handleAnswerReadAloud}
             style={{
-              backgroundColor: "#22c55e",  // same green
+              backgroundColor: "#4BDE81",  // same green
               color: "white",
               border: "none",
               borderRadius: "0.5rem",

@@ -211,7 +211,7 @@ const QuizSection: React.FC = () => {
                 <button
                   onClick={() => handleReadFeedback(i)}
                   style={{
-                    backgroundColor: "#22c55e",
+                    backgroundColor: "#4BDE81",
                     color: "white",
                     border: "none",
                     borderRadius: "0.5rem",

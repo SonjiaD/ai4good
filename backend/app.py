@@ -314,7 +314,7 @@ def clarify_text():
         "- She saw a pool next to the pull-up bar → She saw a !pool! next to the !pull!-up bar\n"
         "- Not the nut → !Not! the !nut!\n\n"
         f"Input:\n{input_text}\n\n"
-        "Return only the revised text with !word! tags. Do not explain or comment."
+        "Return only the revised text with !word! tags. Do not explain or comment. Do NOT start with phrases like 'Here is the revised text'"
     )
 
     llm = ChatOllama(model="llama3", temperature=0.3)
