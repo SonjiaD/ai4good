@@ -76,7 +76,7 @@
 }
 
 .section-title {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
   color: #1f2937;
@@ -91,7 +91,7 @@
 }
 
 .qa-title {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: 600;
   margin-bottom: 1rem;
 }
@@ -160,7 +160,7 @@
 }
 
 .quiz-section h2 {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
 }
 
@@ -325,4 +325,17 @@ button.primary:hover,
 .focus-alert-box.alert {
   background-color: #f8d7da;
   color: #d9534f;
+}
+
+/* All relevant buttons updated */
+button.primary,
+.qa-button,
+.upload-btn,
+.read-aloud-btn,
+button.secondary,
+.mic-button {
+  border-radius: 0.75rem; /* used to be 9999px */
+  padding: 0.75rem 1.25rem;
+  font-size: 16px;
+  font-weight: 600;
 }
