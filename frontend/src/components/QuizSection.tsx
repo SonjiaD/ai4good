@@ -172,19 +172,21 @@ const QuizSection: React.FC = () => {
           </li>
         </ol>
       </div> */}
-      <div className="quiz-guide-wrapper">
-        <div className="rb-guide-wrapper">
-          <GuideCard step={1} title="Generate Quiz">
-            Click <strong>📝 Generate Quiz</strong> to create questions from the story.
-          </GuideCard>
-          <GuideCard step={2} title="Answer Questions">
-            Type your answer or tap the <strong>🎙️</strong> mic to speak.
-          </GuideCard>
-          <GuideCard step={3} title="Get Feedback">
-            Press <strong>Submit</strong> to check your answer, and <strong>▶ Read Aloud</strong> to hear the feedback.
-          </GuideCard>
+      {questions.length === 0 && (
+        <div className="quiz-guide-wrapper">
+          <div className="rb-guide-wrapper">
+            <GuideCard step={1} title="Generate Quiz">
+              Click <strong>📝 Generate Quiz</strong> to create questions from the story.
+            </GuideCard>
+            <GuideCard step={2} title="Answer Questions">
+              Type your answer or tap the <strong>🎙️</strong> mic to speak.
+            </GuideCard>
+            <GuideCard step={3} title="Get Feedback">
+              Press <strong>Submit</strong> to check your answer, and <strong>▶ Read Aloud</strong> to hear the feedback.
+            </GuideCard>
+          </div>
         </div>
-      </div>
+      )}
 
 
       {/* === Questions + Input + Feedback === */}
