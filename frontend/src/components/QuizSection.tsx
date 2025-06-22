@@ -184,18 +184,39 @@ const QuizSection: React.FC = () => {
 
           {/* feedback block stays the same */}
           {feedbacks[i] && (
-            <>
-              <div className="qa-answer mt-2">
-                <strong>Feedback:</strong> {feedbacks[i]}
-              </div>
-              <button
-                className="mt-2 px-3 py-1 bg-yellow-500 text-white rounded"
-                onClick={() => handleReadFeedback(i)}
+            <div className="qa-answer mt-4">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "0.5rem",
+                  gap: "1rem",
+                  flexWrap: "wrap",
+                }}
               >
-                🔊 Read Feedback
-              </button>
-            </>
+                <strong style={{ fontSize: "1.1rem" }}>Feedback:</strong>
+
+                <button
+                  onClick={() => handleReadFeedback(i)}
+                  style={{
+                    backgroundColor: "#22c55e", // match QAAssistant green
+                    color: "white",
+                    border: "none",
+                    borderRadius: "0.5rem",
+                    padding: "0.4rem 0.75rem",
+                    fontSize: "0.9rem",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ▶ Read Aloud
+                </button>
+              </div>
+              <p>{feedbacks[i]}</p>
+            </div>
           )}
+
         </div>
       ))}
 
