@@ -21,24 +21,16 @@ export default function GettingStartedGuide() {
 
   return (
     <div className="rb-guide-wrapper">
-      <Card step={1} title="Upload a PDF Story">
-        Click the <strong>📄 Upload PDF</strong> button in the top-right corner to load a story.
+      <Card step={1} title="Upload a Story">
+        Click the <strong>📄 Upload PDF</strong> button in the top-right to pick a story to read.
       </Card>
 
-      <Card step={2} title="Turn on Vocab Mode">
-        Use the <strong>Vocab Mode toggle</strong> (green switch) to enable word lookup. Then click any word in the story.
+      <Card step={2} title="Explore Words">
+        Turn on <strong>Vocab Mode</strong>, then tap any word to highlight it. Press <strong>🔍 Search Definition</strong> to learn what it means!
       </Card>
 
-      <Card step={3} title="Look Up a Word">
-        Press <strong>🔍 Search Definition</strong> to get a kid-friendly meaning of your selected word.
-      </Card>
-
-      <Card step={4} title="Listen to the Story">
-        Press <strong>▶ Read Aloud</strong> to hear the full story read out loud.
-      </Card>
-
-      <Card step={5} title="Start Over">
-        Press <strong>✖︎ Clear Highlights</strong> to reset the story and try again!
+      <Card step={3} title="Listen or Start Fresh">
+        Press <strong>▶ Read Aloud</strong> to hear the story, or <strong>✖ Clear Highlights</strong> to try again!
       </Card>
     </div>
   );
