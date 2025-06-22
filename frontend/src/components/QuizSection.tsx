@@ -44,14 +44,6 @@ const QuizSection: React.FC = () => {
     setFeedbacks(updatedFeedbacks);
   };
 
-  // const handleRecord = async (index: number) => {
-  //   const res = await fetch('http://localhost:5000/api/record', { method: 'POST' });
-  //   const data = await res.json();
-  //   const updatedAnswers = [...answers];
-  //   updatedAnswers[index] = data.transcription;
-  //   setAnswers(updatedAnswers);
-  // };
-
   const handleRecord = async (index: number) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -88,7 +80,6 @@ const QuizSection: React.FC = () => {
       alert("Please allow mic access to record your answer.");
     }
   };
-
 
   const handleReadFeedback = async (index: number) => {
     if (!feedbacks[index]) return;
@@ -152,26 +143,6 @@ const QuizSection: React.FC = () => {
         </button>
       </div>
 
-      {/* === Short instructions like ExtractedText === */}
-      {/* <div className="dotted-instructions" style={{
-        border: "2px dashed #94a3b8",
-        borderRadius: "1rem",
-        backgroundColor: "#f1f5f9",
-        padding: "1.5rem",
-        marginBottom: "1.5rem"
-      }}>
-        <ol style={{ paddingLeft: "1.25rem", margin: 0, color: "#334155", fontSize: "0.95rem" }}>
-          <li style={{ marginBottom: "0.75rem" }}>
-            Click <strong>📝 Generate Quiz</strong> to create questions from the story.
-          </li>
-          <li style={{ marginBottom: "0.75rem" }}>
-            Type your answer or click the <strong>🎙️</strong> mic to speak your response.
-          </li>
-          <li>
-            Press <strong>Submit</strong> to get friendly feedback. You can also <strong>▶ Read Aloud</strong>.
-          </li>
-        </ol>
-      </div> */}
       {questions.length === 0 && (
         <div className="quiz-guide-wrapper">
           <div className="rb-guide-wrapper">
@@ -187,7 +158,6 @@ const QuizSection: React.FC = () => {
           </div>
         </div>
       )}
-
 
       {/* === Questions + Input + Feedback === */}
       {questions.map((q, i) => (

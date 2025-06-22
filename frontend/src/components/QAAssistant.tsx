@@ -128,12 +128,8 @@ return (
         <p>{answer}</p>
       </div>
     )}
-
   </div>
 );
-
-
 };
-
 
 export default QAAssistant;

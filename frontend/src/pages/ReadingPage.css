@@ -131,7 +131,7 @@
 }
 
 .mic-button {
-  background-color: #10b981;
+  background-color: #4ade80;
   color: white;
   border: none;
   padding: 0.75rem 1.25rem;
@@ -145,7 +145,7 @@
 }
 
 .mic-button:hover {
-  background-color: #059669;
+  background-color: #4ade80;
 }
 
 .qa-answer {
@@ -226,7 +226,7 @@ button.primary:hover,
 }
 
 .status-pill.active {
-  background-color: #34d399;
+  background-color: #4ade80;
   color: white;
 }
 
