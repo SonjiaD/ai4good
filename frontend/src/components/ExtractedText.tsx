@@ -54,7 +54,6 @@ const ExtractedText: React.FC = () => {
     selection.removeAllRanges();
   };
 
-
   const fetchDefinition = async () => {
     if (!selectedWord) return;
 
@@ -67,9 +66,10 @@ const ExtractedText: React.FC = () => {
     setDefinition(data.definition || "No definition found.");
   };
 
-
-
-  const getHighlightedText = (text: string, highlightsArg?: { start: number; end: number; text: string }[]) => {
+  const getHighlightedText = (
+    text: string,
+    highlightsArg?: { start: number; end: number; text: string }[]
+  ) => {
     const hl = highlightsArg || highlights;
     if (!text) return null;
 
@@ -81,7 +81,14 @@ const ExtractedText: React.FC = () => {
       if (h.start > currentIndex) {
         parts.push(text.slice(currentIndex, h.start));
       }
-      parts.push(<mark key={h.start}>{text.slice(h.start, h.end)}</mark>);
+
+      // Yellow highlight
+      parts.push(
+        <mark key={`hl-${h.start}`} className="yellow-highlight">
+          {text.slice(h.start, h.end)}
+        </mark>
+      );
+
       currentIndex = h.end;
     }
 
@@ -89,8 +96,33 @@ const ExtractedText: React.FC = () => {
       parts.push(text.slice(currentIndex));
     }
 
+    // If vocabMode is active and selectedWord exists, also wrap it
+    if (vocabMode && selectedWord) {
+      return (
+        <>
+          {parts.map((part, i) => {
+            if (typeof part === "string") {
+              const regex = new RegExp(`\\b(${selectedWord})\\b`, "gi");
+              const splitParts = part.split(regex);
+              return splitParts.map((sub, j) =>
+                sub.toLowerCase() === selectedWord.toLowerCase() ? (
+                  <span key={`${i}-${j}`} className="blue-highlight">
+                    {sub}
+                  </span>
+                ) : (
+                  sub
+                )
+              );
+            }
+            return part;
+          })}
+        </>
+      );
+    }
+
     return <>{parts}</>;
   };
+
 
 
 

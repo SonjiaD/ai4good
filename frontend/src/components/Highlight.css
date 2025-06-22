@@ -19,3 +19,17 @@ mark {
   padding: 0.1em 0.25em;
   border-radius: 0.25em;
 }
+
+.yellow-highlight {
+  background-color: yellow;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+.blue-highlight {
+  background-color: #cce5ff;
+  border-radius: 4px;
+  padding: 0 2px;
+  font-weight: bold;
+}
+
