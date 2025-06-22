@@ -113,7 +113,7 @@ const QuizSection: React.FC = () => {
 
       // Step 3: Play audio file (if using file playback)
       const audio = new Audio('http://localhost:5000/api/tts/file');
-      audio.play();
+      // audio.play();
     } catch (err) {
       console.error("Error reading feedback aloud:", err);
       alert("There was a problem generating the audio. Check the backend logs.");

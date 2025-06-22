@@ -74,7 +74,7 @@ const QAAssistant: React.FC = () => {
 
       const data = await response.json();
       const audio = new Audio("http://localhost:5000/audio/" + data.filename);
-      audio.play();
+      // audio.play();
     } catch (err) {
       console.error("Error reading answer aloud:", err);
     }

@@ -147,7 +147,7 @@ const ExtractedText: React.FC = () => {
       });
 
       const audio = new Audio("http://localhost:5000/api/tts/file");
-      audio.play();
+      // audio.play();
     } catch (err) {
       console.error("Error reading aloud:", err);
     } finally {
@@ -166,7 +166,7 @@ const ExtractedText: React.FC = () => {
         body: JSON.stringify({ text: definition }),
     });
       const audio = new Audio("http://localhost:5000/api/tts/file");
-      audio.play();
+      // audio.play();
     } catch (err) {
       console.error("Error reading definition aloud:", err);
     } finally {
