@@ -1,0 +1,71 @@
+.customavatar-container {
+  font-family: 'Poppins', sans-serif;
+}
+
+.customavatar-container h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.coins-display {
+  display: flex;
+  justify-content: right;
+  margin-right: 5%;
+  margin-top: -5rem;
+}
+
+.customavatar-main {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.avatar-sections {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.avatar-equipment {
+  background-color: #FFE6BC;
+  border-radius: 40px;
+  padding: 2rem;
+  margin-right:5%;
+  width: 280px;
+  text-align: center;
+  height: 500px;
+}
+
+.avatar-equipment img.equipped-img {
+  width: 130px;
+  margin-bottom: 1rem;
+}
+
+.outfit-gallery {
+  background-color: #FFE6BC;
+  border-radius: 40px;
+  padding: 2rem;
+}
+
+
+.outfit-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 1.2rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.save-changes {
+  margin-top: 2rem;
+  margin-left: 365px;
+  padding: 1.5rem 3rem;
+  background-color: #5CCDFF;
+  border: none;
+  border-radius: 60px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+    color: white;
+}
+
