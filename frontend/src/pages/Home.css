@@ -1,6 +1,5 @@
-.welcome-container {
+.homepage-container {
   font-family: 'Poppins', sans-serif;
-  padding: 2rem;
 }
 
 .navbar {
@@ -9,55 +8,206 @@
   align-items: center;
 }
 
+.nav-link {
+  color: #000;
+  text-decoration: none;
+  font-weight: 500;
+  text-align: left; /*This and flex-grow align text to the left*/
+  flex-grow: 1;
+}
+
+.nav-link:hover {
+  color: #1da1f2;
+}
+
 .logo-img {
   width: 200px;
 }
 
-.welcome-main {
+.homepage-main {
+  text-align: center;
+  text-align: left;
+  padding-top: 0rem;
+  margin-left: 10%;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  margin: 1.5rem 0 1rem;
+}
+
+.reading-section .current-book {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  max-width: 80%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.book-text h3 {
+  margin-bottom: 0.3rem;
+}
+
+.book-text p {
+  margin-bottom: 0.4rem;
+}
+
+.continue-btn {
+  background-color: #258eff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.book-img {
+  height: 120px;
+  border-radius: 12px;
+}
+
+.progress-section {
+  margin-top: 2rem;
+  max-width: 80%;
+}
+
+.progress-bar-wrapper {
+  height: 8px;
+  background: #dbe3ea;
+  border-radius: 10px;
+  margin: 0.4rem 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #258eff;
+  border-radius: 10px;
+}
+
+.progress-percent {
+  text-align: right;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.reading-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.time-this-week, .reading-challenge {
+  flex: 1;
+  min-width: 280px;
+}
+
+.bar-chart {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.day-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.day-bar .bar {
+  height: 50px;
+  width: 12px;
+  background: #ccc;
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+}
+
+.challenge-box {
+  background: #f7f4fd;
+  padding: 1rem;
+  border-radius: 15px;
+  position: relative;
+}
+
+.challenge-progress {
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  margin-top: 0.8rem;
+  position: relative;
+}
+
+.challenge-progress .progress-bar.purple {
+  height: 100%;
+  background: #a855f7;
+  border-radius: 10px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.challenge-text {
+  position: absolute;
+  right: 10px;
+  top: -24px;
+  font-weight: bold;
+}
+
+.coin {
+  position: absolute;
+  right: -25px;
+  top: -10px;
+  width: 30px;
+}
+
+.bot-reaction {
+  position: absolute;
+  bottom: -50px;
+  right: 0;
   text-align: center;
 }
 
-.upload-box {
-  background: #f6f6f6;
-  padding: 2rem;
-  border-radius: 12px;
-  margin: 2rem auto;
-  width: 60%;
+.speech-bubble {
+  background: white;
+  border-radius: 10px;
+  padding: 0.3rem 0.8rem;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  margin-bottom: 5px;
+  font-size: 0.9rem;
 }
 
-.upload-btn {
-  background-color: #34A2D3;
-  color: white;
-  font-size: 1.2rem;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 30px;
-  margin-top: 1rem;
-  cursor: pointer;
+.bot-thumbs {
+  height: 60px;
 }
 
-.reading-progress {
-  margin: 2rem auto;
-  width: 70%;
-}
-
-.progress-bar-bg {
-  width: 100%;
-  background-color: #d8d8d8;
-  height: 10px;
-  border-radius: 5px;
-}
-
-.progress-bar-fill {
-  height: 10px;
-  background-color: #4caf50;
-  border-radius: 5px;
-}
-
-.achievements {
+.achievements-section .badges {
   display: flex;
-  justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-top: 2rem;
+  margin-top: 1rem;
+}
+
+.badge-card {
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 15px;
+  text-align: center;
+}
+
+.badge-card img {
+  width: 175px;
+  height: 175px;
+  margin-bottom: 0.5rem;
 }
