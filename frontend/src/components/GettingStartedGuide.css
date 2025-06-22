@@ -1,0 +1,32 @@
+.rb-guide-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 1.5rem 0;
+}
+
+.rb-guide-card {
+  border: 2px dashed #8ecaff;
+  background: #f5fbff;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1rem 1rem 1rem;
+  position: relative;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.rb-step-badge {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #2196f3;
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+}

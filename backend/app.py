@@ -31,7 +31,6 @@ from flask import Flask, request, jsonify
 #paragraph structuring
 import re
 
-
 app = Flask(__name__) #creates new flask web application 
 
 CORS(app)  # Allow requests from frontend
@@ -60,8 +59,7 @@ def save_questionnaire():
         profile["questionnaire"] = answers
         _save_profile(profile)
 
-        # ✅ NEW: Copy to frontend/public/profile.json
-        import shutil
+        # Copy to frontend/public/profile.json
         shutil.copy("profile.json", "../frontend/public/profile.json")
 
         return jsonify({"msg": "questionnaire stored"})
@@ -85,7 +83,6 @@ def get_profile():
 
 
 #helper to turn saved questionnaire into short context string
-# ----------  PROFILE → CONTEXT  ----------
 def _profile_context() -> str:
     """Return a compact, human-readable summary of the questionnaire."""
     profile = _load_profile()
@@ -112,8 +109,6 @@ def _profile_context() -> str:
                 lines.append(f"{label}: {v}")
     return "\n".join(lines)
 # -----------------------------------------
-
-
 #matcha-tts
 os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
 
@@ -197,7 +192,7 @@ def upload_pdf():
         cleaned_text = combined.replace("\n", " ")
 
         # Naively split paragraphs by sentence breaks for now
-        # You can improve this later using NLP or by detecting longer pauses
+        # can improve this later using NLP or by detecting longer pauses
         raw_paragraphs = re.split(r'(?<=[.?!])\s+(?=[A-Z“"])', cleaned_text)
 
         paragraphs = [p.strip() for p in raw_paragraphs if p.strip()]

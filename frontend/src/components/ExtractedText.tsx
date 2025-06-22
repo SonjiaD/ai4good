@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useReadingContext } from '../context/ReadingContext';
 import './Highlight.css';  // New: separate CSS file
+import GettingStartedGuide from "./GettingStartedGuide";
 
 const ExtractedText: React.FC = () => {
   const { text, title, paragraphs } = useReadingContext();
@@ -139,12 +140,9 @@ const ExtractedText: React.FC = () => {
         onMouseUp={handleTextClick}
       >
         {(() => {
-          // choose the array we'll loop over
-
           // removes the title from the text, as it's already rendered separately
           const blocks = [text.replace(title, "").trim()];
           
-
           // running character offset inside the FULL rendered text
           let runningOffset = 0;
 
@@ -172,8 +170,6 @@ const ExtractedText: React.FC = () => {
           });
         })()}
       </div>
-
-
 
       <div
         style={{
@@ -232,7 +228,11 @@ const ExtractedText: React.FC = () => {
       {/* Buttons: Read Aloud + Clear Highlights */}
       
     </div>
-  ) : null;
+  ) : (
+    <div style={{ padding: "2rem" }}>
+      <GettingStartedGuide />
+    </div>
+  );
 
 };
 
