@@ -126,31 +126,40 @@ const QuizSection: React.FC = () => {
 
 
   return (
-    <div className="card quiz-section">
-      <h2>Test Your Understanding</h2>
-      {/* <button onClick={generateQuiz} className="primary mb-4" disabled={loading}>
-        {loading ? "Generating..." : "Generate Quiz"}
-      </button> */}
-
-      <div style={{ marginBottom: "1rem" }}>
+    <div className="card quiz-section" style={{ marginTop: "2rem" }}>
+      {/* === Header with title and button, similar to PDFUploader === */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          marginBottom: "1rem"
+        }}
+      >
+        <h2 className="text-xl font-bold mb-0">Test Your Understanding</h2>
         <button
           onClick={generateQuiz}
           className="primary"
           disabled={loading}
+          style={{ minWidth: "140px", padding: "0.75rem 1rem" }}
         >
-          {loading ? "Generating..." : "Generate Quiz"}
+          {loading ? "Generating..." : "📝 Generate Quiz"}
         </button>
       </div>
 
-      
+      {/* === Short instructions like ExtractedText === */}
+      <p style={{ marginBottom: "1rem", fontSize: "0.95rem", color: "#333" }}>
+        Generate a quiz based on the story above. Type your answers or record them to check your comprehension.
+      </p>
 
+      {/* === Questions + Input + Feedback === */}
       {questions.map((q, i) => (
-        <div key={i} className="qa-box mt-6">           {/* outer wrapper */}
+        <div key={i} className="qa-box mt-6">
           <p className="font-medium">
             <b>Q{i + 1}:</b> {q}
           </p>
 
-          {/* ✨ new unified input row */}
           <div className="qa-input-section">
             <input
               className="qa-input flex-grow"
@@ -163,7 +172,6 @@ const QuizSection: React.FC = () => {
               }}
             />
 
-            {/* same colour/shape as the Assistant’s ▶ button */}
             <button
               className="qa-button"
               onClick={() => submitAnswer(i)}
@@ -172,7 +180,6 @@ const QuizSection: React.FC = () => {
               {loading ? "…" : "Submit"}
             </button>
 
-            {/* use the green mic style for consistency */}
             <button
               className="secondary"
               onClick={() => handleRecord(i)}
@@ -182,7 +189,6 @@ const QuizSection: React.FC = () => {
             </button>
           </div>
 
-          {/* feedback block stays the same */}
           {feedbacks[i] && (
             <div className="qa-answer mt-4">
               <div
@@ -196,18 +202,16 @@ const QuizSection: React.FC = () => {
                 }}
               >
                 <strong style={{ fontSize: "1.1rem" }}>Feedback:</strong>
-
                 <button
                   onClick={() => handleReadFeedback(i)}
                   style={{
-                    backgroundColor: "#22c55e", // match QAAssistant green
+                    backgroundColor: "#22c55e",
                     color: "white",
                     border: "none",
                     borderRadius: "0.5rem",
                     padding: "0.4rem 0.75rem",
                     fontSize: "0.9rem",
                     cursor: "pointer",
-                    whiteSpace: "nowrap",
                   }}
                 >
                   ▶ Read Aloud
@@ -216,14 +220,11 @@ const QuizSection: React.FC = () => {
               <p>{feedbacks[i]}</p>
             </div>
           )}
-
         </div>
       ))}
-
-
-      
     </div>
   );
+
 };
 
 export default QuizSection;

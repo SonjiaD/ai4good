@@ -27,3 +27,28 @@
   font-size: 1.2rem;
 }
 
+.instructionCard {
+  border: 2px dashed #b5d4ff;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: #f8fbff;
+}
+
+.instructionStep {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.stepNumber {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
+  text-align: center;
+  line-height: 1.75rem;
+  margin-right: 0.75rem;
+}
