@@ -1,6 +1,8 @@
 import './OutfitShop.css';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
+import coinIcon from '../assets/coin-icon.png';
 
 const outfits = [
   {
@@ -51,12 +53,24 @@ export default function OutfitShop() {
 
   return (
     <div className="outfit-shop">
+      <header className="navbar">
+        <div className="logo">
+          <img src={logo} alt="Logo" className="logo-img" />
+        </div>
+        <nav>
+          <Link to={'/reading'} className="nav-link">{'Read'}</Link>
+          <Link to={'/home'} className="nav-link">{'Dashboard'}</Link>
+          <Link to={'/avatar'} className="nav-link">{'Customize Avatar'}</Link>
+          <Link to="/profile" className="nav-link">Profile</Link>
+          <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
+        </nav>
+      </header>
       <h1>Outfit Shop</h1>
       <p className="subtitle">Outfits rotate weekly— Grab them while you can!</p>
      
 
       <div className="coin-display">
-        <img src="/images/coin.png" className="coin-icon" alt="Coin" />
+        <img src={coinIcon} className="coin-icon" alt="Coin" />
         <span className="coin-count">{coins}</span>
       </div>
 

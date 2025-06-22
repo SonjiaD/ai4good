@@ -43,7 +43,7 @@
 .remove-btn {
   background: none;
   border: none;
-  color: #0077ff;
+  color: #34A2D3;
   cursor: pointer;
   font-weight: bold;
 }
@@ -56,7 +56,7 @@
 }
 
 .add-btn {
-  background-color: #0079FF;
+  background-color: #34A2D3;
   color: white;
   padding: 0.6rem 1.2rem;
   border-radius: 12px;
@@ -66,7 +66,7 @@
 }
 
 .next-page-btn {
-    background-color: #F0F2F5;
+    background-color: #B2CCE9;
     color: rgb(0, 0, 0);
     padding: 0.6rem 1.2rem;
     border-radius: 12px;

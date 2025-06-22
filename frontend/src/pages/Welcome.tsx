@@ -19,7 +19,7 @@ const Welcome: React.FC = () => {
         <h1>Welcome, Lily!</h1>
         <h2>Upload a PDF to start reading!</h2>
         <button className="file-btn" onClick={() => navigate('/reading')}>
-              Let's Go!
+              Go to Reading Page
         </button>
         <img src={readingBuddies} alt="Reading Buddies" className="reading-buddies-img" />
       </main>

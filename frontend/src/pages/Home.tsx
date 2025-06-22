@@ -7,8 +7,7 @@ import badge4 from '../assets/quiz-whiz.png';
 import logo from '../assets/logo.png'; 
 import coins from '../assets/coins.png';
 import treehouseImg from '../assets/treehouse.png';
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useNavigate , Link } from 'react-router-dom';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +22,7 @@ const Home: React.FC = () => {
           <Link to={'/reading'} className="nav-link">{'Read'}</Link>
           <Link to={'/outfit-shop'} className="nav-link">{'Outfit Shop'}</Link>
           <Link to={'/avatar'} className="nav-link">{'Customize Avatar'}</Link>
+          <Link to="/profile" className="nav-link">Profile</Link>
           <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
         </nav>
       </header>
