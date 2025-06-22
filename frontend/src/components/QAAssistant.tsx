@@ -60,30 +60,6 @@ const QAAssistant: React.FC = () => {
     }
   };
 
-
-  // OLD DESIGN 
-  // return (
-  //   <div>
-  //     {/* <h2>Q&A Assistant</h2> */}
-  //     <div style={{ display: "flex", gap: "1rem" }}>
-  //       <input value={question} onChange={e => setQuestion(e.target.value)} className="form-input-custom" placeholder="Ask a question..." />
-  //       <button className="primary" onClick={handleAsk} disabled={loading}>
-  //         {loading ? "Asking..." : "Ask"}
-  //       </button>
-  //       <button className="secondary" onClick={handleRecord}>🎙️</button>
-  //     </div>
-
-  //     {answer && (
-  //       <div style={{ marginTop: "1rem", padding: "1rem", background: "#f1f5f9", borderRadius: "0.75rem" }}>
-  //         <b>Answer:</b> {answer}
-  //       </div>
-  //     )}
-  //   </div>
-  // );
-// };
-
-// take this style and use it in the test your understanding section
-
 return (
   <div className="qa-box">
     <div className="qa-input-section">
