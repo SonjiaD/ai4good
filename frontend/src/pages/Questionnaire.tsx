@@ -60,6 +60,12 @@ const Questionnaire: React.FC = () => {
         }
 
         setShowThankYou(true);
+        // Redirect to home after 2.5 seconds
+        setTimeout(() => {
+          navigate('/home');
+        }, 2500);
+        return;
+
 
         // OLD VERSION Final step, log the answers
 
@@ -95,6 +101,12 @@ const Questionnaire: React.FC = () => {
       }
 
       setShowThankYou(true);
+      // Redirect to home after 2.5 seconds
+      setTimeout(() => {
+        navigate('/home');
+      }, 2500);
+      return;
+
     }
   };
 
