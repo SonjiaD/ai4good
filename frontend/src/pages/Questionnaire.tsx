@@ -130,7 +130,7 @@ const Questionnaire: React.FC = () => {
             <div className="thankyou-content">
             <h1>Thank you for your time!</h1>
             <p>Your answers are of great help in your child’s learning journey.</p>
-            <button className="start-btn" onClick={() => navigate('/welcome')}>
+            <button className="start-btn" onClick={() => navigate('/reading')}> {/* Changed to reading page since welcome page felt redundant */}
               Let’s get started!
             </button>
             <img src={buddCheer} alt="Budd Cheer" className="thankyou-bot" />
@@ -143,6 +143,7 @@ const Questionnaire: React.FC = () => {
             <div className="button-group">
               <button className="role-btn" onClick={() => handleRoleSelect('Parent')}>Parent</button>
               <button className="role-btn" onClick={() => handleRoleSelect('Child')}>Child</button>
+              <button className="role-btn" onClick={() => navigate('/TeacherHome')}>Teacher</button>
             </div>
           </>
         ) : (

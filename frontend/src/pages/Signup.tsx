@@ -26,7 +26,7 @@ const Signup: React.FC = () => {
             <form className="signup-form">
               <input type="email" placeholder="Email" className="input blue" />
               <input type="password" placeholder="Password…" className="input purple" />
-              <button type="submit" className="submit-btn" onClick={() => navigate('/Questionnaire')}>Sign Up</button>
+              <button type="submit" className="submit-btn" onClick={() => navigate('/consent')}>Sign Up</button>
             </form>
 
             <p className="login-text">

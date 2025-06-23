@@ -9,6 +9,8 @@ import { ReadingProvider, useReadingContext } from "../context/ReadingContext";
 import "../App.css"; // keep your existing CSS
 import "./ReadingPage.css";
 import FocusAlerts from "../components/FocusAlerts";
+import logo from '../assets/logo.png';
+import { useNavigate , Link } from 'react-router-dom';
 
 const ReadingPageContent: React.FC = () => {
   const { setMouseIdleTime } = useReadingContext();
@@ -31,8 +33,22 @@ const ReadingPageContent: React.FC = () => {
     };
   }, [setMouseIdleTime]);
 
+  const navigate = useNavigate();
+
   return (
     <div className="app">
+      <header className="navbar">
+        <div className="logo">
+          <img src={logo} alt="Logo" className="logo-img" />
+        </div>
+        <nav>
+          <Link to={'/home'} className="nav-link">{'Dashboard'}</Link>
+          <Link to={'/outfit-shop'} className="nav-link">{'Outfit Shop'}</Link>
+          <Link to={'/avatar'} className="nav-link">{'Customize Avatar'}</Link>
+          <Link to="/profile" className="nav-link">Profile</Link>
+          <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
+        </nav>
+      </header>
 
       {/* Uncomment the header if you want to display the logo */}
 

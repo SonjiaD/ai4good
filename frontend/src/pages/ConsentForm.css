@@ -1,0 +1,67 @@
+.consent-container {
+  font-family: 'Poppins', sans-serif;
+}
+
+.consent-main {
+  text-align: center;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.consent-main h1 {
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+}
+
+.consent-main p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.consent-text {
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.consent-text h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.consent-text p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.consent-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+input[type='checkbox'] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.consent-btn {
+  padding: 0.8rem 1.6rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #B2CCE9;
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.consent-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

@@ -1,15 +1,15 @@
-.loginsignup-container {
+.teacher-home-container {
   font-family: 'Poppins', sans-serif;
   color: #1a1a1a;
 }
 
-.loginsignup-main h1 {
+.teacher-home-main h1 {
   font-size: 2.8rem;
   font-weight: 700;
   margin-bottom: -1rem;
 }
 
-.loginsignup-main p {
+.teacher-home-main p {
   font-size: 1.3rem;
 }
 
@@ -30,28 +30,22 @@
   margin-right: 0.5rem;
 }
 
-/*nav a {
+nav a {
   margin-right: 1.5rem;
   text-decoration: none;
   color: #000;
-}*/
+}
 
-.loginsignup-main {
-  text-align: center;
+.teacher-home-main {
+  text-align: left;
   padding-top: 0rem;
+  margin-left: 10%;
   position: relative;
   font-family: 'Poppins', sans-serif;
   padding-bottom: 4rem; /*This causes scrollbar in case thats an issue in the future*/
-}
+}  
 
-.button-group {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.signup-btn {
+.my-class-btn {
   background-color: #34A2D3;
   color: #000;
   border: none;
@@ -66,24 +60,12 @@
   box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
 }
 
-.login-btn {
-  background-color: #B2CCE9;
-  color: #000;
-  border: none;
-  padding: 1rem 2rem;
-  margin: 0.5rem 0;
-  border-radius: 30px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  font-weight: 600;
-  width: 100%;
-  max-width: 300px;
-  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-}
-
-.bookie-budd {
-  width: 250px;
-  margin-bottom: -5rem;
+.reading-budds-img {
+  position: fixed;
+  bottom: 0;
+  left: 50%; /* This + transform centers the image horizontally */
+  transform: translateX(-50%);
+  width: 800px;
   pointer-events: none;
-  z-index: -1; 
+  z-index: -1;
 }

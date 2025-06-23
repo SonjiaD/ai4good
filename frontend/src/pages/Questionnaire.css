@@ -8,6 +8,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
+  font-weight: 500;
 }
 
 .logo {
@@ -20,14 +21,8 @@
   margin-right: 0.5rem;
 }
 
-nav a {
-  margin-right: 1.5rem;
-  text-decoration: none;
-  color: #000;
-}
-
 .logout-nav-btn {
-  background-color: #ff7d5c;
+  background-color: #34A2D3;
   color: #000;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -160,7 +155,7 @@ input[type="checkbox"] {
 }
 
 .skip-btn {
-  background-color: #ffe08c;
+  background-color: #B2CCE9;
 }
 
 .next-btn {
