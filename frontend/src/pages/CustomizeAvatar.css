@@ -92,3 +92,7 @@
   scale: 1.05;
 }
 
+.customavatar-container {
+  height: 100vh;          /* Full viewport height */
+  overflow-y: scroll;     /* Always show vertical scrollbar */
+}

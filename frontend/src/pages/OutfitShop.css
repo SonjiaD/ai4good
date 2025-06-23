@@ -144,4 +144,7 @@ body {
     90% { opacity: 1; }
     100% { opacity: 0; transform: translateY(-10px); }
   }
-  
+  .outfit-shop {
+  height: 100vh;         /* Full height to enable scrolling */
+  overflow-y: scroll;    /* Always show vertical scrollbar */
+}

@@ -7,7 +7,6 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate(); // ✅ this line is missing in your code
 
-
   useEffect(() => {
     const saved = localStorage.getItem("readingbuddy_profile");
     if (saved) {
@@ -60,11 +59,12 @@ export default function Profile() {
         <img src={logo} alt="Logo" className="logo-img" />
       </div>
       <nav>
-        <Link to={'/reading'} className="nav-link">Read</Link>
-        <Link to={'/home'} className="nav-link">Dashboard</Link>
-        <Link to={'/avatar'} className="nav-link">Customize Avatar</Link>
-        <Link to="/profile" className="nav-link">Profile</Link>
-        <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
+        <Link to={'/home'} className="nav-link">{'Dashboard'}</Link>
+                  <Link to={'/reading'} className="nav-link">Read</Link>
+                  <Link to={'/avatar'} className="nav-link">Customize</Link>
+                  <Link to={'/outfit-shop'} className="nav-link">Shop</Link>
+                  <Link to="/profile" className="nav-link">Profile</Link>
+                  <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
       </nav>
     </header>
 
