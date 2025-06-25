@@ -24,7 +24,7 @@ An **AI-powered reading companion** designed to support neurodivergent children 
 - **🧠 In-Context Learning with Learner Profiles**  
   Questionnaire responses are saved and used to tailor chatbot responses (e.g., adapting for ADHD, dyslexia, auditory processing disorder, etc.).
 
-- **👀 Focus Tracker (Upcoming)**  
+- **👀 Focus Tracker**  
   Combines mouse activity + webcam detection to gently track user attention during reading.
 
 ---
@@ -189,7 +189,27 @@ $env:PHONEMIZER_ESPEAK_LIBRARY="C:\Program Files\eSpeak NG\libespeak-ng.dll"
 
 ---
 
-### ▶️ Run All Servers (Matcha-TTS + Flask + React)
+### 🧪 After Cloning Repo - Test Matcha-TTS via Terminal
+
+**With Clarity:**
+
+```bash
+matcha-tts --text "Pass me the !peel! not the !pill!" --clarity 1 --play
+matcha-tts --text "I heard them say !cooed! not !could!" --clarity 1 --play
+matcha-tts --text "Unfortunately, the student's answer is not !correct!. According to the story, Luna liked to sit on the !windowsill! and watch the !waves! crash against the !rocks! every !morning!" --clarity 1 --play
+```
+
+**Without Clarity:**
+
+```bash
+matcha-tts --text "Pass me the peel not the pill" --play
+matcha-tts --text "Unfortunately, the student's answer is not correct. According to the story, Luna liked to sit on the windowsill and watch the waves crash against the rocks every morning." --play
+```
+
+---
+
+
+### ▶️ Run All Servers Windows Setup (Matcha-TTS + Flask + React)
 
 #### 1. Frontend (React)
 
@@ -218,22 +238,4 @@ python server.py
 
 ---
 
-### 🧪 Test Matcha-TTS via Terminal
-
-**With Clarity:**
-
-```bash
-matcha-tts --text "Pass me the !peel! not the !pill!" --clarity 1 --play
-matcha-tts --text "I heard them say !cooed! not !could!" --clarity 1 --play
-matcha-tts --text "Unfortunately, the student's answer is not !correct!. According to the story, Luna liked to sit on the !windowsill! and watch the !waves! crash against the !rocks! every !morning!" --clarity 1 --play
-```
-
-**Without Clarity:**
-
-```bash
-matcha-tts --text "Pass me the peel not the pill" --play
-matcha-tts --text "Unfortunately, the student's answer is not correct. According to the story, Luna liked to sit on the windowsill and watch the waves crash against the rocks every morning." --play
-```
-
----
 
