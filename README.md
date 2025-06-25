@@ -1,45 +1,70 @@
 # 📚 ReadingBuddy.AI
 
-An AI-powered reading companion designed for neurodivergent children. Children can read stories, listen to them with TTS, answer comprehension questions, and receive friendly feedback—all powered by AI models running locally or in the cloud.
+An **AI-powered reading companion** designed to support neurodivergent children aged 7–10. Children can upload stories, listen to them using AI-generated speech, answer comprehension questions, highlight words for vocabulary help, and receive friendly, personalized feedback—all powered by local and cloud-based AI models.
+
+---
+
+## ✨ Key AI Features
+
+- **📖 Story Upload + Segmentation**  
+  Automatically splits longer stories into manageable sections to reduce cognitive overload.
+
+- **🗣️ Text-to-Speech (TTS)**  
+  High-quality voice generation using **Matcha-TTS**, with optional **speech clarity enhancements** for minimal pairs (e.g., “pill” vs. “peel”).
+
+- **🧠 Reading Comprehension Assistant**  
+  Generates story-specific questions using LLMs. Supports both multiple choice and open-ended formats.
+
+- **🎯 Personalized Feedback Chatbot**  
+  Friendly, age-appropriate chatbot gives encouragement and corrections based on the child's answers and their learning profile.
+
+- **📚 Vocabulary Lookup**  
+  Highlight any word in the story and ask the AI for a simple definition in the context of the story.
+
+- **🧠 In-Context Learning with Learner Profiles**  
+  Questionnaire responses are saved and used to tailor chatbot responses (e.g., adapting for ADHD, dyslexia, auditory processing disorder, etc.).
+
+- **👀 Focus Tracker (Upcoming)**  
+  Combines mouse activity + webcam detection to gently track user attention during reading.
 
 ---
 
 ## 🧩 Project Versions
 
-| Version       | Description                               |
-|---------------|-------------------------------------------|
-| `streamlit_app/` | Rapid prototype with local TTS and LLM |
-| `frontend/ + backend/` | Production-ready full-stack version (React (Typescript) + Flask (Python) API) |
+| Folder                  | Description                                                                 |
+|--------------------------|-----------------------------------------------------------------------------|
+| `streamlit_app/`         | Lightweight prototype with Streamlit, Matcha-TTS, and Ollama (local LLM)    |
+| `frontend/ + backend/`   | Full-stack production-ready version (React + Flask), with persistent profiles and modular components |
 
 ---
 
-## 🔧 Full-Stack Setup (Flask + React)
+## 🔧 Full-Stack Setup (React + Flask)
 
 ### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/SonjiaD/ai4good
+cd ai4good
 ```
+
+---
 
 ### 2. Backend Setup (Flask)
 
-Navigate to the backend:
-
 ```bash
 cd backend
+python -m venv .venv
 ```
 
-Create and activate a virtual environment:
+Activate the environment:
 
-- **Windows**:
+- **Windows**
   ```bash
-  python -m venv .venv
   .venv\Scripts\activate
   ```
 
-- **Mac/Linux**:
+- **Mac/Linux**
   ```bash
-  python3 -m venv .venv
   source .venv/bin/activate
   ```
 
@@ -49,21 +74,19 @@ Install dependencies:
 pip install flask flask-cors langchain gtts matcha-tts langchain-community pymupdf
 ```
 
-Run the Flask server:
+Run the server:
 
 ```bash
 python app.py
 ```
 
-The server will run on `http://localhost:5000`.
+The backend will be available at: `http://localhost:5000`
 
 ---
 
 ### 3. Frontend Setup (React + TypeScript)
 
-> ⚠️ **Important**: The backend and frontend must be run in separate terminals.
-
-Open a new terminal, then:
+Open a new terminal:
 
 ```bash
 cd frontend
@@ -71,13 +94,17 @@ npm install
 npm start
 ```
 
-Your React app will run at `http://localhost:3000`.
+Your React app will be available at: `http://localhost:3000`
+
+> ⚠️ Make sure the Flask backend is running in a separate terminal window!
 
 ---
 
 ## 🧪 Streamlit Prototype Setup
 
-### 1. Clone the Repository
+This prototype runs everything in a single Python app using local models and a simpler interface.
+
+### 1. Clone the Repo
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/ReadingBuddyAI.git
@@ -114,36 +141,99 @@ If `requirements.txt` is missing:
 pip install streamlit langchain langchain-community gtts matcha-tts
 ```
 
-### 4. Install Ollama and Pull a Model
+### 4. Install Ollama + Model
 
 1. Download Ollama: https://ollama.com/download  
-2. Pull a model:
+2. Pull a local model:
 
 ```bash
 ollama pull llama3
 ```
 
-### 5. Run the Streamlit App
+### 5. Run Streamlit App
 
 ```bash
 cd streamlit_app
 streamlit run Home.py
 ```
 
-Visit: `http://localhost:8501`
+Visit the app at: `http://localhost:8501`
+
 
 ---
 
-### 🗣️ Matcha-TTS Setup (Windows Only)
+## 🧠 Matcha-TTS Setup Guide (Windows Only)
+
+ReadingBuddy.AI uses [Matcha-TTS](https://github.com/chocobearz/Matcha-TTS-L2-clarity/tree/main/matcha) for speech clarity, especially for minimal pairs (e.g. “pill” vs “peel”).
+
+### 🔗 Matcha-TTS GitHub Repo
+- https://github.com/chocobearz/Matcha-TTS-L2-clarity/tree/main/matcha
+
+### 🧰 Setup Instructions
 
 1. **Install eSpeak NG**  
    Download from: https://github.com/espeak-ng/espeak-ng/releases  
-   Find and copy the path to `libespeak-ng.dll` (typically in `C:\Program Files\eSpeak NG\libespeak-ng.dll`).
+   Locate the `libespeak-ng.dll` path (usually `C:\Program Files\eSpeak NG\libespeak-ng.dll`).
 
-2. **Set environment variable**
+2. **Set environment variable (PowerShell):**
 
 ```powershell
 $env:PHONEMIZER_ESPEAK_LIBRARY="C:\Program Files\eSpeak NG\libespeak-ng.dll"
 ```
 
-> 🔁 You need to run this **every time** before using Matcha-TTS unless you add it to your permanent system environment variables.
+3. **Activate virtual environment:**
+
+```powershell
+.venv310\Scripts\Activate
+```
+
+---
+
+### ▶️ Run All Servers (Matcha-TTS + Flask + React)
+
+#### 1. Frontend (React)
+
+```bash
+cd frontend
+npm start
+```
+
+#### 2. Backend (Flask)
+
+```powershell
+.venv310\Scripts\Activate
+cd backend
+$env:PHONEMIZER_ESPEAK_LIBRARY="C:\Program Files\eSpeak NG\libespeak-ng.dll"
+python app.py
+```
+
+#### 3. Matcha-TTS Server
+
+```powershell
+.venv310\Scripts\Activate
+$env:PHONEMIZER_ESPEAK_LIBRARY="C:\Program Files\eSpeak NG\libespeak-ng.dll"
+cd Matcha-TTS\matcha
+python server.py
+```
+
+---
+
+### 🧪 Test Matcha-TTS via Terminal
+
+**With Clarity:**
+
+```bash
+matcha-tts --text "Pass me the !peel! not the !pill!" --clarity 1 --play
+matcha-tts --text "I heard them say !cooed! not !could!" --clarity 1 --play
+matcha-tts --text "Unfortunately, the student's answer is not !correct!. According to the story, Luna liked to sit on the !windowsill! and watch the !waves! crash against the !rocks! every !morning!" --clarity 1 --play
+```
+
+**Without Clarity:**
+
+```bash
+matcha-tts --text "Pass me the peel not the pill" --play
+matcha-tts --text "Unfortunately, the student's answer is not correct. According to the story, Luna liked to sit on the windowsill and watch the waves crash against the rocks every morning." --play
+```
+
+---
+
