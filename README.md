@@ -3,7 +3,7 @@
 An **AI-powered reading companion** designed to support neurodivergent children aged 7–10. Children can upload stories, listen to them using AI-generated speech, answer comprehension questions, highlight words for vocabulary help, and receive friendly, personalized feedback—all powered by local and cloud-based AI models.
 
 ---
-## 🔗 Additional Links
+## 🔗 Links
 
 - **YouTube Presentation**: [Watch Our Demo](https://www.youtube.com/watch?v=IzJGKTbb9VY)
 - **Slide Deck**: [Slides](https://docs.google.com/presentation/d/1kwzcAqwsPFRZ223iXDrsqG7W1z3u-UjGa139fp5wK6g/edit?usp=sharing)
