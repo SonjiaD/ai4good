@@ -5,6 +5,7 @@ An **AI-powered reading companion** designed to support neurodivergent children 
 ---
 ## 🔗 Links
 
+- **Figma Design**: [Prototype](https://www.figma.com/design/j9fPMIz8Y2nxVmJYDB1hnc/ReadingBudd?node-id=0-1&t=PKDubu9j2tPs6nMM-1)
 - **YouTube Presentation**: [Watch Our Demo](https://www.youtube.com/watch?v=IzJGKTbb9VY)
 - **Slide Deck**: [Slides](https://docs.google.com/presentation/d/1kwzcAqwsPFRZ223iXDrsqG7W1z3u-UjGa139fp5wK6g/edit?usp=sharing)
 ---
