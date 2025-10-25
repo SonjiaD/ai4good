@@ -59,11 +59,11 @@ export default function OutfitShop() {
         </div>
         <nav>
           <Link to={'/home'} className="nav-link">{'Dashboard'}</Link>
-        <Link to={'/reading'} className="nav-link">Read</Link>
-        <Link to={'/avatar'} className="nav-link">Customize</Link>
-        <Link to={'/outfit-shop'} className="nav-link">Shop</Link>
-        <Link to="/profile" className="nav-link">Profile</Link>
-        <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
+          <Link to={'/reading'} className="nav-link">Read</Link>
+          <Link to={'/avatar'} className="nav-link">Customize</Link>
+          <Link to={'/outfit-shop'} className="nav-link">Shop</Link>
+          <Link to="/profile" className="nav-link">Profile</Link>
+          <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
         </nav>
       </header>
       <h1>Outfit Shop</h1>
