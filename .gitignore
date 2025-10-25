@@ -22,3 +22,9 @@ package-lock.json
 # Mac/Windows system files
 .DS_Store
 Thumbs.db
+
+#google credentials (tts)
+google-credentials.json
+backend/google-credentials.json
+googlecredentials.json
+backend/googlecredentials.json
