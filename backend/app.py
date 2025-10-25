@@ -4,8 +4,6 @@ from flask_cors import CORS
 import os
 import fitz
 
-#importing ollama
-from langchain.chat_models import ChatOllama
 from flask import send_file, Flask, request, jsonify
 
 #matcha-tts
@@ -31,6 +29,26 @@ from flask import Flask, request, jsonify
 #paragraph structuring
 import re
 
+#anthropic - claude (not using anymore cuz limited)
+import anthropic    #gives access to Claude API
+import os
+from dotenv import load_dotenv  #load .env file automatically
+
+#gemini (unlimited)
+import google.generativeai as genai #gemini ai lib
+
+#loading env variables from .env file
+load_dotenv()
+
+# #initialize anthropic claude client, calling the key from .env file
+# claude_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+#configure gemini api key
+genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
+
+#initialize gemini model
+gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
 app = Flask(__name__) #creates new flask web application 
 
 CORS(app)  # Allow requests from frontend
@@ -48,6 +66,26 @@ def _load_profile():
 def _save_profile(data):
     with open(PROFILE_PATH, "w") as f:
         json.dump(data, f, indent=2)
+
+#helper fnc to call gemini
+def call_gemini(prompt, temperature=0.3):
+    """
+    Helper function to call Gemini API
+    
+    Args:
+        prompt: The text prompt to send to Gemini
+        temperature: Controls randomness (0-1). Lower = more focused
+    
+    Returns:
+        The text response from Gemini
+    """
+    response = gemini_model.generate_content(
+        prompt,
+        generation_config=genai.types.GenerationConfig(
+            temperature=temperature,
+        )
+    )
+    return response.text
 
 @app.route("/api/save-questionnaire", methods=["POST"])
 def save_questionnaire():
@@ -232,8 +270,7 @@ Output ONLY the 3 questions, numbered:
 2. ...
 3. ...
 """
-    llm = ChatOllama(model="llama3", temperature=0.3)
-    raw = llm.predict(q_prompt)
+    raw = call_gemini(q_prompt, temperature = 0.3)
 
     questions = [line.strip().split(". ", 1)[-1]
                  for line in raw.strip().split("\n")
@@ -266,8 +303,7 @@ Question: {question}
 Student Answer: {answer}
 """
 
-    llm = ChatOllama(model="llama3", temperature=0.3)
-    feedback = llm.predict(fb_prompt)
+    feedback = call_gemini(fb_prompt, temperature = 0.3)
 
     return jsonify({"feedback": feedback})
 
@@ -317,8 +353,7 @@ def clarify_text():
         "Return only the revised text with !word! tags. Do not explain or comment. Do NOT start with phrases like 'Here is the revised text'"
     )
 
-    llm = ChatOllama(model="llama3", temperature=0.3)
-    clarified_text = llm.predict(clarity_prompt).strip()
+    clarified_text = call_gemini(clarity_prompt, temperature = 0.3).strip()
 
     # Clean up unexpected bold or double !! if present
     #sometimes the model might return text with **bold** or !!double exclamations!!
@@ -371,8 +406,7 @@ Question: {user_question}
 
 Answer:
 """
-    llm = ChatOllama(model="llama3", temperature=0.3)
-    answer = llm.predict(chat_prompt)
+    answer = call_gemini(chat_prompt, temperature = 0.3)
     
 
     return jsonify({"answer": answer})
@@ -406,8 +440,7 @@ Your job:
 Answer:
 
 """
-    llm = ChatOllama(model="llama3", temperature=0.3)
-    result = llm.predict(prompt)
+    result = call_gemini(prompt, temperature = 0.3)
 
     return jsonify({"definition": result.strip()})
 
