@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify 
 from flask_cors import CORS
 import os
@@ -37,6 +36,9 @@ from dotenv import load_dotenv  #load .env file automatically
 #gemini (unlimited)
 import google.generativeai as genai #gemini ai lib
 
+#google cloud text-to-speech
+from google.cloud import texttospeech
+
 #loading env variables from .env file
 load_dotenv()
 
@@ -48,6 +50,10 @@ genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
 
 #initialize gemini model
 gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
+#initialize google tts client
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_TTS_CREDENTIALS_PATH")
+tts_client = texttospeech.TextToSpeechClient()
 
 app = Flask(__name__) #creates new flask web application 
 
@@ -147,8 +153,8 @@ def _profile_context() -> str:
                 lines.append(f"{label}: {v}")
     return "\n".join(lines)
 # -----------------------------------------
-#matcha-tts
-os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
+#matcha-tts --- Commented out
+#os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "C:\\Program Files\\eSpeak NG\\libespeak-ng.dll"
 
 #whisper
 # Hardcode ffmpeg path for Whisper to find it
@@ -263,7 +269,7 @@ Below is a story. Your job is to create 3 simple, clear reading comprehension qu
 ✅ ONLY use characters and events from the story **as written**.
 
 Story:
-\"\"\"{story}\"\"\"
+\"\"\"{story}\"\"\" 
 
 Output ONLY the 3 questions, numbered:
 1. ...
@@ -298,7 +304,7 @@ Give kind, simple feedback using **only** the story info.
 🚫 DO NOT invent names, characters, or facts.
 
 Story:
-\"\"\"{story}\"\"\"
+\"\"\"{story}\"\"\" 
 Question: {question}
 Student Answer: {answer}
 """
@@ -307,40 +313,66 @@ Student Answer: {answer}
 
     return jsonify({"feedback": feedback})
 
-#helper function to send message to local websocket server
-async def send_tts_message(text):
-    uri = "ws://localhost:1000"
-    async with websockets.connect(uri) as websocket:
-        message = {"text": text}
-        message_json = json.dumps(message)
-        await websocket.send(message_json)
-        print(f"Sent: {message_json})")
+#helper function to send message to local websocket server -- commented out since for matcha
+# async def send_tts_message(text):
+#     uri = "ws://localhost:1000"
+#     async with websockets.connect(uri) as websocket:
+#         message = {"text": text}
+#         message_json = json.dumps(message)
+#         await websocket.send(message_json)
+#         print(f"Sent: {message_json})")
 
-        response = await websocket.recv()
-        print(f"Received: {response}")
-        return response
+#         response = await websocket.recv()
+#         print(f"Received: {response}")
+#         return response
 
 
-#new matcha-tts clarity tags
+#new matcha-tts clarity tags (replaced with google cloud tts)
 @app.route('/api/tts', methods=['POST'])
 def tts():
     data = request.get_json()
     text = data.get("text", "")[:1000]  # safety limit
-    print("🔊 TTS receives:", text)
+    print("🔊 Google TTS receives:", text)
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(send_tts_message(text))
-        return jsonify({"status": "ok"})
+        synthesis_input = texttospeech.SynthesisInput(text=text)
+
+        voice = texttospeech.VoiceSelectionParams(
+            language_code="en-US",
+            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE,
+            name="en-US-Wavenet-F"  #specific voice option, we can change this around
+        )
+
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3,
+            speaking_rate=1.0,
+            pitch=0.0
+        )
+
+        response = tts_client.synthesize_speech(
+            input=synthesis_input,
+            voice=voice,
+            audio_config=audio_config
+        )
+
+        output_path = os.path.join("temp", "tts_output.mp3")
+        os.makedirs("temp", exist_ok=True)
+        with open(output_path, "wb") as out:
+            out.write(response.audio_content)
+
+        print(f"✅ Audio saved at {output_path}")
+        return send_file(output_path, mimetype="audio/mpeg", as_attachment=False)
+
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 #clarify text for matcha-tts
 @app.route('/api/clarify-text', methods=['POST'])
 def clarify_text():
     data = request.get_json()
-    input_text = data.get("text", "")
+    input_text = data.get("text", "") 
 
     clarity_prompt = (
         "Wrap minimal pair words (e.g. pill/peel, pool/pull, bit/beat) with single exclamation marks, like !pill!. "
@@ -429,7 +461,7 @@ Below is a story and a word that appears in it. Explain what the word means in t
 Word: "{word}"
 
 Story:
-\"\"\"{story}\"\"\"
+\"\"\"{story}\"\"\" 
 
 Your job:
 - Give a short, clear definition of the word.

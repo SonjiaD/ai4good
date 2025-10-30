@@ -28,3 +28,5 @@ google-credentials.json
 backend/google-credentials.json
 googlecredentials.json
 backend/googlecredentials.json
+googlecredentialstts.json
+backend/googlecredentialstts.json
