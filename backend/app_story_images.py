@@ -118,7 +118,7 @@ def decide_kid_style(kid_style_param: str | None, reader_age_param: str | None) 
     if reader_age_param is not None:
         try:
             age = int(reader_age_param)
-            if 4 <= age <= 12:
+            if 7 <= age <= 10:
                 return True
         except ValueError:
             pass
@@ -129,9 +129,9 @@ def build_style_preamble(reader_age: int | None = None) -> str:
     """Generic picture-book look; optional age hint."""
     parts = [KID_STYLE]
     if reader_age is not None:
-        if reader_age <= 6:
+        if reader_age <= 7:
             parts.append("Shapes and compositions should be extra simple; avoid clutter.")
-        elif reader_age <= 12:
+        elif reader_age <= 10:
             parts.append("Maintain simple shapes; allow slightly richer scenes for ages 7–12.")
     return "\n".join(parts) + "\n"
 
