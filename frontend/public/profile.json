@@ -1,18 +1,10 @@
 {
   "questionnaire": {
     "role": "Parent",
-    "reading_style": [
-      "With audio"
-    ],
-    "reading_time": [
-      "5-10 minutes"
-    ],
-    "reading_supports": [
-      "Larger fonts"
-    ],
-    "reading_challenges": [
-      "Autism (ASD)"
-    ]
+    "reading_style": "With visuals",
+    "reading_time": "<5 minutes",
+    "reading_supports": "No support",
+    "reading_challenges": "Attention differences (ADHD)"
   },
   "struggles": []
 }

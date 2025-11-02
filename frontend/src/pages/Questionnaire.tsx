@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import buddFace from '../assets/budd-face.png';
 import logo from '../assets/logo.png';
@@ -13,13 +13,13 @@ const API_BASE = "http://127.0.0.1:5000";
 
 
 type Role = 'Parent' | 'Child' | null;
-type AnswerMap = Record<string, string[] | string>;
+type AnswerMap = Record<string, string>;
 
 const Questionnaire: React.FC = () => {
   const [role, setRole] = useState<Role>(null);
   const [step, setStep] = useState<number>(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [selectedOption, setSelectedOption] = useState<string>('');
   const [showThankYou, setShowThankYou] = useState(false);
   const navigate = useNavigate();
 
@@ -28,27 +28,42 @@ const Questionnaire: React.FC = () => {
   // Debug: Log when component renders
   console.log("[Questionnaire] Render - showThankYou:", showThankYou, "role:", role, "step:", step);
 
+  // Check if questionnaire was already completed on component mount
+  useEffect(() => {
+    const questionnaireCompleted = localStorage.getItem('questionnaire_completed');
+    if (questionnaireCompleted === 'true') {
+      console.log("[Questionnaire] Questionnaire already completed - showing thank you page");
+      setShowThankYou(true);
+    }
+  }, []);
+
+  // Debug: Track showThankYou changes
+  useEffect(() => {
+    console.log("[Questionnaire] showThankYou changed to:", showThankYou);
+    if (showThankYou) {
+      console.log("[Questionnaire] Thank you page should be visible now!");
+    }
+  }, [showThankYou]);
+
   const handleRoleSelect = (selectedRole: Role) => {
     setRole(selectedRole);
     setStep(0);
-    setSelectedOptions([]);
+    setSelectedOption('');
   };
 
-  const toggleOption = (option: string) => {
-    setSelectedOptions((prev) =>
-      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
-    );
+  const selectOption = (option: string) => {
+    setSelectedOption(option);
   };
 
   const handleNext = async () => {
     const questionId = questions[step].id;
-    setAnswers((prev) => ({ ...prev, [questionId]: selectedOptions }));
-    setSelectedOptions([]);
+    setAnswers((prev) => ({ ...prev, [questionId]: selectedOption }));
+    setSelectedOption('');
 
     if (step < questions.length - 1) {
       setStep(step + 1);
     } else {
-      const finalAnswers = { role, ...answers, [questionId]: selectedOptions };
+      const finalAnswers = { role, ...answers, [questionId]: selectedOption };
 
       // Get user_id and access_token from localStorage (set during login/signup)
       const userId = localStorage.getItem('user_id');
@@ -78,6 +93,8 @@ const Questionnaire: React.FC = () => {
       }
 
       console.log("[Questionnaire] Setting showThankYou to true");
+      // Mark questionnaire as completed in localStorage to persist state
+      localStorage.setItem('questionnaire_completed', 'true');
       setShowThankYou(true);
       console.log("[Questionnaire] Questionnaire complete - staying on page");
       // Don't auto-redirect - let user click button to proceed
@@ -90,7 +107,7 @@ const Questionnaire: React.FC = () => {
     const skippedAnswers = { ...answers, [questionId]: 'skipped' };
 
     setAnswers(skippedAnswers);
-    setSelectedOptions([]);
+    setSelectedOption('');
 
     if (step < questions.length - 1) {
       setStep(step + 1);
@@ -123,6 +140,8 @@ const Questionnaire: React.FC = () => {
         console.error("❌ Failed to send skipped questionnaire:", err);
       }
 
+      // Mark questionnaire as completed in localStorage to persist state
+      localStorage.setItem('questionnaire_completed', 'true');
       setShowThankYou(true);
       // Don't auto-redirect - let user click button to proceed
       return;
@@ -135,11 +154,11 @@ const Questionnaire: React.FC = () => {
       const prevStep = step - 1;
       const prevQuestionId = questions[prevStep].id;
       const prevAnswer = answers[prevQuestionId];
-      setSelectedOptions(Array.isArray(prevAnswer) ? prevAnswer : []);
+      setSelectedOption(prevAnswer || '');
       setStep(prevStep);
     } else {
       setRole(null); // Go back to role selection
-      setSelectedOptions([]);
+      setSelectedOption('');
     }
   };
 
@@ -184,10 +203,11 @@ const Questionnaire: React.FC = () => {
               {questions[step].options.map((opt) => (
                 <label key={opt} className="checkbox-label">
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name={`question-${step}`}
                     value={opt}
-                    checked={selectedOptions.includes(opt)}
-                    onChange={() => toggleOption(opt)}
+                    checked={selectedOption === opt}
+                    onChange={() => selectOption(opt)}
                   />
                   {opt}
                 </label>
@@ -202,7 +222,7 @@ const Questionnaire: React.FC = () => {
                     {['reading_challenges', 'reading_difficulties'].includes(questions[step].id) && (
                     <button className="nav-btn skip-btn" onClick={handleSkip}>Skip ➡</button>
                     )}
-                    <button className="nav-btn next-btn" onClick={handleNext} disabled={selectedOptions.length === 0}>
+                    <button className="nav-btn next-btn" onClick={handleNext} disabled={!selectedOption}>
                     Next
                     </button>
                 </div>
