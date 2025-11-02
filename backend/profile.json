@@ -2,16 +2,16 @@
   "questionnaire": {
     "role": "Parent",
     "reading_style": [
-      "With visuals"
+      "With audio"
     ],
     "reading_time": [
-      "<5 minutes"
+      "5-10 minutes"
     ],
     "reading_supports": [
-      "Text To Speech"
+      "Larger fonts"
     ],
     "reading_challenges": [
-      "Attention differences (ADHD)"
+      "Autism (ASD)"
     ]
   },
   "struggles": []

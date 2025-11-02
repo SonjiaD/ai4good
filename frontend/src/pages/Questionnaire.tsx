@@ -25,6 +25,9 @@ const Questionnaire: React.FC = () => {
 
   const questions = role === 'Parent' ? parentQuestions : childQuestions;
 
+  // Debug: Log when component renders
+  console.log("[Questionnaire] Render - showThankYou:", showThankYou, "role:", role, "step:", step);
+
   const handleRoleSelect = (selectedRole: Role) => {
     setRole(selectedRole);
     setStep(0);
@@ -43,37 +46,42 @@ const Questionnaire: React.FC = () => {
     setSelectedOptions([]);
 
     if (step < questions.length - 1) {
-        setStep(step + 1);
+      setStep(step + 1);
     } else {
+      const finalAnswers = { role, ...answers, [questionId]: selectedOptions };
 
-        const finalAnswers = { role, ...answers, [questionId]: selectedOptions };
+      // Get user_id and access_token from localStorage (set during login/signup)
+      const userId = localStorage.getItem('user_id');
+      const accessToken = localStorage.getItem('access_token');
 
-        try {
-          // await axios.post("/api/save-questionnaire", finalAnswers);
-          await axios.post(`${API_BASE}/api/save-questionnaire`, finalAnswers);
-
-          localStorage.setItem("readingbuddy_profile", JSON.stringify(finalAnswers)); // ✅ Save to localStorage
-
-          console.log("✅ Questionnaire data sent to backend.");
-        } catch (err) {
-          console.error("❌ Failed to send questionnaire to backend:", err);
-        }
-
-        setShowThankYou(true);
-        // Redirect to home after 2.5 seconds
-        setTimeout(() => {
-          navigate('/home');
-        }, 2500);
+      if (!userId) {
+        console.error("❌ No user_id found. User must be logged in.");
+        alert("Please log in first!");
+        navigate('/login');
         return;
+      }
 
+      try {
+        // Send to backend with user_id and access_token
+        console.log("[Questionnaire] Sending data to backend...");
+        await axios.post(`${API_BASE}/api/save-questionnaire`, {
+          answers: finalAnswers,
+          user_id: userId,
+          access_token: accessToken
+        });
 
-        // OLD VERSION Final step, log the answers
+        localStorage.setItem("readingbuddy_profile", JSON.stringify(finalAnswers));
 
-        // //Logging to console for now, can be replaced later by sending to backend or saving profile
-        // console.log("✅ Final Answers:", { role, ...answers, [questionId]: selectedOptions });
-        // //Add logic to save profile or redirect ?
-        // //For now just show thank you message
-        // setShowThankYou(true);
+        console.log("✅ Questionnaire data sent to backend.");
+      } catch (err) {
+        console.error("❌ Failed to send questionnaire to backend:", err);
+      }
+
+      console.log("[Questionnaire] Setting showThankYou to true");
+      setShowThankYou(true);
+      console.log("[Questionnaire] Questionnaire complete - staying on page");
+      // Don't auto-redirect - let user click button to proceed
+      return;
     }
   };
 
@@ -88,12 +96,27 @@ const Questionnaire: React.FC = () => {
       setStep(step + 1);
     } else {
       const finalAnswers = { role, ...skippedAnswers };
+
+      // Get user_id and access_token from localStorage
+      const userId = localStorage.getItem('user_id');
+      const accessToken = localStorage.getItem('access_token');
+
+      if (!userId) {
+        console.error("❌ No user_id found. User must be logged in.");
+        alert("Please log in first!");
+        navigate('/login');
+        return;
+      }
+
       try {
-        // await axios.post("/api/save-questionnaire", finalAnswers);
-        await axios.post(`${API_BASE}/api/save-questionnaire`, finalAnswers);
+        // Send to backend with user_id and access_token
+        await axios.post(`${API_BASE}/api/save-questionnaire`, {
+          answers: finalAnswers,
+          user_id: userId,
+          access_token: accessToken
+        });
 
-        localStorage.setItem("readingbuddy_profile", JSON.stringify(finalAnswers)); // ✅ Save to localStorage
-
+        localStorage.setItem("readingbuddy_profile", JSON.stringify(finalAnswers));
 
         console.log("✅ Skipped questionnaire sent to backend.");
       } catch (err) {
@@ -101,12 +124,8 @@ const Questionnaire: React.FC = () => {
       }
 
       setShowThankYou(true);
-      // Redirect to home after 2.5 seconds
-      setTimeout(() => {
-        navigate('/home');
-      }, 2500);
+      // Don't auto-redirect - let user click button to proceed
       return;
-
     }
   };
 
@@ -131,8 +150,8 @@ const Questionnaire: React.FC = () => {
           <img src={logo} alt="Logo" className="logo-img" />
         </div>
         <nav>
-          <a href="#">About</a>
-          <a href="#">Contact</a>
+          <a href="#" onClick={(e) => e.preventDefault()}>About</a>
+          <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
           <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
         </nav>
       </header>

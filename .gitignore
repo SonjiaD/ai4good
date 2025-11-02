@@ -13,7 +13,11 @@ venv/
 env/
 .venv/
 .venv310/
+
+# Environment variables (API keys, secrets)
 .env
+backend/.env
+frontend/.env
 
 # Node.js
 node_modules/
@@ -28,3 +32,5 @@ google-credentials.json
 backend/google-credentials.json
 googlecredentials.json
 backend/googlecredentials.json
+googlecredentialstts.json
+backend/googlecredentialstts.json

@@ -3,9 +3,46 @@ import { Link, useNavigate } from 'react-router-dom';
 import './Signup.css';
 import logo from '../assets/logo.png';
 import honeyThumbs from '../assets/honey-thumbs-signup.png';
+import axios from 'axios';
+
+const API_BASE = "http://127.0.0.1:5000";
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      // Call backend signup API
+      const response = await axios.post(`${API_BASE}/api/signup`, {
+        email,
+        password
+      });
+
+      console.log('✅ Signup successful:', response.data);
+
+      // Store user info in localStorage
+      localStorage.setItem('user_id', response.data.user_id);
+      localStorage.setItem('user_email', response.data.email);
+      localStorage.setItem('access_token', response.data.access_token);
+
+      // Redirect to consent form
+      navigate('/consent');
+
+    } catch (err: any) {
+      console.error('❌ Signup failed:', err);
+      setError(err.response?.data?.error || 'Signup failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="signup-container">
@@ -14,30 +51,52 @@ const Signup: React.FC = () => {
           <img src={logo} alt="Logo" className="logo-img" />
         </div>
         <nav>
-          <a href="#">About</a>
-          <a href="#">Contact</a>
+          <a href="#" onClick={(e) => e.preventDefault()}>About</a>
+          <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
         </nav>
       </header>
 
-    <main className="signup-main">
-            <h1>Let’s get started!</h1>
-            <p>To jumpstart into your reading journey~</p>
-            
-            <form className="signup-form">
-              <input type="email" placeholder="Email" className="input blue" />
-              <input type="password" placeholder="Password…" className="input purple" />
-              <button type="submit" className="submit-btn" onClick={() => navigate('/consent')}>Sign Up</button>
-            </form>
+      <main className="signup-main">
+        <h1>Let's get started!</h1>
+        <p>To jumpstart into your reading journey~</p>
+        
+        {error && <p className="error-message">{error}</p>}
+        
+        <form className="signup-form" onSubmit={handleSignup}>
+          <input 
+            type="email" 
+            placeholder="Email" 
+            className="input blue"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input 
+            type="password" 
+            placeholder="Password…" 
+            className="input purple"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+          />
+          <button 
+            type="submit" 
+            className="submit-btn"
+            disabled={loading}
+          >
+            {loading ? 'Creating Account...' : 'Sign Up'}
+          </button>
+        </form>
 
-            <p className="login-text">
-                Already have an account? <Link to="/login" className="login-link">Login</Link>
-            </p>
+        <p className="login-text">
+          Already have an account? <Link to="/login" className="login-link">Login</Link>
+        </p>
 
-            <img src={honeyThumbs} alt="Cheering Bear" className="signup-bear" />
+        <img src={honeyThumbs} alt="Cheering Bear" className="signup-bear" />
       </main>
     </div>
   );
 };
-
 
 export default Signup;

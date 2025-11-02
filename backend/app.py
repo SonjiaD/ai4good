@@ -37,6 +37,9 @@ from dotenv import load_dotenv  #load .env file automatically
 #gemini (unlimited)
 import google.generativeai as genai #gemini ai lib
 
+#supabase client, database
+from supabase_client import supabase
+
 #loading env variables from .env file
 load_dotenv()
 
@@ -90,14 +93,64 @@ def call_gemini(prompt, temperature=0.3):
 @app.route("/api/save-questionnaire", methods=["POST"])
 def save_questionnaire():
     try:
-        answers = request.get_json()
-        print("[📨 Received questionnaire]", answers)
+        data = request.get_json()
+        answers = data.get("answers")  # Questionnaire answers
+        user_id = data.get("user_id")  # User ID from frontend
+        access_token = data.get("access_token")  # Access token for authentication
 
+        print(f"[📨 Received questionnaire] User: {user_id}")
+        print(f"[🔍 Access token received?] {access_token is not None}")
+        if access_token:
+            print(f"[🔐 Token preview] {access_token[:20]}...")
+
+        # Validate input
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        if not answers:
+            return jsonify({"error": "answers are required"}), 400
+
+        # Create authenticated Supabase client if access_token is provided
+        if access_token:
+            from supabase import create_client
+            auth_supabase = create_client(
+                os.getenv("SUPABASE_URL"),
+                os.getenv("SUPABASE_KEY")
+            )
+            # Set the auth header for this request
+            auth_supabase.postgrest.auth(access_token)
+            client_to_use = auth_supabase
+            print("[🔐 Using authenticated Supabase client]")
+        else:
+            client_to_use = supabase
+            print("[⚠️ Using anonymous Supabase client - RLS may block this]")
+
+        # Save to Supabase
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Prepare data for upsert - username is required (NOT NULL constraint)
+        profile_data = {
+            "id": user_id,
+            "username": f"user_{user_id[:8]}",  # Generate username from user_id
+            "questionnaire": answers,
+            "role": answers.get("role"),
+            "reading_style": answers.get("reading_style", []),
+            "reading_time": answers.get("reading_time", []),
+            "reading_supports": answers.get("reading_supports", []),
+            "reading_challenges": answers.get("reading_challenges", []),
+            "created_at": now,
+            "updated_at": now
+        }
+
+        response = client_to_use.table("profiles").upsert(profile_data).execute()
+
+        print("[✅ Saved to Supabase]", response.data)
+
+        # Still save to JSON for backward compatibility (optional)
         profile = _load_profile()
         profile["questionnaire"] = answers
         _save_profile(profile)
-
-        # Copy to frontend/public/profile.json
         shutil.copy("profile.json", "../frontend/public/profile.json")
 
         return jsonify({"msg": "questionnaire stored"})
@@ -108,17 +161,129 @@ def save_questionnaire():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/api/profile", methods=["GET"])
 def get_profile():
     try:
-        profile = _load_profile()
-        return jsonify(profile)
+        # Get user_id and access_token from query parameters
+        user_id = request.args.get('user_id')
+        access_token = request.args.get('access_token')
+
+        print(f"[🔍 GET /api/profile] Querying for user_id: {user_id}")
+
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        # Create authenticated Supabase client if access_token is provided
+        if access_token:
+            from supabase import create_client
+            auth_supabase = create_client(
+                os.getenv("SUPABASE_URL"),
+                os.getenv("SUPABASE_KEY")
+            )
+            # Set the auth header for this request
+            auth_supabase.postgrest.auth(access_token)
+            client_to_use = auth_supabase
+            print("[🔐 Using authenticated Supabase client]")
+        else:
+            client_to_use = supabase
+            print("[⚠️ Using anonymous Supabase client - RLS may block this]")
+
+        # Get from Supabase
+        response = client_to_use.table("profiles").select("*").eq("id", user_id).execute()
+
+        print(f"[🔍 Supabase response] data: {response.data}, count: {len(response.data) if response.data else 0}")
+
+        if response.data and len(response.data) > 0:
+            print(f"[✅ Loaded profile from Supabase] User: {user_id}")
+            print(f"[📦 Profile data] {response.data[0]}")
+            return jsonify(response.data[0])
+        else:
+            # No profile found in database, return empty
+            print(f"[ℹ️ No profile found for user: {user_id}]")
+            return jsonify({
+                "questionnaire": {},
+                "struggles": []
+            })
+
     except Exception as e:
         import traceback
+        print(f"[❌ ERROR in /api/profile]")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+#sign up - create new account
+#receives email/pw from frontend
+#create account in supabase auth
+@app.route("/api/signup", methods=["POST"])
+def signup():
+    """Create a new user account"""
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
+        
+        # Validate input
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+        
+        # Create user in Supabase Auth
+        response = supabase.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+
+        print(f"[✅ User created] {response.user.id}")
+        print(f"[🔍 Session exists?] {response.session is not None}")
+        if response.session:
+            print(f"[🔐 Access token] {response.session.access_token[:20]}...")
+        else:
+            print(f"[⚠️ No session created - email confirmation might be enabled]")
+
+        return jsonify({
+            "msg": "Account created successfully",
+            "user_id": response.user.id,
+            "email": response.user.email,
+            "access_token": response.session.access_token if response.session else None
+        }), 201
+        
+    except Exception as e:
+        import traceback
+        print("❌ ERROR in /api/signup:")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+#login - authenticate user
+@app.route("/api/login", methods=["POST"])
+def login():
+    """Login an existing user"""
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
+        
+        # Validate input
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+        
+        # Sign in with Supabase Auth
+        response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+        
+        print(f"[✅ User logged in] {response.user.id}")
+        
+        return jsonify({
+            "msg": "Login successful",
+            "user_id": response.user.id,
+            "email": response.user.email,
+            "access_token": response.session.access_token
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        print("❌ ERROR in /api/login:")
+        traceback.print_exc()
+        return jsonify({"error": "Invalid email or password"}), 401
 
 #helper to turn saved questionnaire into short context string
 def _profile_context() -> str:
@@ -164,32 +329,6 @@ def home():
 @app.route("/api/hello")
 def hello():
     return "👋 Hello!"
-
-# adding new app route for the PyMuPDF
-# @app.route('/api/upload-pdf', methods=['POST'])
-# def upload_pdf():
-#     if 'file' not in request.files:
-#         return jsonify({'error': 'No file uploaded'}), 400
-
-#     file = request.files['file']
-    
-#     if not file.filename.endswith('.pdf'):
-#         return jsonify({'error': 'Invalid file format'}), 400
-
-#     # Save temporarily
-#     filepath = os.path.join('temp', file.filename)
-#     os.makedirs('temp', exist_ok=True)
-#     file.save(filepath)
-
-#     # Extract text
-#     try:
-#         doc = fitz.open(filepath)
-#         text = "\n".join([page.get_text() for page in doc])
-#         doc.close()
-#         os.remove(filepath)
-#         return jsonify({'text': text})
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/upload-pdf', methods=['POST'])
 def upload_pdf():
