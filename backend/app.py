@@ -6,9 +6,9 @@ import fitz
 from flask import send_file, Flask, request, jsonify
 
 #matcha-tts
-import subprocess
-import traceback
-import time
+#import subprocess
+#import traceback
+#import time
 
 #websocket-client logic
 import asyncio
@@ -16,8 +16,8 @@ import websockets
 import json
 
 #whisper
-import whisper
-import tempfile
+#import whisper
+#import tempfile
 
 #questionnaire copying
 import shutil
@@ -39,6 +39,9 @@ import google.generativeai as genai #gemini ai lib
 #google cloud text-to-speech
 from google.cloud import texttospeech
 
+#google cloud speech-to-text
+from google.cloud import speech
+
 #loading env variables from .env file
 load_dotenv()
 
@@ -54,6 +57,10 @@ gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
 #initialize google tts client
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_TTS_CREDENTIALS_PATH")
 tts_client = texttospeech.TextToSpeechClient()
+
+#initialize google sst client
+stt_client = speech.SpeechClient()
+
 
 app = Flask(__name__) #creates new flask web application 
 
@@ -158,8 +165,8 @@ def _profile_context() -> str:
 
 #whisper
 # Hardcode ffmpeg path for Whisper to find it
-os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
-model = whisper.load_model("base")  # Load the Whisper model
+#os.environ["PATH"] += os.pathsep + r"C:\Users\sonja\Downloads\ffmpeg-7.1.1-essentials_build\ffmpeg-7.1.1-essentials_build\bin"
+#model = whisper.load_model("base")  # Load the Whisper model
 
 
 @app.route("/") #defines home route like homepage of server
@@ -397,14 +404,59 @@ def clarify_text():
     return jsonify({"text": clarified_text})
 
 #whisper
+#@app.route('/api/transcribe-audio', methods=['POST'])
+#def transcribe_audio():
+#    file = request.files['audio']
+#    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp:
+#        file.save(temp.name)
+#        result = model.transcribe(temp.name)
+#        transcription = result['text']
+#    return jsonify({'transcription': transcription})
+
+#google cloud stt
 @app.route('/api/transcribe-audio', methods=['POST'])
 def transcribe_audio():
-    file = request.files['audio']
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp:
-        file.save(temp.name)
-        result = model.transcribe(temp.name)
-        transcription = result['text']
-    return jsonify({'transcription': transcription})
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'error': 'No audio file provided'}), 400
+            
+        file = request.files['audio']
+        print(f"🎤 Received audio file: {file.filename}")
+        
+        #Reading into memory instead of into a file
+        audio_content = file.read()
+        print(f"📊 Audio file size: {len(audio_content)} bytes")
+        
+        # Configure recognition
+        config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
+            sample_rate_hertz=48000,
+            language_code="en-US",
+            enable_automatic_punctuation=True,
+        )
+        
+        audio = speech.RecognitionAudio(content=audio_content)
+        
+        print("🔄 Sending to Google Speech-to-Text")
+        response = stt_client.recognize(config=config, audio=audio)
+        
+        transcription = ""
+        if response.results:
+            for result in response.results:
+                if result.alternatives:
+                    transcription += result.alternatives[0].transcript + " "
+            transcription = transcription.strip()
+        
+        if not transcription:
+            transcription = "No speech detected"
+            
+        print(f"✅ Transcription: {transcription}")
+        return jsonify({'transcription': transcription})
+
+    except Exception as e:
+        print("❌ STT Error:")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 #qa assistant .tsx page
 # Free-form QA assistant based on uploaded story
