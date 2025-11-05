@@ -3,6 +3,8 @@ import os
 import io
 import base64
 from datetime import datetime
+from urllib.parse import urljoin
+from flask import url_for
 from pathlib import Path
 from typing import List, Tuple
 
@@ -157,7 +159,11 @@ def save_png(png_bytes: bytes, stem: str) -> str:
     filename = f"{stem}-{ts}.png"
     path = OUTPUT_DIR / filename
     path.write_bytes(png_bytes)
-    return str(path.resolve())
+    return filename
+
+def file_url(filename: str) -> str:
+    # Builds an absolute URL to the blueprint route, including /api prefix
+    return url_for("images_bp.serve_generated", filename=filename, _external=True)
 
 # ---------------------------
 # Routes
@@ -200,8 +206,8 @@ def create_story_images():
 
     style_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else None
 
-    generated_paths: List[str] = []
-    images_info: List[Tuple[int, str]] = []
+    generated_filenames: List[str] = []
+    images_json: List[Tuple[int, str]] = []
 
     counted = 0
     for idx, text in enumerate(pages):
@@ -213,20 +219,28 @@ def create_story_images():
 
         try:
             png_bytes = generate_image(prompt, size=size)
-            out_path = save_png(png_bytes, stem=f"page{idx+1}")
-            generated_paths.append(out_path)
-            images_info.append((idx, out_path))
+            filename = save_png(png_bytes, stem=f"page{idx+1}")
+            generated_filenames.append(file_url(filename))
+            images_json.append({
+                "url": file_url(filename),
+                "page": idx + 1,
+                "prompt": prompt
+            })
+
             counted += 1
         except Exception as e:
-            images_info.append((idx, f"ERROR: {e}"))
+            images_json.append({
+                "error": str(e),
+                "page": idx + 1
+            })
 
-    if not generated_paths:
+    if not generated_filenames:
         return jsonify({"error": "No images were generated. Check API key/credits and try smaller pages."}), 500
 
     return jsonify({
         "message": "Images generated.",
-        "count": len(generated_paths),
-        "paths": generated_paths
+        "count": len(generated_filenames),
+        "images": images_json
     }), 200
 
 @images_bp.route("/generated/<path:filename>")
@@ -234,10 +248,6 @@ def serve_generated(filename):
     """Serve generated images."""
     return send_from_directory(str(OUTPUT_DIR.resolve()), filename, mimetype="image/png")
 
-def file_url(filename: str) -> str:
-    """Utility to turn file path into absolute URL."""
-    base = request.host_url  # e.g., http://localhost:5000/
-    return urljoin(base, f"generated/{filename}")
 
 @images_bp.get("/images/test-openai")
 def test_openai():
