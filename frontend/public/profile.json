@@ -1,10 +1,18 @@
 {
   "questionnaire": {
-    "role": "Parent",
-    "reading_style": "With visuals",
-    "reading_time": "<5 minutes",
-    "reading_supports": "No support",
-    "reading_challenges": "Attention differences (ADHD)"
+    "role": "Child",
+    "reading_style": [
+      "I like pictures"
+    ],
+    "reading_time": [
+      "Sometimes!"
+    ],
+    "reading_preferences": [
+      "Animals"
+    ],
+    "reading_difficulties": [
+      "I get distracted/it\u2019s hard to focus"
+    ]
   },
   "struggles": []
 }

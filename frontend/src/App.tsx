@@ -15,6 +15,7 @@ import TeacherHome from './pages/TeacherHome';
 import MyClass from './pages/MyClass';
 import StudentOverview from './pages/StudentOverview';
 import CustomizeAvatar from './pages/CustomizeAvatar';
+import ImageGenerator from "./pages/ImageGenerator";
 
 function App() {
   // const [msg, setMsg] = useState('');
@@ -49,6 +50,7 @@ function App() {
         <Route path="/myclass" element={<MyClass />} />
         <Route path="/studentoverview" element={<StudentOverview />} />
         <Route path="/avatar" element={<CustomizeAvatar />} />
+        <Route path="/images" element={<ImageGenerator />} />
         
       </Routes>
     </Router>

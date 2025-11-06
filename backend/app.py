@@ -1,3 +1,4 @@
+from __future__ import annotations
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -74,6 +75,10 @@ app = Flask(__name__) #creates new flask web application
 
 CORS(app)  # Allow requests from frontend
 #makes sure frontend can talk to backend
+
+# registering img generation blueprint:
+from app_story_images import images_bp
+app.register_blueprint(images_bp, url_prefix='/api')
 
 PROFILE_PATH = os.path.join(os.path.dirname(__file__), "profile.json")
 
@@ -703,7 +708,6 @@ def tts_gemini():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 
 #route for logging to flask focus
