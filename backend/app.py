@@ -73,7 +73,7 @@ stt_client = speech.SpeechClient()
 
 app = Flask(__name__) #creates new flask web application 
 
-CORS(app)  # Allow requests from frontend
+CORS(app, origins=["http://localhost:5173", "https://readingbuddy.vercel.app/"])  # Allow requests from frontend
 #makes sure frontend can talk to backend
 
 # registering img generation blueprint:
@@ -718,4 +718,5 @@ def log_focus():
     return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False) #allows to run external connections (for deployment)
