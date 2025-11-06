@@ -225,20 +225,11 @@ const ExtractedText: React.FC = () => {
     }
 
     // Case 3: No audio or stopped - START NEW audio
+    //removed text clarity
     setLoading(true);
     try {
-      // Optional: Clarify text first (you can remove this if you don't need it)
-      const clarifyResponse = await fetch(`${API_BASE_URL}/api/clarify-text`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      const { text: clarifiedText } = await clarifyResponse.json();
-
-      // Play the clarified text directly
-      await playTTS(clarifiedText);
-      
-      // Set loading to false after audio starts playing
+      // Play the text directly without clarification
+      await playTTS(text);
       setLoading(false);
     } catch (err) {
       console.error("Error reading aloud:", err);
