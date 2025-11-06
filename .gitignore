@@ -13,6 +13,7 @@ venv/
 env/
 .venv/
 .venv310/
+test_venv/
 
 # Environment variables (API keys, secrets)
 .env
