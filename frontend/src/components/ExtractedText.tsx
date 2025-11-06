@@ -21,6 +21,11 @@ const ExtractedText: React.FC = () => {
   //for reading aloud definition
   const [definitionLoading, setDefinitionLoading] = useState(false);
 
+  //state variables to track audio instance and playback state
+  const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);  //stores audio object to control it(pause/resume)
+  const [isPlaying, setIsPlaying] = useState(false); //true when audio playing, false when stopped
+  const [isPaused, setIsPaused] = useState(false); //true when audio paused
+
   //fixed TTS function
   const playTTS = async (textToSpeak: string) => {
     try {
@@ -42,22 +47,47 @@ const ExtractedText: React.FC = () => {
       
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      
+
+      // Store audio instance in state so we can pause/resume it
+      setAudioInstance(audio);
+      setIsPlaying(true);
+      setIsPaused(false);
+
       //handling audio events & cleaning up the memory
       audio.onended = () => {
         console.log("✅ Audio finished playing");
         URL.revokeObjectURL(audioUrl);
+        setIsPlaying(false);
+        setIsPaused(false);
+        setAudioInstance(null);
+        setLoading(false);
       };
-      
+
+      audio.onpause = () => {
+        console.log("⏸ Audio paused");
+        setIsPlaying(false);
+        setIsPaused(true);
+      };
+
+      audio.onplay = () => {
+        console.log("▶ Audio playing");
+        setIsPlaying(true);
+        setIsPaused(false);
+      };
+
       //in case of error + clean up
       audio.onerror = (error) => {
         console.error("❌ Audio playback error:", error);
         URL.revokeObjectURL(audioUrl);
+        setIsPlaying(false);
+        setIsPaused(false);
+        setAudioInstance(null);
+        setLoading(false);
       };
-    
-    //playing the audio
-    await audio.play();
-    console.log("🎵 Audio started playing");
+
+      //playing the audio
+      await audio.play();
+      console.log("🎵 Audio started playing");
     
   } catch (error) {
     console.error('❌ TTS Error:', error);
@@ -175,8 +205,25 @@ const ExtractedText: React.FC = () => {
   };
 
   // Fixed: Read aloud for main text
+  // Play/Pause/Resume handler for main text
   const handleReadAloud = async () => {
     if (!text) return;
+
+    // Case 1: Audio is paused - RESUME it
+    if (isPaused && audioInstance) {
+      console.log("▶ Resuming audio");
+      audioInstance.play();
+      return;
+    }
+
+    // Case 2: Audio is playing - PAUSE it
+    if (isPlaying && audioInstance) {
+      console.log("⏸ Pausing audio");
+      audioInstance.pause();
+      return;
+    }
+
+    // Case 3: No audio or stopped - START NEW audio
     setLoading(true);
     try {
       // Optional: Clarify text first (you can remove this if you don't need it)
@@ -189,11 +236,14 @@ const ExtractedText: React.FC = () => {
 
       // Play the clarified text directly
       await playTTS(clarifiedText);
+      
+      // Set loading to false after audio starts playing
+      setLoading(false);
     } catch (err) {
       console.error("Error reading aloud:", err);
-    } finally {
       setLoading(false);
     }
+    // Note: setLoading(false) is handled in playTTS's onended/onerror now
   };
 
   // Fixed: Read aloud for definition
@@ -282,8 +332,12 @@ const ExtractedText: React.FC = () => {
           className="rb-btn rb-btn--primary"
           onClick={handleReadAloud}
           disabled={loading}
+          style={{
+            backgroundColor: isPlaying ? "#ef4444" : isPaused ? "#f59e0b" : undefined,
+            transition: "background-color 0.3s ease"
+          }}
         >
-          {loading ? "Loading..." : "▶ Read Aloud"}
+          {loading ? "Loading..." : isPlaying ? "⏸ Pause" : isPaused ? "▶ Resume" : "▶ Read Aloud"}
         </button>
 
         <button
