@@ -32,7 +32,7 @@ const ExtractedText: React.FC = () => {
     try {
       console.log("🔊 Sending TTS request for:", textToSpeak);
       
-      const response = await fetch(`${API_BASE_URL}/api/define`, {
+      const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: textToSpeak }),
