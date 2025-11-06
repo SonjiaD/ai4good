@@ -73,7 +73,9 @@ stt_client = speech.SpeechClient()
 
 app = Flask(__name__) #creates new flask web application 
 
-CORS(app, origins=["http://localhost:5173", "https://readingbuddy.vercel.app"])  # Allow requests from frontend
+CORS(app,
+     origins=["http://localhost:5173", "https://readingbuddy.vercel.app"],
+     resources={r"/*": {"origins": ["http://localhost:5173", "https://readingbuddy.vercel.app"]}})  # Allow requests from frontend including Blueprint routes
 #makes sure frontend can talk to backend
 
 # registering img generation blueprint:
