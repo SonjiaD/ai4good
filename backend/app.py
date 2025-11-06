@@ -11,7 +11,7 @@ import traceback
 import time
 
 # gemini tts
-import tts_service
+
 import io
 #websocket-client logic
 import asyncio
@@ -47,6 +47,8 @@ from google.cloud import texttospeech
 
 #loading env variables from .env file
 load_dotenv()
+
+import tts_service  #moving to after load_dotenv
 
 # #initialize anthropic claude client, calling the key from .env file
 # claude_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

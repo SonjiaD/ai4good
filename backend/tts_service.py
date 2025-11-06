@@ -5,7 +5,7 @@ from google.genai import types
 import wave, io, base64, os
 
 # creating client to read GOOGLE_API_KEY from env
-client = genai.Client()
+client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
 
 # fcn defining TTS synthesis
 def synthesize_tts(
