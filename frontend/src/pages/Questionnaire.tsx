@@ -9,8 +9,8 @@ import { parentQuestions } from '../data/parentQuestions';
 import { childQuestions } from '../data/childQuestions';
 // for post request
 import axios from 'axios';
-const API_BASE = "http://127.0.0.1:5000";
-
+import { API_BASE_URL } from '../config';
+const API_BASE = API_BASE_URL;
 
 type Role = 'Parent' | 'Child' | null;
 type AnswerMap = Record<string, string>;

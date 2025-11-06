@@ -4,8 +4,9 @@ import './Signup.css';
 import logo from '../assets/logo.png';
 import honeyThumbs from '../assets/honey-thumbs-signup.png';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = API_BASE_URL;
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();

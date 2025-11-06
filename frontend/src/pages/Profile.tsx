@@ -3,8 +3,9 @@ import "./Profile.css";
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = API_BASE_URL;
 
 export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
