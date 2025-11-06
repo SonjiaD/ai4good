@@ -1,5 +1,5 @@
 
-from flask import Flask, request, jsonify 
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import fitz
@@ -11,6 +11,9 @@ import subprocess
 import traceback
 import time
 
+# gemini tts
+import tts_service
+import io
 #websocket-client logic
 import asyncio
 import websockets
@@ -582,6 +585,39 @@ Answer:
     result = call_gemini(prompt, temperature = 0.3)
 
     return jsonify({"definition": result.strip()})
+
+# route for calling gemini tts
+@app.route("/api/tts-gemini", methods=["POST"])
+def tts_gemini():
+    """
+    JSON body:
+    {
+      "text": "Say cheerfully: Have a wonderful day!",
+      "voice": "Erinome"
+    }
+    Returns: audio/wav file bytes
+    """
+    try:
+        data = request.get_json(force=True) or {}
+        text = (data.get("text") or "").strip()
+        voice = (data.get("voice") or "Erinome").strip()
+
+        if not text:
+            return jsonify({"error": "Missing 'text'"}), 400
+
+        wav_bytes = tts_service.synthesize_tts(text, voice)
+
+        return send_file(
+            io.BytesIO(wav_bytes),
+            mimetype="audio/wav",
+            as_attachment=False,
+            download_name="tts.wav",
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 
 
 #route for logging to flask focus
