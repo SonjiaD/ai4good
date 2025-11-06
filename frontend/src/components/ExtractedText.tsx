@@ -139,7 +139,7 @@ const ExtractedText: React.FC = () => {
   const fetchDefinition = async () => {
     if (!selectedWord) return;
 
-    const response = await fetch(`${API_BASE_URL}/api/define`, {
+    const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ word: selectedWord }),
