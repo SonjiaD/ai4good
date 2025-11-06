@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { API_BASE_URL } from '../config';
 const PdfPage: React.FC = () => {
 
 //state variables
@@ -29,7 +29,7 @@ const PdfPage: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload-pdf', {
+      const response = await fetch(`${API_BASE_URL}/api/upload-pdf`, {
         method: 'POST',
         body: formData,
       });
@@ -49,7 +49,7 @@ const PdfPage: React.FC = () => {
 
   const handleGenerateQuestions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/generate-quiz', {
+      const response = await fetch(`${API_BASE_URL}/api/generate-quiz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
@@ -73,7 +73,7 @@ const PdfPage: React.FC = () => {
     const answer = answers[index];
 
     try {
-      const response = await fetch('http://localhost:5000/api/submit-answer', {
+      const response = await fetch(`${API_BASE_URL}/api/submit-answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, question, answer }),
@@ -93,7 +93,7 @@ const PdfPage: React.FC = () => {
 
     const handleReadFeedback = async (index: number) => {
     try {
-        const response = await fetch('http://localhost:5000/api/tts', {
+        const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: feedbacks[index] }),
@@ -112,7 +112,7 @@ const PdfPage: React.FC = () => {
 
     const handleReadText = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/tts', {
+            const response = await fetch(`${API_BASE_URL}/api/tts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text.slice(0, 300) }), // limit for speed
@@ -146,7 +146,7 @@ const PdfPage: React.FC = () => {
           const formData = new FormData();
           formData.append('audio', audioBlob);
 
-          fetch('http://localhost:5000/api/transcribe-audio', {
+          fetch(`${API_BASE_URL}/api/transcribe-audio`, {
             method: 'POST',
             body: formData
           })

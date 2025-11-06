@@ -5,6 +5,7 @@ import GettingStartedGuide from "./GettingStartedGuide";
 import "../styles/buttons.css";
 import VocabToggle from "./VocabToggle";
 import PDFUploader from "./PDFUploader";
+import { API_BASE_URL } from '../config';
 
 const ExtractedText: React.FC = () => {
   const { text, title, paragraphs } = useReadingContext();
@@ -31,7 +32,7 @@ const ExtractedText: React.FC = () => {
     try {
       console.log("🔊 Sending TTS request for:", textToSpeak);
       
-      const response = await fetch("http://localhost:5000/api/tts", {
+      const response = await fetch(`${API_BASE_URL}/api/define`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: textToSpeak }),
@@ -138,7 +139,7 @@ const ExtractedText: React.FC = () => {
   const fetchDefinition = async () => {
     if (!selectedWord) return;
 
-    const response = await fetch("http://localhost:5000/api/define", {
+    const response = await fetch(`${API_BASE_URL}/api/define`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ word: selectedWord }),
@@ -227,7 +228,7 @@ const ExtractedText: React.FC = () => {
     setLoading(true);
     try {
       // Optional: Clarify text first (you can remove this if you don't need it)
-      const clarifyResponse = await fetch("http://localhost:5000/api/clarify-text", {
+      const clarifyResponse = await fetch(`${API_BASE_URL}/api/clarify-text`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),

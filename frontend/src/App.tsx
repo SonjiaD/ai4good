@@ -18,18 +18,6 @@ import CustomizeAvatar from './pages/CustomizeAvatar';
 import ImageGenerator from "./pages/ImageGenerator";
 
 function App() {
-  // const [msg, setMsg] = useState('');
-  // const [response, setResponse] = useState('');
-
-  // const handleSend = async () => {
-  //   const res = await fetch("http://localhost:5000/api/echo", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ message: msg })
-  //   });
-  //   const data = await res.json();
-  //   setResponse(data.response);
-  // };
 
   return (
     <Router>

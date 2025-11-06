@@ -3,7 +3,7 @@ import { useReadingContext } from '../context/ReadingContext';
 import "../pages/ReadingPage.css"; // make sure styles are applied here
 import "./GettingStartedGuide.css"; // ensure path is correct
 import GuideCard from './GuideCard';
-
+import { API_BASE_URL } from '../config';
 
 const QuizSection: React.FC = () => {
   const { text } = useReadingContext();
@@ -16,7 +16,7 @@ const QuizSection: React.FC = () => {
   const generateQuiz = async () => {
     if (!text) return;
     setLoading(true);
-    const response = await fetch('http://localhost:5000/api/generate-quiz', {
+    const response = await fetch(`${API_BASE_URL}/api/generate-quiz`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
@@ -29,7 +29,7 @@ const QuizSection: React.FC = () => {
   };
 
   const submitAnswer = async (index: number) => {
-    const response = await fetch('http://localhost:5000/api/submit-answer', {
+    const response = await fetch(`${API_BASE_URL}/api/submit-answer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -59,7 +59,7 @@ const QuizSection: React.FC = () => {
         const formData = new FormData();
         formData.append('audio', blob, 'recording.webm');
 
-        const res = await fetch('http://localhost:5000/api/transcribe-audio', {
+        const res = await fetch(`${API_BASE_URL}/api/transcribe-audio`, {
           method: 'POST',
           body: formData,
         });
@@ -86,7 +86,7 @@ const QuizSection: React.FC = () => {
 
     try {
       // Step 1: Ask server to add clarity tags
-      const clarifyRes = await fetch('http://localhost:5000/api/clarify-text', {
+      const clarifyRes = await fetch(`${API_BASE_URL}/api/clarify-text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: feedbacks[index] }),
@@ -101,7 +101,7 @@ const QuizSection: React.FC = () => {
       console.log("Clarified Feedback Text:", clarifiedText);
 
       // Step 2: Send to TTS server
-      const ttsRes = await fetch('http://localhost:5000/api/tts', {
+      const ttsRes = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: clarifiedText }),
@@ -112,7 +112,7 @@ const QuizSection: React.FC = () => {
       }
 
       // Step 3: Play audio file (if using file playback)
-      const audio = new Audio('http://localhost:5000/api/tts/file');
+      const audio = new Audio(`${API_BASE_URL}/api/tts/file`);
       // audio.play();
     } catch (err) {
       console.error("Error reading feedback aloud:", err);

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useReadingContext } from '../context/ReadingContext';
+import { API_BASE_URL } from '../config';
 
 const QAAssistant: React.FC = () => {
   const { text } = useReadingContext();
@@ -18,7 +19,7 @@ const QAAssistant: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/qa-chat', {
+      const response = await fetch(`${API_BASE_URL}/api/qa-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, question }),
@@ -59,7 +60,7 @@ const QAAssistant: React.FC = () => {
         formData.append('audio', blob, 'recording.webm');
 
         try {
-          const res = await fetch('http://localhost:5000/api/transcribe-audio', {
+          const res = await fetch(`${API_BASE_URL}/api/transcribe-audio`, {
             method: 'POST',
             body: formData,
           });
@@ -91,7 +92,7 @@ const QAAssistant: React.FC = () => {
     if (!answer) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/tts", {
+      const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: answer }),

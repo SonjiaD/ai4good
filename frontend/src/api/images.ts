@@ -1,4 +1,6 @@
 // src/api/images.ts
+import { API_BASE_URL } from '../config';
+
 export type StoryImage = {
   url: string;
   page?: number;
@@ -12,8 +14,7 @@ export type StoryResponse = {
   images: StoryImage[];
 };
 
-const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE || "http://localhost:5000/api";
+const API_BASE = API_BASE_URL + "/api";
 
 export async function generateImagesFromPdf(
   file: File,

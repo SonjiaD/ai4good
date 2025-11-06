@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useReadingContext } from '../context/ReadingContext';
-
+import { API_BASE_URL } from '../config';
 
 const PDFUploader: React.FC = () => {
   // const { setText } = useReadingContext();
@@ -18,7 +18,7 @@ const PDFUploader: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/upload-pdf', { method: 'POST', body: formData });
+      const response = await fetch(`${API_BASE_URL}/api/upload-pdf`, { method: 'POST', body: formData });
       const data = await response.json();
       setText(data.text);
       setTitle(data.title);        // 🆕
