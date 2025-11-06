@@ -21,6 +21,54 @@ const ExtractedText: React.FC = () => {
   //for reading aloud definition
   const [definitionLoading, setDefinitionLoading] = useState(false);
 
+  //fixed TTS function
+  const playTTS = async (textToSpeak: string) => {
+    try {
+      console.log("🔊 Sending TTS request for:", textToSpeak);
+      
+      const response = await fetch("http://localhost:5000/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textToSpeak }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS request failed: ${response.status}`);
+      }
+
+      //converting to a blob (lol silly) and waiting for a response
+      const audioBlob = await response.blob();
+      console.log("✅ Audio blob received, size:", audioBlob.size);
+      
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      //handling audio events & cleaning up the memory
+      audio.onended = () => {
+        console.log("✅ Audio finished playing");
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      //in case of error + clean up
+      audio.onerror = (error) => {
+        console.error("❌ Audio playback error:", error);
+        URL.revokeObjectURL(audioUrl);
+      };
+    
+    //playing the audio
+    await audio.play();
+    console.log("🎵 Audio started playing");
+    
+  } catch (error) {
+    console.error('❌ TTS Error:', error);
+    
+    //handling autoplay restrictions
+    if (error instanceof Error && error.name === 'NotAllowedError') {
+      alert('Please click the play button to start audio. Browsers require user interaction for audio playback.');
+    }
+  }
+};
+
   const handleTextClick = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -126,13 +174,12 @@ const ExtractedText: React.FC = () => {
     return <>{parts}</>;
   };
 
-
-
-
+  // Fixed: Read aloud for main text
   const handleReadAloud = async () => {
     if (!text) return;
     setLoading(true);
     try {
+      // Optional: Clarify text first (you can remove this if you don't need it)
       const clarifyResponse = await fetch("http://localhost:5000/api/clarify-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -140,14 +187,8 @@ const ExtractedText: React.FC = () => {
       });
       const { text: clarifiedText } = await clarifyResponse.json();
 
-      await fetch("http://localhost:5000/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: clarifiedText }),
-      });
-
-      const audio = new Audio("http://localhost:5000/api/tts/file");
-      // audio.play();
+      // Play the clarified text directly
+      await playTTS(clarifiedText);
     } catch (err) {
       console.error("Error reading aloud:", err);
     } finally {
@@ -155,24 +196,18 @@ const ExtractedText: React.FC = () => {
     }
   };
 
-  //reading aloud definition function
+  // Fixed: Read aloud for definition
   const handleDefinitionReadAloud = async () => {
     if (!definition) return;
     setDefinitionLoading(true);
     try {
-      await fetch("http://localhost:5000/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: definition }),
-    });
-      const audio = new Audio("http://localhost:5000/api/tts/file");
-      // audio.play();
+      await playTTS(definition);
     } catch (err) {
       console.error("Error reading definition aloud:", err);
     } finally {
       setDefinitionLoading(false);
     }
-  }
+  };
 
   return text ? (
     <>
@@ -307,17 +342,12 @@ const ExtractedText: React.FC = () => {
           <p style={{ marginTop: "0.5rem", lineHeight: "1.6" }}>{definition}</p>
         </aside>
       )}
-
-
-
     </>
   ) : (
     <div style={{ padding: "2rem" }}>
       <GettingStartedGuide />
     </div>
   );
-
-
 };
 
 export default ExtractedText;
