@@ -119,6 +119,7 @@ const EyeTracker: React.FC = () => {
     return () => {
       faceLandmarkerRef.current?.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setIsEyeTracking]);
 
   // detecting whether face is in frame/mouse is too idle for focus alerts

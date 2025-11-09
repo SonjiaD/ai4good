@@ -111,8 +111,8 @@ const QuizSection: React.FC = () => {
         throw new Error("TTS server error");
       }
 
-      // Step 3: Play audio file (if using file playback)
-      const audio = new Audio(`${API_BASE_URL}/api/tts/file`);
+      // Step 3: Play audio file (commented out for now)
+      // const audio = new Audio(`${API_BASE_URL}/api/tts/file`);
       // audio.play();
     } catch (err) {
       console.error("Error reading feedback aloud:", err);

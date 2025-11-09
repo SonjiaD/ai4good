@@ -4,11 +4,10 @@ import './Highlight.css';  // New: separate CSS file
 import GettingStartedGuide from "./GettingStartedGuide";
 import "../styles/buttons.css";
 import VocabToggle from "./VocabToggle";
-import PDFUploader from "./PDFUploader";
 import { API_BASE_URL } from '../config';
 
 const ExtractedText: React.FC = () => {
-  const { text, title, paragraphs } = useReadingContext();
+  const { text, title } = useReadingContext();
   const [loading, setLoading] = useState(false);
   
   // for text highlighting

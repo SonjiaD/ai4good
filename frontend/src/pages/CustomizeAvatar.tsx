@@ -7,7 +7,6 @@ import coinIcon from '../assets/coin-icon.png';
 import { useState } from 'react';
 
 import bearPfp from '../assets/bear-avatar.png';
-import coinCount from '../assets/coin-count.png';
 import chef from '../assets/chef.png';
 import pirate from '../assets/pirate.png';
 import hero from '../assets/hero.png';

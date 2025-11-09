@@ -1,7 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ReadingPage from './pages/ReadingPage';
-import FocusTracker from './pages/FocusTracker';
 import OutfitShop from './pages/OutfitShop';
 import ConsentForm from './pages/ConsentForm';
 import Questionnaire from './pages/Questionnaire';
