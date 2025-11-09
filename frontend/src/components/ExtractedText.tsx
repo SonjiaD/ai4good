@@ -115,7 +115,7 @@ const ExtractedText: React.FC = () => {
 
       console.log(`Prefetching sentence ${index + 1}/${sentences.length}`);
       try {
-        const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
+        const response = await fetch(`${API_BASE_URL}/api/tts`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: sentences[index] }),
@@ -155,7 +155,7 @@ const ExtractedText: React.FC = () => {
           audioUrl = nextAudioCache.url;
           nextAudioCache = null;
         } else {
-          const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
+          const response = await fetch(`${API_BASE_URL}/api/tts`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: sentences[currentIndex] }),
