@@ -27,78 +27,92 @@ const ExtractedText: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false); //true when audio playing, false when stopped
   const [isPaused, setIsPaused] = useState(false); //true when audio paused
 
+  //helper function to split text into sentences
+  const splitIntoSentences = (text: string): string[] => {
+    //split by periods, exclamation marks, and question marks
+    //keep punctuation with each sentence
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+    return sentences.map(s => s.trim()).filter(s => s.length > 0);
+  }
+
   //fixed TTS function
-  const playTTS = async (textToSpeak: string) => {
-    try {
-      console.log("🔊 Sending TTS request for:", textToSpeak);
-      
-      const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: textToSpeak }),
-      });
+  const playTTS = async (textToSpeak: string): Promise<void> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log("🔊 Sending TTS request for:", textToSpeak);
+        
+        const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: textToSpeak }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`TTS request failed: ${response.status}`);
-      }
+        if (!response.ok) {
+          throw new Error(`TTS request failed: ${response.status}`);
+        }
 
-      //converting to a blob (lol silly) and waiting for a response
-      const audioBlob = await response.blob();
-      console.log("✅ Audio blob received, size:", audioBlob.size);
-      
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+        const audioBlob = await response.blob();
+        console.log("✅ Audio blob received, size:", audioBlob.size);
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
 
-      // Store audio instance in state so we can pause/resume it
-      setAudioInstance(audio);
-      setIsPlaying(true);
-      setIsPaused(false);
-
-      //handling audio events & cleaning up the memory
-      audio.onended = () => {
-        console.log("✅ Audio finished playing");
-        URL.revokeObjectURL(audioUrl);
-        setIsPlaying(false);
-        setIsPaused(false);
-        setAudioInstance(null);
-        setLoading(false);
-      };
-
-      audio.onpause = () => {
-        console.log("⏸ Audio paused");
-        setIsPlaying(false);
-        setIsPaused(true);
-      };
-
-      audio.onplay = () => {
-        console.log("▶ Audio playing");
+        // Store audio instance in state so we can pause/resume it
+        setAudioInstance(audio);
         setIsPlaying(true);
         setIsPaused(false);
-      };
 
-      //in case of error + clean up
-      audio.onerror = (error) => {
-        console.error("❌ Audio playback error:", error);
-        URL.revokeObjectURL(audioUrl);
-        setIsPlaying(false);
-        setIsPaused(false);
-        setAudioInstance(null);
-        setLoading(false);
-      };
+        audio.onended = () => {
+          console.log("✅ Audio finished playing");
+          URL.revokeObjectURL(audioUrl);
+          setIsPlaying(false);
+          setIsPaused(false);
+          setAudioInstance(null);
+          resolve(); // Resolve promise when audio ends
+        };
 
-      //playing the audio
-      await audio.play();
-      console.log("🎵 Audio started playing");
-    
-  } catch (error) {
-    console.error('❌ TTS Error:', error);
-    
-    //handling autoplay restrictions
-    if (error instanceof Error && error.name === 'NotAllowedError') {
-      alert('Please click the play button to start audio. Browsers require user interaction for audio playback.');
+        audio.onpause = () => {
+          console.log("⏸ Audio paused");
+          setIsPlaying(false);
+          setIsPaused(true);
+        };
+
+        audio.onplay = () => {
+          console.log("▶ Audio playing");
+          setIsPlaying(true);
+          setIsPaused(false);
+        };
+
+        audio.onerror = (error) => {
+          console.error("❌ Audio playback error:", error);
+          URL.revokeObjectURL(audioUrl);
+          setIsPlaying(false);
+          setIsPaused(false);
+          setAudioInstance(null);
+          reject(error); // Reject promise on error
+        };
+
+        await audio.play();
+        console.log("🎵 Audio started playing");
+      
+      } catch (error) {
+        console.error('❌ TTS Error:', error);
+        
+        if (error instanceof Error && error.name === 'NotAllowedError') {
+          alert('Please click the play button to start audio. Browsers require user interaction for audio playback.');
+        }
+        reject(error);
+      }
+    });
+  };
+  
+  const playSentencesSequentially = async (sentences: string[]) => {
+    for (let i = 0; i < sentences.length; i++) {
+      console.log(`Playing sentence ${i + 1}/${sentences.length}`);
+      await playTTS(sentences[i]); // Wait for each sentence to finish before playing next
     }
-  }
-};
+    setLoading(false);
+  };
 
   const handleTextClick = () => {
     const selection = window.getSelection();
@@ -225,17 +239,16 @@ const ExtractedText: React.FC = () => {
     }
 
     // Case 3: No audio or stopped - START NEW audio
-    //removed text clarity
     setLoading(true);
     try {
-      // Play the text directly without clarification
-      await playTTS(text);
-      setLoading(false);
+      const sentences = splitIntoSentences(text);
+      console.log(`Split text into ${sentences.length} sentences`);
+      
+      playSentencesSequentially(sentences); // Don't await - let it run in background
     } catch (err) {
       console.error("Error reading aloud:", err);
       setLoading(false);
     }
-    // Note: setLoading(false) is handled in playTTS's onended/onerror now
   };
 
   // Fixed: Read aloud for definition
