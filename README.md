@@ -12,26 +12,79 @@ An **AI-powered reading companion** designed to support neurodivergent children 
 
 ## ✨ Key AI Features
 
-- **📖 Story Upload + Segmentation**  
-  Automatically splits longer stories into manageable sections to reduce cognitive overload.
+- **📖 Story Upload + Segmentation**
+  Automatically splits longer stories into manageable sections using **PyMuPDF** for PDF processing.
 
-- **🗣️ Text-to-Speech (TTS)**  
-  High-quality voice generation using **Matcha-TTS**, with optional **speech clarity enhancements** for minimal pairs (e.g., “pill” vs. “peel”).
+- **🗣️ Text-to-Speech (TTS)**
+  High-quality voice generation using **Google Cloud Text-to-Speech API**. Stories are split sentence-by-sentence with prefetching for seamless playback without pauses.
 
-- **🧠 Reading Comprehension Assistant**  
-  Generates story-specific questions using LLMs. Supports both multiple choice and open-ended formats.
+- **🎤 Speech-to-Text (STT)**
+  Voice input support using **Google Cloud Speech-to-Text API** for interactive reading exercises.
 
-- **🎯 Personalized Feedback Chatbot**  
-  Friendly, age-appropriate chatbot gives encouragement and corrections based on the child's answers and their learning profile.
+- **🧠 Reading Comprehension Assistant**
+  Generates story-specific comprehension questions using **Google Gemini API**. Supports both multiple choice and open-ended formats.
 
-- **📚 Vocabulary Lookup**  
-  Highlight any word in the story and ask the AI for a simple definition in the context of the story.
+- **🎯 Personalized Feedback Chatbot**
+  Friendly, age-appropriate feedback powered by **Google Gemini API**, tailored to the child's answers and learning profile.
 
-- **🧠 In-Context Learning with Learner Profiles**  
-  Questionnaire responses are saved and used to tailor chatbot responses (e.g., adapting for ADHD, dyslexia, auditory processing disorder, etc.).
+- **📚 Vocabulary Lookup**
+  Highlight any word in the story and get AI-generated, context-aware definitions using **Google Gemini API**.
 
-- **👀 Focus Tracker**  
-  Combines mouse activity + webcam detection to gently track user attention during reading.
+- **🎨 Story Illustration Generation**
+  Generate kid-friendly illustrations from story text using **OpenAI DALL-E 3 API**.
+
+- **🧠 In-Context Learning with Learner Profiles**
+  Questionnaire responses stored in **Supabase** database and used to tailor AI responses (e.g., adapting for ADHD, dyslexia, auditory processing disorder, etc.).
+
+- **👀 Focus Tracker**
+  Uses **MediaPipe Face Landmarker** via webcam + mouse activity tracking to gently monitor user attention during reading.
+
+---
+
+## 🔑 AI APIs & Services Used
+
+### Required API Keys
+
+The production version uses the following cloud-based AI services:
+
+| Service | Purpose | API Key Required | Free Tier Limits |
+|---------|---------|------------------|------------------|
+| **Google Cloud Text-to-Speech** | Story narration (TTS) | `GOOGLE_API_KEY` or service account credentials | 1M characters/month |
+| **Google Cloud Speech-to-Text** | Voice input (STT) | Service account credentials (`GOOGLE_TTS_CREDENTIALS_PATH`) | 60 min/month |
+| **Google Gemini API** | Quiz generation, feedback, definitions | `GOOGLE_API_KEY` | 15 requests/min, 1500/day |
+| **OpenAI API** | Story illustrations (DALL-E 3) | `OPENAI_API_KEY` | Pay-per-use ($0.04/image) |
+| **Supabase** | Database & authentication | `SUPABASE_URL`, `SUPABASE_KEY` | 500MB database, 50K auth users |
+
+### Environment Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```bash
+# Google Cloud APIs
+GOOGLE_API_KEY=your_gemini_api_key_here
+GOOGLE_TTS_CREDENTIALS_PATH=./google-credentials.json
+
+# OpenAI
+OPENAI_API_KEY=your_openai_key_here
+
+# Supabase
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_anon_key
+```
+
+### Google Cloud Service Account Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable **Cloud Text-to-Speech API** and **Cloud Speech-to-Text API**
+4. Create a service account and download the JSON key file
+5. Save it as `google-credentials.json` in the `backend/` folder
+
+### API Rate Limit Considerations
+
+- **Google Cloud TTS**: Sentence-by-sentence playback stays well within free tier limits
+- **Google Gemini**: Free tier allows ~15 requests/minute - sufficient for quiz generation
+- **OpenAI DALL-E**: Pay-per-use, but images are generated on-demand and cached
 
 ---
 
@@ -77,8 +130,16 @@ Activate the environment:
 Install dependencies:
 
 ```bash
-pip install flask flask-cors langchain gtts matcha-tts langchain-community pymupdf
+pip install -r requirements.txt
 ```
+
+**For production deployment**, use minimal dependencies:
+
+```bash
+pip install -r requirements-prod.txt
+```
+
+Create a `.env` file with your API keys (see [AI APIs section](#-ai-apis--services-used) above).
 
 Run the server:
 
@@ -103,6 +164,36 @@ npm start
 Your React app will be available at: `http://localhost:3000`
 
 > ⚠️ Make sure the Flask backend is running in a separate terminal window!
+
+---
+
+## 🚀 Production Deployment
+
+The application is deployed using:
+
+- **Frontend**: [Vercel](https://vercel.com) - Deployed from `frontend/` directory
+  - Live URL: `https://readingbuddy.vercel.app`
+  - Auto-deploys from `main` branch on push
+  - Uses `requirements-prod.txt` for optimized build
+
+- **Backend**: [Render](https://render.com) - Deployed from `backend/` directory
+  - API URL: `https://ai4good.onrender.com`
+  - Auto-deploys from `main` branch on push
+  - Free tier includes cold starts (~50s delay on first request)
+
+### Deployment Configuration
+
+**Backend (Render)**:
+- Build Command: `pip install -r requirements-prod.txt`
+- Start Command: `gunicorn app:app`
+- Environment Variables: Set all API keys from `.env` in Render dashboard
+- Add `google-credentials.json` as a Secret File
+
+**Frontend (Vercel)**:
+- Framework Preset: Create React App
+- Build Command: `npm run build`
+- Output Directory: `build`
+- Automatically detects and uses Node.js
 
 ---
 
