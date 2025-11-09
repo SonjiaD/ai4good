@@ -107,11 +107,75 @@ const ExtractedText: React.FC = () => {
   };
   
   const playSentencesSequentially = async (sentences: string[]) => {
-    for (let i = 0; i < sentences.length; i++) {
-      console.log(`Playing sentence ${i + 1}/${sentences.length}`);
-      await playTTS(sentences[i]); // Wait for each sentence to finish before playing next
-    }
-    setLoading(false);
+    let currentIndex = 0;
+    
+    const playNextSentence = async () => {
+      if (currentIndex >= sentences.length) {
+        // All done
+        setIsPlaying(false);
+        setIsPaused(false);
+        setAudioInstance(null);
+        setLoading(false);
+        return;
+      }
+
+      const sentence = sentences[currentIndex];
+      console.log(`Fetching and playing sentence ${currentIndex + 1}/${sentences.length}`);
+      
+      try {
+        // Fetch TTS for current sentence
+        const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: sentence }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`TTS request failed: ${response.status}`);
+        }
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+
+        setAudioInstance(audio);
+        setIsPlaying(true);
+        setIsPaused(false);
+
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          currentIndex++; // Move to next sentence
+          playNextSentence(); // Fetch and play next sentence
+        };
+
+        audio.onpause = () => {
+          setIsPlaying(false);
+          setIsPaused(true);
+        };
+
+        audio.onplay = () => {
+          setIsPlaying(true);
+          setIsPaused(false);
+        };
+
+        audio.onerror = (error) => {
+          console.error("❌ Audio playback error:", error);
+          URL.revokeObjectURL(audioUrl);
+          setIsPlaying(false);
+          setIsPaused(false);
+          setAudioInstance(null);
+          setLoading(false);
+        };
+
+        await audio.play();
+        console.log("🎵 Audio started playing");
+      } catch (error) {
+        console.error("❌ TTS Error:", error);
+        setLoading(false);
+      }
+    };
+
+    playNextSentence(); // Start the chain
   };
 
   const handleTextClick = () => {
