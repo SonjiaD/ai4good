@@ -14,8 +14,8 @@ const LoginSignup: React.FC = () => {
           <img src={logo} alt="Logo" className="logo-img" />
         </div>
         <nav>
-          <a href="#">About</a>
-          <a href="#">Contact</a>
+          <button>About</button>
+          <button>Contact</button>
         </nav>
       </header>
 

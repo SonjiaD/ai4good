@@ -169,8 +169,8 @@ const Questionnaire: React.FC = () => {
           <img src={logo} alt="Logo" className="logo-img" />
         </div>
         <nav>
-          <a href="#" onClick={(e) => e.preventDefault()}>About</a>
-          <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
+          <button onClick={() => {}}>About</button>
+          <button onClick={() => {}}>Contact</button>
           <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
         </nav>
       </header>

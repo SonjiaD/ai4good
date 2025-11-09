@@ -20,8 +20,8 @@ const ConsentForm: React.FC = () => {
           <img src={logo} alt="ReadingBudd Logo" className="logo-img" />
         </div>
         <nav>
-          <a href="#" onClick={(e) => e.preventDefault()}>About</a>
-          <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
+          <button onClick={() => {}}>About</button>
+          <button onClick={() => {}}>Contact</button>
         </nav>
       </header>
 

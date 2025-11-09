@@ -30,10 +30,10 @@ const MyClass: React.FC = () => {
                   <img src={logo} alt="Logo" className="logo-img" />
               </div>
               <nav>
-                  <a href="#">Home</a>
-                  <a href="#">Assignment</a>
-                  <a href="#">Troubleshoot</a>
-                  <a href="#">Settings</a>
+                  <button>Home</button>
+                  <button>Assignment</button>
+                  <button>Troubleshoot</button>
+                  <button>Settings</button>
                   <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button>
               </nav>
           </header>
