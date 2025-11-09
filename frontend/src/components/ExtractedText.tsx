@@ -107,7 +107,32 @@ const ExtractedText: React.FC = () => {
   
   const playSentencesSequentially = async (sentences: string[]) => {
     let currentIndex = 0;
-    
+    let nextAudioCache: { audio: HTMLAudioElement; url: string } | null = null;
+
+    // Prefetch next sentence
+    const prefetchNext = async (index: number) => {
+      if (index >= sentences.length) return null;
+
+      console.log(`Prefetching sentence ${index + 1}/${sentences.length}`);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: sentences[index] }),
+        });
+
+        if (!response.ok) return null;
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        return { audio, url: audioUrl };
+      } catch (error) {
+        console.error("Prefetch error:", error);
+        return null;
+      }
+    };
+
     const playNextSentence = async () => {
       if (currentIndex >= sentences.length) {
         // All done
@@ -118,33 +143,49 @@ const ExtractedText: React.FC = () => {
         return;
       }
 
-      const sentence = sentences[currentIndex];
-      console.log(`Fetching and playing sentence ${currentIndex + 1}/${sentences.length}`);
-      
+      console.log(`Playing sentence ${currentIndex + 1}/${sentences.length}`);
+
       try {
-        // Fetch TTS for current sentence
-        const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: sentence }),
-        });
+        let audio: HTMLAudioElement;
+        let audioUrl: string;
 
-        if (!response.ok) {
-          throw new Error(`TTS request failed: ${response.status}`);
+        // Use cached audio if available, otherwise fetch
+        if (nextAudioCache) {
+          audio = nextAudioCache.audio;
+          audioUrl = nextAudioCache.url;
+          nextAudioCache = null;
+        } else {
+          const response = await fetch(`${API_BASE_URL}/api/tts-gemini`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: sentences[currentIndex] }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`TTS request failed: ${response.status}`);
+          }
+
+          const audioBlob = await response.blob();
+          audioUrl = URL.createObjectURL(audioBlob);
+          audio = new Audio(audioUrl);
         }
-
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
 
         setAudioInstance(audio);
         setIsPlaying(true);
         setIsPaused(false);
+        if (currentIndex === 0) setLoading(false); // Stop loading after first sentence starts
+
+        // Start prefetching next sentence while this one plays
+        if (currentIndex + 1 < sentences.length) {
+          prefetchNext(currentIndex + 1).then(cached => {
+            nextAudioCache = cached;
+          });
+        }
 
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
           currentIndex++; // Move to next sentence
-          playNextSentence(); // Fetch and play next sentence
+          playNextSentence(); // Play next sentence (already prefetched!)
         };
 
         audio.onpause = () => {
