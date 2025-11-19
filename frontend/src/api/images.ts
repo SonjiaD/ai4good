@@ -38,3 +38,41 @@ export async function generateImagesFromPdf(
 
 // If you really want the old name, re-export it like this:
 // export const uploadStoryForImages = generateImagesFromPdf;
+
+export type StoryJobStatus = "queued" | "running" | "done" | "error" | "unknown";
+
+export type StoryJobResponse = {
+  job_id: string;
+  status: StoryJobStatus;
+  result?: StoryResponse;
+  error?: string;
+};
+
+export async function startStoryImageJob(
+  file: File,
+  opts?: { max_pages?: number; size?: string }
+): Promise<{ job_id: string; status: StoryJobStatus }> {
+  const fd = new FormData();
+  fd.append("pdf", file);
+  if (opts?.max_pages) fd.append("max_pages", String(opts.max_pages));
+  if (opts?.size) fd.append("size", opts.size);
+
+  const res = await fetch(`${API_BASE}/images/story/async`, {
+    method: "POST",
+    body: fd,
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  return res.json();
+}
+
+export async function getStoryImageJob(jobId: string): Promise<StoryJobResponse> {
+  const res = await fetch(`${API_BASE}/images/story/async/${jobId}`);
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return res.json();
+}

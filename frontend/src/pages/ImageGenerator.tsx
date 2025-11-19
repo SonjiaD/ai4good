@@ -57,8 +57,8 @@
 // }
 
 
-import React, { useState } from "react";
-import { generateImagesFromPdf, type StoryImage } from "../api/images"; // <-- match path & names
+import React, { useState, useEffect } from "react";
+import { generateImagesFromPdf, type StoryImage, startStoryImageJob, getStoryImageJob, type StoryJobStatus } from "../api/images"; // <-- match path & names
 
 export default function ImageGenerator() {
   const [pdf, setPdf] = useState<File | null>(null);
@@ -67,6 +67,9 @@ export default function ImageGenerator() {
   const [images, setImages] = useState<StoryImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<StoryJobStatus | null>(null);
 
   const onChoose = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) setPdf(e.target.files[0]);
@@ -77,15 +80,53 @@ export default function ImageGenerator() {
     setError(null);
     setLoading(true);
     setImages([]);
+    setJobId(null);
+    setJobStatus(null);
     try {
-      const result = await generateImagesFromPdf(pdf, { max_pages: maxPages, size });
-      setImages(result.images ?? []);
+      const start = await startStoryImageJob(pdf, { max_pages: maxPages, size });
+      // const result = await generateImagesFromPdf(pdf, { max_pages: maxPages, size });
+      setJobId(start.job_id);
+      setJobStatus(start.status);
+      // setImages(result.images ?? []);
     } catch (e: any) {
       setError(e?.message ?? "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
+  // polling effect
+  useEffect(() => {
+    if (!jobId) return;
+
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const job = await getStoryImageJob(jobId);
+        if (cancelled) return;
+        setJobStatus(job.status);
+
+        if (job.status === "done" && job.result) {
+          setImages(job.result.images ?? []);
+          setLoading(false);
+          clearInterval(interval);
+        } else if (job.status === "error") {
+          setError(job.error ?? "Job failed.");
+          setLoading(false);
+          clearInterval(interval);
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        setError(e?.message ?? "Error polling job.");
+        setLoading(false);
+        clearInterval(interval);
+      }
+    },6000); // poll every 5s
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [jobId]);
 
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 24, textAlign: "center" }}>

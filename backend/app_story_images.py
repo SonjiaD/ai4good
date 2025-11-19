@@ -3,6 +3,7 @@ import os
 import io
 import base64
 import json
+import time
 from datetime import datetime
 from urllib.parse import urljoin
 from flask import url_for
@@ -13,11 +14,29 @@ from flask import Flask, request, jsonify, Blueprint, send_from_directory
 import fitz  # PyMuPDF
 from openai import OpenAI
 from dotenv import load_dotenv
-
+from uuid import uuid4
+from concurrent.futures import ThreadPoolExecutor
 # blueprint
 images_bp = Blueprint('images_bp', __name__)
 
 load_dotenv()
+
+# in-memory job store
+JOBS: dict[str, dict] = {}
+# thread pool for bg work
+EXECUTOR = ThreadPoolExecutor(max_workers=2)
+
+# bg worker fcn 
+def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
+    """Background worker: run process_story_images and store result in JOBS."""
+    JOBS[job_id]["status"] = "running"
+    try:
+        result = process_story_images(pdf_bytes, form_data)
+        JOBS[job_id]["status"] = "done"
+        JOBS[job_id]["result"] = result
+    except Exception as e:
+        JOBS[job_id]["status"] = "error"
+        JOBS[job_id]["error"] = str(e)
 
 # --------
 # config
@@ -35,7 +54,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 MAX_PAGES = int(os.getenv("MAX_PAGES", "5"))
 
 # Default image size
-DEFAULT_SIZE = os.getenv("IMAGE_SIZE", "1024x1024")
+DEFAULT_SIZE = os.getenv("IMAGE_SIZE", "512x512") # changed for faster generation times
 if DEFAULT_SIZE not in ALLOWED_SIZES:
     DEFAULT_SIZE = "1024x1024"
 
@@ -241,40 +260,37 @@ def save_png(png_bytes: bytes, stem: str) -> str:
 
 def file_url(filename: str) -> str:
     # Builds an absolute URL to the blueprint route, including /api prefix
-    return url_for("images_bp.serve_generated", filename=filename, _external=True)
+    # return url_for("images_bp.serve_generated", filename=filename, _external=True)
+    # TEST:
+    """Turn a filename into a static served URL for generated images."""
+    return f"http://localhost:5000/api/generated/{filename}"
 
-# ---------------------------
-# Routes
-# ---------------------------
-
-@images_bp.route("/images/story", methods=["POST"])
-def create_story_images():
-    """Generate story images from a PDF, using an LLM summary for coherence"""
-    if "pdf" not in request.files:
-        return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
-
-    pdf_file = request.files["pdf"]
-    try:
-        pdf_bytes = pdf_file.read()
-        pages = pdf_bytes_to_pages(pdf_bytes)
-    except Exception as e:
-        return jsonify({"error": f"Failed to read PDF: {e}"}), 400
-
+# NEW: core processor fcn 
+def process_story_images(pdf_bytes: bytes, form_data: dict) -> dict:
+    """
+    Core sync logic to:
+    - read pages
+    - summarize
+    - generate images
+    - return a JSON-serializable dict
+    """
+    t0 = time.monotonic()
+    pages = pdf_bytes_to_pages(pdf_bytes)
     if not pages:
-        return jsonify({"error": "No text found in the PDF."}), 400
+        raise ValueError("No text found in the PDF.")
 
     try:
-        cap = int(request.form.get("max_pages", str(MAX_PAGES)))
+        cap = int(form_data.get("max_pages", str(MAX_PAGES)))
         if cap <= 0:
             cap = 1
     except ValueError:
         cap = MAX_PAGES
 
-    req_size = request.form.get("size", DEFAULT_SIZE)
+    req_size = form_data.get("size", DEFAULT_SIZE)
     size = req_size if req_size in ALLOWED_SIZES else DEFAULT_SIZE
 
-    kid_style_param = request.form.get("kid_style")
-    reader_age_param = request.form.get("reader_age")
+    kid_style_param = form_data.get("kid_style")
+    reader_age_param = form_data.get("reader_age")
     use_kid_style = decide_kid_style(kid_style_param, reader_age_param)
 
     try:
@@ -282,16 +298,19 @@ def create_story_images():
     except ValueError:
         age_int = None
 
-    style_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else None
+    base_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else ""
 
-        # 1) summarize entire story → story bible
+    # ---- story summary (LLM) ----
+    # for testing time:
+    tbeforeSummary = time.monotonic()
     summary = summarize_story_pages(pages, max_scene=cap)
-
+    tafterSummary = time.monotonic()
+    print(f"Time for story summarization: {tafterSummary - tbeforeSummary:.2f} seconds")
+    summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
     characters = summary.get("characters") or []
     setting = summary.get("setting") or ""
     scenes = summary.get("scenes") or []
 
-    # if LLM came back empty, fall back to “one scene per page”
     if not scenes:
         scenes = []
         for idx, page_text in enumerate(pages[:cap]):
@@ -304,7 +323,6 @@ def create_story_images():
                 }
             )
 
-    # add context text to preamble once
     ctx_bits = []
     if setting:
         ctx_bits.append(f"Overall setting: {setting}")
@@ -313,12 +331,14 @@ def create_story_images():
         for ch in characters:
             ctx_bits.append(f"- {ch}")
 
-    context_preamble = style_preamble
+    context_preamble = base_preamble
     if ctx_bits:
-        context_preamble = style_preamble + "\n\nStory context:\n" + "\n".join(ctx_bits) + "\n"
+        context_preamble = (
+            base_preamble + "\n\nStory context:\n" + "\n".join(ctx_bits) + "\n"
+        )
 
-    generated_filenames: List[str] = []
-    images_json: List[dict] = []
+    generated_filenames: list[str] = []
+    images_json: list[dict] = []
 
     counted = 0
     for idx, scene in enumerate(scenes):
@@ -328,8 +348,15 @@ def create_story_images():
         page_hint = scene.get("page_hint") or (idx + 1)
         scene_summary = scene.get("summary") or "A key moment from the story."
 
-        # using existing page_to_prompt fcn, but now feeding in scene summary
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
+        # testing time 
+        tImgStart = time.monotonic()
+        png_bytes = generate_image(prompt, size=size)
+        tImgEnd = time.monotonic()
+        print(f"Time for image generation (page {page_hint}): {tImgEnd - tImgStart:.2f} seconds")
+
+        tDone = time.monotonic()
+        print(f"Total time so far: {tDone - t0:.2f} seconds")
 
         try:
             png_bytes = generate_image(prompt, size=size)
@@ -352,23 +379,167 @@ def create_story_images():
             )
 
     if not generated_filenames:
-        return jsonify(
-            {
-                "error": "No images were generated. Check API key/credits and try smaller pages."
-            }
-        ), 500
+        raise RuntimeError(
+            "No images were generated. Check API key/credits and try smaller pages."
+        )
 
-    return jsonify(
-        {
-            "message": "Images generated.",
-            "count": len(generated_filenames),
-            "images": images_json,
-            "summary": {
-                "characters": characters,
-                "setting": setting,
-            },
-        }
-    ), 200
+    return {
+        "message": "Images generated.",
+        "count": len(generated_filenames),
+        "images": images_json,
+        "summary": {
+            "characters": characters,
+            "setting": setting,
+        },
+    }
+
+# ---------------------------
+# Routes
+# ---------------------------
+
+# NEW /images/story route using the core processor function
+@images_bp.route("/images/story", methods=["POST"])
+def create_story_images():
+    """Synchronous version: do all work in this request."""
+    if "pdf" not in request.files:
+        return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
+
+    pdf_file = request.files["pdf"]
+    try:
+        pdf_bytes = pdf_file.read()
+    except Exception as e:
+        return jsonify({"error": f"Failed to read PDF: {e}"}), 400
+
+    try:
+        result = process_story_images(pdf_bytes, request.form.to_dict())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify(result), 200
+
+
+# @images_bp.route("/images/story", methods=["POST"])
+# def create_story_images():
+#     """Generate story images from a PDF, using an LLM summary for coherence"""
+#     if "pdf" not in request.files:
+#         return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
+
+#     pdf_file = request.files["pdf"]
+#     try:
+#         pdf_bytes = pdf_file.read()
+#         pages = pdf_bytes_to_pages(pdf_bytes)
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to read PDF: {e}"}), 400
+
+#     if not pages:
+#         return jsonify({"error": "No text found in the PDF."}), 400
+
+#     try:
+#         cap = int(request.form.get("max_pages", str(MAX_PAGES)))
+#         if cap <= 0:
+#             cap = 1
+#     except ValueError:
+#         cap = MAX_PAGES
+
+#     req_size = request.form.get("size", DEFAULT_SIZE)
+#     size = req_size if req_size in ALLOWED_SIZES else DEFAULT_SIZE
+
+#     kid_style_param = request.form.get("kid_style")
+#     reader_age_param = request.form.get("reader_age")
+#     use_kid_style = decide_kid_style(kid_style_param, reader_age_param)
+
+#     try:
+#         age_int = int(reader_age_param) if reader_age_param is not None else None
+#     except ValueError:
+#         age_int = None
+
+#     style_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else None
+
+#         # 1) summarize entire story → story bible
+#     summary = summarize_story_pages(pages, max_scene=cap)
+
+#     characters = summary.get("characters") or []
+#     setting = summary.get("setting") or ""
+#     scenes = summary.get("scenes") or []
+
+#     # if LLM came back empty, fall back to “one scene per page”
+#     if not scenes:
+#         scenes = []
+#         for idx, page_text in enumerate(pages[:cap]):
+#             scenes.append(
+#                 {
+#                     "id": idx + 1,
+#                     "page_hint": idx + 1,
+#                     "summary": page_text.strip()
+#                     or "A continuation of the story based on this page.",
+#                 }
+#             )
+
+#     # add context text to preamble once
+#     ctx_bits = []
+#     if setting:
+#         ctx_bits.append(f"Overall setting: {setting}")
+#     if characters:
+#         ctx_bits.append("Main characters:")
+#         for ch in characters:
+#             ctx_bits.append(f"- {ch}")
+
+#     context_preamble = style_preamble
+#     if ctx_bits:
+#         context_preamble = style_preamble + "\n\nStory context:\n" + "\n".join(ctx_bits) + "\n"
+
+#     generated_filenames: List[str] = []
+#     images_json: List[dict] = []
+
+#     counted = 0
+#     for idx, scene in enumerate(scenes):
+#         if counted >= cap:
+#             break
+
+#         page_hint = scene.get("page_hint") or (idx + 1)
+#         scene_summary = scene.get("summary") or "A key moment from the story."
+
+#         # using existing page_to_prompt fcn, but now feeding in scene summary
+#         prompt = page_to_prompt(scene_summary, idx, context_preamble)
+
+#         try:
+#             png_bytes = generate_image(prompt, size=size)
+#             filename = save_png(png_bytes, stem=f"page{page_hint}")
+#             generated_filenames.append(filename)
+#             images_json.append(
+#                 {
+#                     "url": file_url(filename),
+#                     "page": int(page_hint),
+#                     "prompt": prompt,
+#                 }
+#             )
+#             counted += 1
+#         except Exception as e:
+#             images_json.append(
+#                 {
+#                     "error": str(e),
+#                     "page": int(page_hint),
+#                 }
+#             )
+
+#     if not generated_filenames:
+#         return jsonify(
+#             {
+#                 "error": "No images were generated. Check API key/credits and try smaller pages."
+#             }
+#         ), 500
+
+#     return jsonify(
+#         {
+#             "message": "Images generated.",
+#             "count": len(generated_filenames),
+#             "images": images_json,
+#             "summary": {
+#                 "characters": characters,
+#                 "setting": setting,
+#             },
+#         }
+#     ), 200
 
     # old version without story summarization
     # generated_filenames: List[str] = []
@@ -420,3 +591,48 @@ def test_openai():
     client = get_openai_client()
     models = client.models.list()
     return {"ok": True, "models": [m.id for m in models.data[:5]]}
+
+# NEW: async endpoints
+@images_bp.route("/images/story/async", methods=["POST"])
+def create_story_images_async():
+    """Async version: enqueue a job and return job_id immediately."""
+    if "pdf" not in request.files:
+        return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
+
+    pdf_file = request.files["pdf"]
+    try:
+        pdf_bytes = pdf_file.read()
+    except Exception as e:
+        return jsonify({"error": f"Failed to read PDF: {e}"}), 400
+
+    form_data = request.form.to_dict()
+
+    job_id = str(uuid4())
+    JOBS[job_id] = {
+        "status": "queued",
+        "created_at": datetime.utcnow().isoformat() + "Z",
+    }
+
+    # kick off background work
+    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
+
+    return jsonify({"job_id": job_id, "status": "queued"}), 202
+
+
+@images_bp.route("/images/story/async/<job_id>", methods=["GET"])
+def get_story_images_job(job_id: str):
+    job = JOBS.get(job_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+
+    # Don't leak raw python objects; copy only what you need
+    payload: dict = {
+        "job_id": job_id,
+        "status": job.get("status", "unknown"),
+    }
+    if "result" in job:
+        payload["result"] = job["result"]
+    if "error" in job:
+        payload["error"] = job["error"]
+
+    return jsonify(payload), 200
