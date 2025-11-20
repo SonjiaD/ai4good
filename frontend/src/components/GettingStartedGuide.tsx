@@ -32,6 +32,12 @@ export default function GettingStartedGuide() {
       <Card step={3} title="Listen or Start Fresh">
         Press <strong>▶ Read Aloud</strong> to hear the story, or <strong>✖ Clear Highlights</strong> to try again!
       </Card>
+
+      <Card step={4} title="Turn Story into Pictures">
+      Click <strong>🖍️ Illustrate Story PDF</strong> to transform your story into fun and colourful illustrations!
+        <br /><br />
+      </Card>
+
     </div>
   );
 }
