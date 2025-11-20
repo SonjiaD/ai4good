@@ -6,13 +6,16 @@ const PDFUploader: React.FC = () => {
   // const { setText } = useReadingContext();
   const [loading, setLoading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
-  const { setText, setTitle, setParagraphs } = useReadingContext();
+  // const { setText, setTitle, setParagraphs } = useReadingContext();
+  const { setText, setTitle, setParagraphs, setFile } = useReadingContext();
 
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // new: make PDF avail to rest of app
+    setFile(file);
     const formData = new FormData();
     formData.append('file', file);
 
