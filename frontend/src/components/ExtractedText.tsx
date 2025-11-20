@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { useReadingContext } from '../context/ReadingContext';
 import './Highlight.css';  // New: separate CSS file
 import GettingStartedGuide from "./GettingStartedGuide";
 import "../styles/buttons.css";
 import VocabToggle from "./VocabToggle";
 import { API_BASE_URL } from '../config';
+import ImageGenerator from "../pages/ImageGenerator";
+import {
+  startStoryImageJob,
+  getStoryImageJob,
+  type StoryImage,
+  type StoryJobStatus,
+} from "../api/images";
 
 const ExtractedText: React.FC = () => {
-  const { text, title } = useReadingContext();
+  const { text, title, file } = useReadingContext();
   const [loading, setLoading] = useState(false);
-  
+  const navigate = useNavigate();
+  const [showImageGenerator, setShowImageGenerator] = useState(false);
+
   // for text highlighting
   const [highlights, setHighlights] = useState<{ start: number; end: number; text: string }[]>([]);
 
@@ -218,6 +228,14 @@ const ExtractedText: React.FC = () => {
     playNextSentence(); // Start the chain
   };
 
+// --- image generation state ---
+  const [images, setImages] = useState<StoryImage[]>([]);
+  const [imgJobId, setImgJobId] = useState<string | null>(null);
+  const [imgJobStatus, setImgJobStatus] = useState<StoryJobStatus | null>(null);
+  const [imgProgress, setImgProgress] = useState<string[]>([]);
+  const [imgLoading, setImgLoading] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
+
   const handleTextClick = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -368,6 +386,79 @@ const ExtractedText: React.FC = () => {
     }
   };
 
+  // illustrate click handler
+  const handleIllustrate = async () => {
+    if (!file) {
+      alert("Please upload a story PDF first.");
+      return;
+    }
+
+    setImgError(null);
+    setImgLoading(true);
+    setImages([]);
+    setImgJobId(null);
+    setImgJobStatus(null);
+    setImgProgress([]);
+
+    try {
+      // tweak max_pages/size here - for now 5 (likely 3 for demo)
+      const start = await startStoryImageJob(file, {
+        max_pages: 5,
+        size: "1024x1024",
+      });
+
+      setImgJobId(start.job_id);
+      setImgJobStatus(start.status);
+      if ((start as any).progress) {
+        setImgProgress((start as any).progress);
+      }
+    } catch (e: any) {
+      console.error("Error starting illustration job:", e);
+      setImgError(e?.message ?? "Could not start illustration job.");
+      setImgLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!imgJobId) return;
+
+    let cancelled = false;
+
+    const interval = setInterval(async () => {
+      try {
+        const job = await getStoryImageJob(imgJobId);
+        if (cancelled) return;
+
+        setImgJobStatus(job.status);
+        if (job.progress) {
+          setImgProgress(job.progress);
+        }
+
+        if (job.status === "done" && job.result) {
+          setImages(job.result.images ?? []);
+          setImgLoading(false);
+          clearInterval(interval);
+        } else if (job.status === "error") {
+          setImgError(job.error ?? "Illustration job failed.");
+          setImgLoading(false);
+          clearInterval(interval);
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        console.error("Error polling illustration job:", e);
+        setImgError(e?.message ?? "Error checking illustration job.");
+        setImgLoading(false);
+        clearInterval(interval);
+      }
+    }, 6000); // 6s, similar to /images page
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [imgJobId]);
+
+
   return text ? (
     <>
       <div
@@ -440,7 +531,7 @@ const ExtractedText: React.FC = () => {
         <button
           className="rb-btn rb-btn--primary"
           onClick={handleReadAloud}
-          disabled={loading}
+          disabled={loading} 
           style={{
             backgroundColor: isPlaying ? "#ef4444" : isPaused ? "#f59e0b" : undefined,
             transition: "background-color 0.3s ease"
@@ -450,13 +541,88 @@ const ExtractedText: React.FC = () => {
         </button>
 
         <button
+          className="rb-btn rb-btn--primary"
+          style={{ gridColumn: "span 2" }} // full width
+          onClick={handleIllustrate}
+          disabled={imgLoading || !file}
+          // onClick={() => navigate("/images")}
+        >
+          🖍️ Illustrate Story PDF
+        </button>
+        <button
           className="rb-btn rb-btn--secondary"
           style={{ gridColumn: "span 2" }}
           onClick={() => setHighlights([])}
         >
           ✖︎ Clear Highlights
         </button>
+        {/* <button
+          className="rb-btn rb-btn--primary"
+          onClick={() => navigate("/images")}
+        >
+          🖍️ Illustrate Story PDF
+        </button> */}
       </div>
+      {/* ---------- illustration status + results ---------- */}
+      {(imgLoading || imgJobStatus === "running" || imgJobStatus === "queued") && (
+        <div style={{ marginTop: "1rem", fontSize: "0.9rem", color: "#374151" }}>
+          <strong>Generating your illustrations…</strong>
+          <p style={{ margin: "0.25rem 0" }}>
+            This can take a couple of minutes depending on story length.
+          </p>
+          {imgProgress.length > 0 && (
+            <p style={{ margin: 0 }}>
+              Latest update: {imgProgress[imgProgress.length - 1]}
+            </p>
+          )}
+        </div>
+      )}
+
+      {imgError && (
+        <div style={{ marginTop: "0.75rem", color: "#b00020", fontSize: "0.9rem" }}>
+          {imgError}
+        </div>
+      )}
+
+      {images.length > 0 && (
+        <section style={{ marginTop: "1.5rem" }}>
+          <h4 style={{ marginBottom: "0.75rem" }}>Story Pictures</h4>
+          <div
+            style={{
+              display: "grid",
+              gap: "1rem",
+              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+            }}
+          >
+            {images.map((img, idx) => (
+              <figure key={idx} style={{ margin: 0 }}>
+                <img
+                  src={img.url}
+                  alt={`Story page illustration ${img.page ?? idx + 1}`}
+                  style={{
+                    width: "100%",
+                    height: 200,
+                    objectFit: "cover",
+                    borderRadius: 10,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <figcaption
+                  style={{
+                    fontSize: 12,
+                    opacity: 0.8,
+                    marginTop: 6,
+                    textAlign: "center",
+                  }}
+                >
+                  Page {img.page ?? idx + 1}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
 
       {/* definition display section */}
 
