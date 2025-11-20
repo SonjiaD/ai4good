@@ -2,6 +2,7 @@ from __future__ import annotations
 import os
 import io
 import base64
+import json
 from datetime import datetime
 from urllib.parse import urljoin
 from flask import url_for
@@ -41,6 +42,8 @@ if DEFAULT_SIZE not in ALLOWED_SIZES:
 # Image model for generation
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-1")
 
+# LLM model for story summarization // planning
+SUMMARY_MODEL = os.getenv("SUMMARY_MODEL", "gpt-4o-mini") #TODO: change model (if needed)
 # ---------------------------
 # Flask App + OpenAI Client
 # ---------------------------
@@ -61,6 +64,81 @@ def pdf_bytes_to_pages(pdf_bytes: bytes) -> List[str]:
             pages.append(text if text else "")  # Keep page count consistent
     return pages
 
+# story summarizer helper
+def summarize_story_pages(
+        pages: List[str],
+        max_scene: int = 6,
+) -> dict:
+    """
+    Use an LLM to produce a short story summary
+    - characters (short descriptions)
+    - settings
+    - scenes : a list of {id, page_hint, summary} 
+    """
+
+    # join all pages into single string, but trim 
+    full_text = "\n\n--- PAGE BREAK ---\n\n".join(pages)
+    full_text = _trim(full_text, limit=4000)  # limit to 4000 chars
+
+    client = get_openai_client()
+
+    system_msg = {
+        "role": "system",
+        "content": (
+            "You are a helpful assistant that summarizes children's stories for illustration purposes. "
+            "Given the full story text, you will extract characters, settings,"
+            "and a small list of key scenes to illustrate."
+            "Keep everything simple, concrete, and kid-friendly."
+        ),
+    }
+    user_msg = {
+        "role": "user",
+        "content": (
+            f"Story text (may be multiple pages):\n\n{full_text}\n\n"
+            f"Please respond ONLY with JSON using this schema:\n"
+            "{\n"
+            '  "characters": [\n'
+            '    "short 1-2 sentence describing where the story mostly happens"\n'
+            ' "scenes": [\n'
+            "{\n"
+            '      "id": 1,\n'
+            '      "page_hint": 1, \n'
+            '      "summary": "1-3 sentences describing what should be in the illustration"\n'
+            "    }\n"
+            " ... up to "
+            f"{max_scene} scenes total\n"
+            "  ]\n"
+            "}\n"
+            "Use page_hint as an approximate page number (starting at 1) if it is obvious;"
+            "otherwise just start from 1 and increment."
+        ),
+    }
+
+    resp = client.chat.completions.create(
+        model=SUMMARY_MODEL,
+        messages=[system_msg, user_msg],
+        response_format={"type": "json_object"},
+    )
+
+    content = resp.choices[0].message.content
+    try:
+        data = json.loads(content)
+    except Exception:
+        # if parsing fails, just fall back later
+        return {}
+
+    # Ensure basic shape
+    data.setdefault("characters", [])
+    data.setdefault("setting", "")
+    data.setdefault("scenes", [])
+
+    # cap scenes
+    if isinstance(data["scenes"], list):
+        data["scenes"] = data["scenes"][:max_scene]
+    else:
+        data["scenes"] = []
+
+    return data
 # ---------------------------
 # Prompting (Kid-Friendly)
 # ---------------------------
@@ -171,7 +249,7 @@ def file_url(filename: str) -> str:
 
 @images_bp.route("/images/story", methods=["POST"])
 def create_story_images():
-    """Generate story images from a PDF."""
+    """Generate story images from a PDF, using an LLM summary for coherence"""
     if "pdf" not in request.files:
         return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
 
@@ -206,42 +284,129 @@ def create_story_images():
 
     style_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else None
 
+        # 1) summarize entire story → story bible
+    summary = summarize_story_pages(pages, max_scene=cap)
+
+    characters = summary.get("characters") or []
+    setting = summary.get("setting") or ""
+    scenes = summary.get("scenes") or []
+
+    # if LLM came back empty, fall back to “one scene per page”
+    if not scenes:
+        scenes = []
+        for idx, page_text in enumerate(pages[:cap]):
+            scenes.append(
+                {
+                    "id": idx + 1,
+                    "page_hint": idx + 1,
+                    "summary": page_text.strip()
+                    or "A continuation of the story based on this page.",
+                }
+            )
+
+    # add context text to preamble once
+    ctx_bits = []
+    if setting:
+        ctx_bits.append(f"Overall setting: {setting}")
+    if characters:
+        ctx_bits.append("Main characters:")
+        for ch in characters:
+            ctx_bits.append(f"- {ch}")
+
+    context_preamble = style_preamble
+    if ctx_bits:
+        context_preamble = style_preamble + "\n\nStory context:\n" + "\n".join(ctx_bits) + "\n"
+
     generated_filenames: List[str] = []
-    images_json: List[Tuple[int, str]] = []
+    images_json: List[dict] = []
 
     counted = 0
-    for idx, text in enumerate(pages):
+    for idx, scene in enumerate(scenes):
         if counted >= cap:
             break
 
-        scene_src = text.strip() or "A continuation of the story based on this page."
-        prompt = page_to_prompt(scene_src, idx, style_preamble)
+        page_hint = scene.get("page_hint") or (idx + 1)
+        scene_summary = scene.get("summary") or "A key moment from the story."
+
+        # using existing page_to_prompt fcn, but now feeding in scene summary
+        prompt = page_to_prompt(scene_summary, idx, context_preamble)
 
         try:
             png_bytes = generate_image(prompt, size=size)
-            filename = save_png(png_bytes, stem=f"page{idx+1}")
-            generated_filenames.append(file_url(filename))
-            images_json.append({
-                "url": file_url(filename),
-                "page": idx + 1,
-                "prompt": prompt
-            })
-
+            filename = save_png(png_bytes, stem=f"page{page_hint}")
+            generated_filenames.append(filename)
+            images_json.append(
+                {
+                    "url": file_url(filename),
+                    "page": int(page_hint),
+                    "prompt": prompt,
+                }
+            )
             counted += 1
         except Exception as e:
-            images_json.append({
-                "error": str(e),
-                "page": idx + 1
-            })
+            images_json.append(
+                {
+                    "error": str(e),
+                    "page": int(page_hint),
+                }
+            )
 
     if not generated_filenames:
-        return jsonify({"error": "No images were generated. Check API key/credits and try smaller pages."}), 500
+        return jsonify(
+            {
+                "error": "No images were generated. Check API key/credits and try smaller pages."
+            }
+        ), 500
 
-    return jsonify({
-        "message": "Images generated.",
-        "count": len(generated_filenames),
-        "images": images_json
-    }), 200
+    return jsonify(
+        {
+            "message": "Images generated.",
+            "count": len(generated_filenames),
+            "images": images_json,
+            "summary": {
+                "characters": characters,
+                "setting": setting,
+            },
+        }
+    ), 200
+
+    # old version without story summarization
+    # generated_filenames: List[str] = []
+    # images_json: List[Tuple[int, str]] = []
+
+    # counted = 0
+    # for idx, text in enumerate(pages):
+    #     if counted >= cap:
+    #         break
+
+    #     scene_src = text.strip() or "A continuation of the story based on this page."
+    #     prompt = page_to_prompt(scene_src, idx, style_preamble)
+
+    #     try:
+    #         png_bytes = generate_image(prompt, size=size)
+    #         filename = save_png(png_bytes, stem=f"page{idx+1}")
+    #         generated_filenames.append(file_url(filename))
+    #         images_json.append({
+    #             "url": file_url(filename),
+    #             "page": idx + 1,
+    #             "prompt": prompt
+    #         })
+
+    #         counted += 1
+    #     except Exception as e:
+    #         images_json.append({
+    #             "error": str(e),
+    #             "page": idx + 1
+    #         })
+
+    # if not generated_filenames:
+    #     return jsonify({"error": "No images were generated. Check API key/credits and try smaller pages."}), 500
+
+    # return jsonify({
+    #     "message": "Images generated.",
+    #     "count": len(generated_filenames),
+    #     "images": images_json
+    # }), 200
 
 @images_bp.route("/generated/<path:filename>")
 def serve_generated(filename):
