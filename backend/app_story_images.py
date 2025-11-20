@@ -26,17 +26,30 @@ JOBS: dict[str, dict] = {}
 # thread pool for bg work
 EXECUTOR = ThreadPoolExecutor(max_workers=2)
 
+# progress fcn
+def log_progress(job_id: str | None, message: str) -> None:
+    """Append a human-readable progress message to a job, if it exists."""
+    if not job_id:
+        return
+    job = JOBS.get(job_id)
+    if job is None:
+        return
+    job.setdefault("progress", [])
+    job["progress"].append(message)
+    print(f"[JOB {job_id}] {message}")
+
 # bg worker fcn 
 def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
     """Background worker: run process_story_images and store result in JOBS."""
     JOBS[job_id]["status"] = "running"
     try:
-        result = process_story_images(pdf_bytes, form_data)
+        result = process_story_images(pdf_bytes, form_data, job_id=job_id)
         JOBS[job_id]["status"] = "done"
         JOBS[job_id]["result"] = result
     except Exception as e:
         JOBS[job_id]["status"] = "error"
         JOBS[job_id]["error"] = str(e)
+        log_progress(job_id, f"Error: {e}")
 
 # --------
 # config
@@ -266,7 +279,7 @@ def file_url(filename: str) -> str:
     return f"http://localhost:5000/api/generated/{filename}"
 
 # NEW: core processor fcn 
-def process_story_images(pdf_bytes: bytes, form_data: dict) -> dict:
+def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
     """
     Core sync logic to:
     - read pages
@@ -275,9 +288,11 @@ def process_story_images(pdf_bytes: bytes, form_data: dict) -> dict:
     - return a JSON-serializable dict
     """
     t0 = time.monotonic()
+    log_progress(job_id, "Starting story image illustration")
     pages = pdf_bytes_to_pages(pdf_bytes)
     if not pages:
         raise ValueError("No text found in the PDF.")
+    log_progress(job_id, f"Extracted {len(pages)} pages from PDF")
 
     try:
         cap = int(form_data.get("max_pages", str(MAX_PAGES)))
@@ -303,8 +318,11 @@ def process_story_images(pdf_bytes: bytes, form_data: dict) -> dict:
     # ---- story summary (LLM) ----
     # for testing time:
     tbeforeSummary = time.monotonic()
+    log_progress(job_id, "Summarizing story to extract key scenes")
     summary = summarize_story_pages(pages, max_scene=cap)
     tafterSummary = time.monotonic()
+    log_progress(job_id, f"Story summary done in {tafterSummary - tbeforeSummary:.1f}s.")
+
     print(f"Time for story summarization: {tafterSummary - tbeforeSummary:.2f} seconds")
     summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
     characters = summary.get("characters") or []
@@ -340,6 +358,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict) -> dict:
     generated_filenames: list[str] = []
     images_json: list[dict] = []
 
+    log_progress(job_id, f"Generating up to {cap} illustration(s)…")
     counted = 0
     for idx, scene in enumerate(scenes):
         if counted >= cap:
@@ -382,7 +401,8 @@ def process_story_images(pdf_bytes: bytes, form_data: dict) -> dict:
         raise RuntimeError(
             "No images were generated. Check API key/credits and try smaller pages."
         )
-
+    t_done = time.monotonic()
+    log_progress(job_id, f"Job completed in {t_done - t0:.1f}s.")
     return {
         "message": "Images generated.",
         "count": len(generated_filenames),
@@ -611,6 +631,7 @@ def create_story_images_async():
     JOBS[job_id] = {
         "status": "queued",
         "created_at": datetime.utcnow().isoformat() + "Z",
+        "progress": [],
     }
 
     # kick off background work
@@ -629,6 +650,7 @@ def get_story_images_job(job_id: str):
     payload: dict = {
         "job_id": job_id,
         "status": job.get("status", "unknown"),
+        "progress": job.get("progress", []),
     }
     if "result" in job:
         payload["result"] = job["result"]

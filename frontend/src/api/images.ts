@@ -46,6 +46,7 @@ export type StoryJobResponse = {
   status: StoryJobStatus;
   result?: StoryResponse;
   error?: string;
+  progress?: string[];
 };
 
 export async function startStoryImageJob(

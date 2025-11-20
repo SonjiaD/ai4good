@@ -70,6 +70,7 @@ export default function ImageGenerator() {
 
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<StoryJobStatus | null>(null);
+  const [progress, setProgress] = useState<string[]>([]);
 
   const onChoose = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) setPdf(e.target.files[0]);
@@ -82,6 +83,7 @@ export default function ImageGenerator() {
     setImages([]);
     setJobId(null);
     setJobStatus(null);
+    setProgress([]);
     try {
       const start = await startStoryImageJob(pdf, { max_pages: maxPages, size });
       // const result = await generateImagesFromPdf(pdf, { max_pages: maxPages, size });
@@ -90,9 +92,11 @@ export default function ImageGenerator() {
       // setImages(result.images ?? []);
     } catch (e: any) {
       setError(e?.message ?? "Something went wrong.");
-    } finally {
       setLoading(false);
-    }
+    } 
+    // finally {
+    //   setLoading(false);
+    // }
   };
   // polling effect
   useEffect(() => {
@@ -104,6 +108,9 @@ export default function ImageGenerator() {
         const job = await getStoryImageJob(jobId);
         if (cancelled) return;
         setJobStatus(job.status);
+        if(job.progress){
+          setProgress(job.progress);
+        }
 
         if (job.status === "done" && job.result) {
           setImages(job.result.images ?? []);
@@ -192,6 +199,45 @@ export default function ImageGenerator() {
           {error && <div style={{ color: "#b00020" }}>{error}</div>}
         </div>
       </section>
+   {/* Loading + status box */}
+   {(jobStatus === "queued" || jobStatus === "running") && (
+        <div
+          style={{
+            marginTop: 20,
+            padding: 12,
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: "#fffaf0",
+            maxWidth: 500,
+            marginInline: "auto",
+            textAlign: "left",
+          }}
+        >
+          <strong>Generating your illustrations…</strong>
+          <p style={{ fontSize: 13, marginTop: 4, marginBottom: 4 }}>
+            This can take 2–4 minutes for 3 images, depending on story complexity.
+          </p>
+          <p style={{ fontSize: 12, opacity: 0.8, margin: 0 }}>
+            Status: {jobStatus}
+          </p>
+
+          {progress.length > 0 && (
+            <p
+              style={{
+                fontSize: 12,
+                marginTop: 8,
+                marginBottom: 0,
+                padding: 8,
+                borderRadius: 8,
+                background: "#fff",
+                border: "1px solid #eee",
+              }}
+            >
+              Latest update: {progress[progress.length - 1]}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 🌀 spinner while loading */}
       {loading && (
@@ -236,17 +282,32 @@ export default function ImageGenerator() {
           >
             {images.map((img, idx) => (
               <figure key={idx} style={{ margin: 0 }}>
+              <div
+              style={{
+                width: "100%",
+                height: 260,
+                overflow: "hidden",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#fff",
+                borderRadius: 12,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+              >
                 <img
                   src={img.url}
                   alt={`Generated page ${img.page ?? idx + 1}`}
                   style={{
-                    width: "100%",
-                    height: 220,
-                    objectFit: "cover",
-                    borderRadius: 10,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                    // objectFit: "cover",
+                    // borderRadius: 10,
+                    // boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 />
+                </div>
                 <figcaption style={{ fontSize: 12, opacity: 0.8, marginTop: 6 }}>
                   Page {img.page ?? idx + 1}
                 </figcaption>
