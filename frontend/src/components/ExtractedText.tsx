@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { useReadingContext } from '../context/ReadingContext';
 import './Highlight.css';  // New: separate CSS file
 import GettingStartedGuide from "./GettingStartedGuide";
@@ -9,6 +10,7 @@ import PDFUploader from "./PDFUploader";
 const ExtractedText: React.FC = () => {
   const { text, title, paragraphs } = useReadingContext();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   
   // for text highlighting
   const [highlights, setHighlights] = useState<{ start: number; end: number; text: string }[]>([]);
@@ -252,12 +254,25 @@ const ExtractedText: React.FC = () => {
         </button>
 
         <button
+          className="rb-btn rb-btn--primary"
+          style={{ gridColumn: "span 2" }} // full width
+          onClick={() => navigate("/images")}
+        >
+          🖍️ Illustrate Story PDF
+        </button>
+        <button
           className="rb-btn rb-btn--secondary"
           style={{ gridColumn: "span 2" }}
           onClick={() => setHighlights([])}
         >
           ✖︎ Clear Highlights
         </button>
+        {/* <button
+          className="rb-btn rb-btn--primary"
+          onClick={() => navigate("/images")}
+        >
+          🖍️ Illustrate Story PDF
+        </button> */}
       </div>
 
       {/* definition display section */}
