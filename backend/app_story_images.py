@@ -6,7 +6,7 @@ import json
 import time
 from datetime import datetime
 from urllib.parse import urljoin
-from flask import url_for
+from flask import url_for, request
 from pathlib import Path
 from typing import List, Tuple
 
@@ -276,7 +276,9 @@ def file_url(filename: str) -> str:
     # return url_for("images_bp.serve_generated", filename=filename, _external=True)
     # TEST:
     """Turn a filename into a static served URL for generated images."""
-    return f"http://localhost:5000/api/generated/{filename}"
+    # return f"http://localhost:5000/api/generated/{filename}" # locally
+    # for deployed version:
+    return url_for("images_bp.serve_generated", filename=filename, _external=True)
 
 # NEW: core processor fcn 
 def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
