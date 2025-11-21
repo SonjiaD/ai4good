@@ -6,7 +6,7 @@ import json
 import time
 from datetime import datetime
 from urllib.parse import urljoin
-# from flask import url_for, request
+from flask import url_for, request
 from pathlib import Path
 from typing import List, Tuple
 
@@ -16,6 +16,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
+from flask import current_app
+
 # blueprint
 images_bp = Blueprint('images_bp', __name__)
 
@@ -39,17 +41,31 @@ def log_progress(job_id: str | None, message: str) -> None:
     print(f"[JOB {job_id}] {message}")
 
 # bg worker fcn 
-def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
+# def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
+#     """Background worker: run process_story_images and store result in JOBS."""
+#     JOBS[job_id]["status"] = "running"
+#     try:
+#         result = process_story_images(pdf_bytes, form_data, job_id=job_id)
+#         JOBS[job_id]["status"] = "done"
+#         JOBS[job_id]["result"] = result
+#     except Exception as e:
+#         JOBS[job_id]["status"] = "error"
+#         JOBS[job_id]["error"] = str(e)
+#         log_progress(job_id, f"Error: {e}")
+# bg worker fcn - for deployment
+def run_image_job(app, job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
     """Background worker: run process_story_images and store result in JOBS."""
-    JOBS[job_id]["status"] = "running"
-    try:
-        result = process_story_images(pdf_bytes, form_data, job_id=job_id)
-        JOBS[job_id]["status"] = "done"
-        JOBS[job_id]["result"] = result
-    except Exception as e:
-        JOBS[job_id]["status"] = "error"
-        JOBS[job_id]["error"] = str(e)
-        log_progress(job_id, f"Error: {e}")
+    with app.app_context():
+        JOBS[job_id]["status"] = "running"
+        try:
+            result = process_story_images(pdf_bytes, form_data, job_id=job_id)
+            JOBS[job_id]["status"] = "done"
+            JOBS[job_id]["result"] = result
+        except Exception as e:
+            JOBS[job_id]["status"] = "error"
+            JOBS[job_id]["error"] = str(e)
+            log_progress(job_id, f"Error: {e}")
+
 
 # --------
 # config
@@ -280,9 +296,7 @@ def file_url(filename: str) -> str:
     """Turn a filename into a static served URL for generated images."""
     # return f"http://localhost:5000/api/generated/{filename}" # locally
     # for deployed version:
-    base = BACKEND_PUBLIC_URL.rstrip("/")
-    return urljoin(base, f"/generated/{filename}")
-    # return url_for("images_bp.serve_generated", filename=filename, _external=True)
+    return url_for("images_bp.serve_generated", filename=filename, _external=True)
 
 # NEW: core processor fcn 
 def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
@@ -641,6 +655,7 @@ def create_story_images_async():
     }
 
     # kick off background work
+    app = current_app._get_current_object()  # get actual Flask app
     EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
