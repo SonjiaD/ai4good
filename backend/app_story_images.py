@@ -6,7 +6,7 @@ import json
 import time
 from datetime import datetime
 from urllib.parse import urljoin
-from flask import url_for, request
+# from flask import url_for, request
 from pathlib import Path
 from typing import List, Tuple
 
@@ -76,6 +76,8 @@ IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-1")
 
 # LLM model for story summarization // planning
 SUMMARY_MODEL = os.getenv("SUMMARY_MODEL", "gpt-4o-mini") #TODO: change model (if needed)
+# for img gen on deployed ver:
+BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL", "http://localhost:5000")
 # ---------------------------
 # Flask App + OpenAI Client
 # ---------------------------
@@ -278,7 +280,9 @@ def file_url(filename: str) -> str:
     """Turn a filename into a static served URL for generated images."""
     # return f"http://localhost:5000/api/generated/{filename}" # locally
     # for deployed version:
-    return url_for("images_bp.serve_generated", filename=filename, _external=True)
+    base = BACKEND_PUBLIC_URL.rstrip("/")
+    return urljoin(base, f"/generated/{filename}")
+    # return url_for("images_bp.serve_generated", filename=filename, _external=True)
 
 # NEW: core processor fcn 
 def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
