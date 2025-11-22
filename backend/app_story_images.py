@@ -55,6 +55,7 @@ def log_progress(job_id: str | None, message: str) -> None:
 # bg worker fcn - for deployment
 def run_image_job(app, job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
     """Background worker: run process_story_images and store result in JOBS."""
+    print(f"Starting background job {job_id}")
     with app.app_context():
         JOBS[job_id]["status"] = "running"
         try:
@@ -658,7 +659,7 @@ def create_story_images_async():
 
     # kick off background work
     app = current_app._get_current_object()  # get actual Flask app
-    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
+    EXECUTOR.submit(run_image_job, app, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
 
