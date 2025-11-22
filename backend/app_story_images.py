@@ -62,10 +62,12 @@ def run_image_job(app, job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
             result = process_story_images(pdf_bytes, form_data, job_id=job_id)
             JOBS[job_id]["status"] = "done"
             JOBS[job_id]["result"] = result
+            print(f"Job {job_id} completed successfully.")
         except Exception as e:
             JOBS[job_id]["status"] = "error"
             JOBS[job_id]["error"] = str(e)
             log_progress(job_id, f"Error: {e}")
+            print(f"Job {job_id} failed with error: {e}")
 
 
 # --------
@@ -658,7 +660,7 @@ def create_story_images_async():
     }
 
     # kick off background work
-    app = current_app._get_current_object()  # get actual Flask app
+    #app = current_app._get_current_object()  # get actual Flask app
     EXECUTOR.submit(run_image_job, app, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
