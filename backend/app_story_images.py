@@ -92,8 +92,8 @@ IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-1")
 
 # LLM model for story summarization // planning
 SUMMARY_MODEL = os.getenv("SUMMARY_MODEL", "gpt-4o-mini") #TODO: change model (if needed)
-# for img gen on deployed ver:
-BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL", "http://localhost:5000")
+# for img gen on deployed ver (making it not rely on flask):
+BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL", "https://ai4good.onrender.com")
 # ---------------------------
 # Flask App + OpenAI Client
 # ---------------------------
@@ -296,7 +296,9 @@ def file_url(filename: str) -> str:
     """Turn a filename into a static served URL for generated images."""
     # return f"http://localhost:5000/api/generated/{filename}" # locally
     # for deployed version:
-    return url_for("images_bp.serve_generated", filename=filename, _external=True)
+    base = BACKEND_PUBLIC_URL.rstrip("/")
+    return f"{base}/api/generated/{filename}"
+    # return url_for("images_bp.serve_generated", filename=filename, _external=True) old ver
 
 # NEW: core processor fcn 
 def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
