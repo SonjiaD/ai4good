@@ -53,19 +53,19 @@ def log_progress(job_id: str | None, message: str) -> None:
 #         JOBS[job_id]["error"] = str(e)
 #         log_progress(job_id, f"Error: {e}")
 # bg worker fcn - for deployment
-def run_image_job(app, job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
+def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
     """Background worker: run process_story_images and store result in JOBS."""
     print(f"Starting background job {job_id}")
-    with app.app_context():
-        JOBS[job_id]["status"] = "running"
-        try:
-            result = process_story_images(pdf_bytes, form_data, job_id=job_id)
-            JOBS[job_id]["status"] = "done"
-            JOBS[job_id]["result"] = result
-        except Exception as e:
-            JOBS[job_id]["status"] = "error"
-            JOBS[job_id]["error"] = str(e)
-            log_progress(job_id, f"Error: {e}")
+    #with app.app_context():
+    JOBS[job_id]["status"] = "running"
+    try:
+        result = process_story_images(pdf_bytes, form_data, job_id=job_id)
+        JOBS[job_id]["status"] = "done"
+        JOBS[job_id]["result"] = result
+    except Exception as e:
+        JOBS[job_id]["status"] = "error"
+        JOBS[job_id]["error"] = str(e)
+        log_progress(job_id, f"Error: {e}")
 
 
 # --------
@@ -658,8 +658,8 @@ def create_story_images_async():
     }
 
     # kick off background work
-    app = current_app._get_current_object()  #TODO: remove once done debugging -  get actual Flask app
-    EXECUTOR.submit(run_image_job, app, job_id, pdf_bytes, form_data)
+    #app = current_app._get_current_object()  #TODO: remove once done debugging -  get actual Flask app
+    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
 
