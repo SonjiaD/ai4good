@@ -4,7 +4,6 @@ import io
 import base64
 import json
 import time
-import logging
 from datetime import datetime
 from urllib.parse import urljoin
 from flask import url_for, request
@@ -18,9 +17,7 @@ from dotenv import load_dotenv
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
 from flask import current_app
-# for logging jobs
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+
 # blueprint
 images_bp = Blueprint('images_bp', __name__)
 
@@ -350,7 +347,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     log_progress(job_id, f"Story summary done in {tafterSummary - tbeforeSummary:.1f}s.")
 
     print(f"Time for story summarization: {tafterSummary - tbeforeSummary:.2f} seconds")
-    summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
+    # summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
     characters = summary.get("characters") or []
     setting = summary.get("setting") or ""
     scenes = summary.get("scenes") or []
@@ -396,7 +393,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
         # testing time 
         tImgStart = time.monotonic()
-        #png_bytes = generate_image(prompt, size=size)
+       # png_bytes = generate_image(prompt, size=size)
         tImgEnd = time.monotonic()
         print(f"Time for image generation (page {page_hint}): {tImgEnd - tImgStart:.2f} seconds")
 
@@ -642,9 +639,7 @@ def test_openai():
 @images_bp.route("/images/story/async", methods=["POST"])
 def create_story_images_async():
     """Async version: enqueue a job and return job_id immediately."""
-    logger.debug("POST /image/story/async called")
     if "pdf" not in request.files:
-        logger.exception("Failed to read PDF in async endpt")
         return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
 
     pdf_file = request.files["pdf"]
@@ -661,35 +656,18 @@ def create_story_images_async():
         "created_at": datetime.utcnow().isoformat() + "Z",
         "progress": [],
     }
-    #DEBUG: log current JOB keys
-    logger.debug(
-        "created job %s. Current JOBS keys: %s",
-        job_id,
-        list(JOBS.keys()), 
-    )
 
     # kick off background work
-    #app = current_app._get_current_object()  # get actual Flask app
-    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
+    app = current_app._get_current_object()  #TODO: remove once done debugging -  get actual Flask app
+    EXECUTOR.submit(run_image_job, app, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
 
 
 @images_bp.route("/images/story/async/<job_id>", methods=["GET"])
 def get_story_images_job(job_id: str):
-    #DEBUG: log every GET + curr JOBS keys
-    logger.debug(
-        "GET /images/story/async/%s called. Current JOBS keys: %s",
-        job_id,
-        list(JOBS.keys()),
-    )
     job = JOBS.get(job_id)
     if not job:
-        logger.warning(
-            "Job %s not found in JOBS. Current keys at 404: %s", 
-            job_id,
-            list(JOBS.keys()),
-        )
         return jsonify({"error": "Job not found"}), 404
 
     # Don't leak raw python objects; copy only what you need
@@ -703,5 +681,4 @@ def get_story_images_job(job_id: str):
     if "error" in job:
         payload["error"] = job["error"]
 
-    logger.debug("Returning status for job %s: %s", job_id, payload["status"])
     return jsonify(payload), 200
