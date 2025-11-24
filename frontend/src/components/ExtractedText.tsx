@@ -12,6 +12,7 @@ import {
   getStoryImageJob,
   type StoryImage,
   type StoryJobStatus,
+  generateImagesFromPdf,
 } from "../api/images";
 
 const ExtractedText: React.FC = () => {
@@ -235,7 +236,9 @@ const ExtractedText: React.FC = () => {
   const [imgProgress, setImgProgress] = useState<string[]>([]);
   const [imgLoading, setImgLoading] = useState(false);
   const [imgError, setImgError] = useState<string | null>(null);
-
+  const USE_SYNC_IMAGES = !API_BASE_URL.includes("localhost"); //sync for prod, async for local testing
+  console.log("USE_SYNC_IMAGES:", USE_SYNC_IMAGES, "API_BASE_URL:", API_BASE_URL); // logging for debug
+  
   const handleTextClick = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -402,16 +405,39 @@ const ExtractedText: React.FC = () => {
 
     try {
       // tweak max_pages/size here - for now 5 (likely 3 for demo)
-      const start = await startStoryImageJob(file, {
+      // const start = await startStoryImageJob(file, { 
+      //   max_pages: 5,
+      //   size: "1024x1024",
+      // }); asynch rq 
+
+      const opts = {
         max_pages: 5,
         size: "1024x1024",
-      });
+      }
+
+      // adding sync/async logic
+      if(USE_SYNC_IMAGES){
+        // deployed ver uses "fake async" -> 1 long rq to sync endpoint
+        setImgJobStatus("running");
+
+        const resp = await generateImagesFromPdf(file, opts);
+        setImages(resp.images || []); // resp.images is StoryImage[]
+        setImgJobStatus("done");
+        setImgLoading(false);
+
+        // adding a prog msg
+        setImgProgress(prev => [...prev, "Illustrations generated successfully."]);
+      } else { // local dev uses real async jobs:
+        const start = await startStoryImageJob(file, opts);
+      
 
       setImgJobId(start.job_id);
       setImgJobStatus(start.status);
       if ((start as any).progress) {
         setImgProgress((start as any).progress);
       }
+      // imgLoading will stay true, useEffect will stop it when job is done
+    }
     } catch (e: any) {
       console.error("Error starting illustration job:", e);
       setImgError(e?.message ?? "Could not start illustration job.");

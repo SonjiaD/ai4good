@@ -670,7 +670,7 @@ def create_story_images_async():
 
     # kick off background work
     #app = current_app._get_current_object()  # get actual Flask app
-    EXECUTOR.submit(run_image_job, app, job_id, pdf_bytes, form_data)
+    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
 
