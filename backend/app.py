@@ -33,7 +33,7 @@ from flask import Flask, request, jsonify
 import re
 
 #anthropic - claude (not using anymore cuz limited)
-import anthropic    #gives access to Claude API
+# import anthropic    #gives access to Claude API
 import os
 from dotenv import load_dotenv  #load .env file automatically
 
