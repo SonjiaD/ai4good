@@ -15,6 +15,7 @@ import MyClass from './pages/MyClass';
 import StudentOverview from './pages/StudentOverview';
 import CustomizeAvatar from './pages/CustomizeAvatar';
 import ImageGenerator from "./pages/ImageGenerator";
+import StoryHistoryPage from './pages/StoryHistory';
 
 function App() {
 
@@ -38,7 +39,7 @@ function App() {
         <Route path="/studentoverview" element={<StudentOverview />} />
         <Route path="/avatar" element={<CustomizeAvatar />} />
         <Route path="/images" element={<ImageGenerator />} />
-        
+        <Route path="/story-history" element={<StoryHistoryPage />} />
       </Routes>
     </Router>
   );

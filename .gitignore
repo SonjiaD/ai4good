@@ -14,6 +14,7 @@ env/
 .venv/
 .venv310/
 test_venv/
+/backend/backend_env    #new one
 
 # Environment variables (API keys, secrets)
 .env
@@ -38,3 +39,4 @@ backend/googlecredentialstts.json
 
 #mathcha/tts
 Matcha-TTS/
+/backend/backend_env
