@@ -1,10 +1,10 @@
 from __future__ import annotations
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os
 import fitz
-
-from flask import send_file, Flask, request, jsonify
+import uuid
+from datetime import datetime
 
 #matcha-tts
 #import subprocess
@@ -61,7 +61,7 @@ import tts_service  #moving to after load_dotenv
 genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
 
 #initialize gemini model
-gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+gemini_model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
 #initialize google tts client
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_TTS_CREDENTIALS_PATH")
@@ -74,8 +74,8 @@ stt_client = speech.SpeechClient()
 app = Flask(__name__) #creates new flask web application 
 
 CORS(app,
-     origins=["http://localhost:5173", "https://readingbuddy.vercel.app"],
-     resources={r"/*": {"origins": ["http://localhost:5173", "https://readingbuddy.vercel.app"]}})  # Allow requests from frontend including Blueprint routes
+     origins=["http://localhost:5173", "https://readingbuddy.vercel.app", "http://localhost:3000"],
+     resources={r"/*": {"origins": ["http://localhost:5173", "https://readingbuddy.vercel.app", "http://localhost:3000"]}})  # Allow requests from frontend including Blueprint routes
 #makes sure frontend can talk to backend
 
 # registering img generation blueprint:
@@ -83,6 +83,9 @@ from app_story_images import images_bp
 app.register_blueprint(images_bp, url_prefix='/api')
 
 PROFILE_PATH = os.path.join(os.path.dirname(__file__), "profile.json")
+
+STORY_STORAGE_PATH = os.path.join(os.getcwd(), "user_data", "stories")
+os.makedirs(STORY_STORAGE_PATH, exist_ok=True)
 
 def _load_profile():
     if os.path.exists(PROFILE_PATH):
@@ -718,6 +721,70 @@ def log_focus():
     data = request.get_json()
     print(f"[FOCUS] {data['status']} at {data['timestamp']}")
     return jsonify({"status": "ok"})
+
+@app.route('/api/upload-story', methods=['POST'])
+def upload_story():
+    user_id = request.form.get('user_id')
+    title = request.form.get('title')
+    file = request.files.get('pdf')
+    if not user_id or not title or not file:
+        return jsonify({'error': 'Missing required fields'}), 400
+    story_id = str(uuid.uuid4())
+    filename = f"{story_id}.pdf"
+    filepath = os.path.join(STORY_STORAGE_PATH, filename)
+    file.save(filepath)
+    pdf_url = f"/api/download-story-pdf/{story_id}"
+    created_at = datetime.utcnow().isoformat()
+    # Insert into Supabase/Postgres
+    # supabase.table('stories').insert({ ... })
+    # For demo, store in a local dict or file
+    # TODO: Replace with actual DB insert
+    # Save metadata to a local file for demo
+    meta = {
+        'id': story_id,
+        'user_id': user_id,
+        'title': title,
+        'pdf_url': pdf_url,
+        'cover_url': '',
+        'created_at': created_at
+    }
+    meta_path = os.path.join(STORY_STORAGE_PATH, f"{story_id}.json")
+    with open(meta_path, "w") as f:
+        import json
+        json.dump(meta, f)
+    return jsonify({'success': True, 'story': meta})
+
+@app.route('/api/user-stories', methods=['GET'])
+def user_stories():
+    user_id = request.args.get('userId')
+    stories = []
+    for fname in os.listdir(STORY_STORAGE_PATH):
+        if fname.endswith('.json'):
+            with open(os.path.join(STORY_STORAGE_PATH, fname)) as f:
+                import json
+                meta = json.load(f)
+                if meta.get('user_id') == user_id:
+                    stories.append(meta)
+    return jsonify({'stories': stories})
+
+@app.route('/api/story-details', methods=['GET'])
+def story_details():
+    story_id = request.args.get('storyId')
+    meta_path = os.path.join(STORY_STORAGE_PATH, f"{story_id}.json")
+    if not os.path.exists(meta_path):
+        return jsonify({'error': 'Story not found'}), 404
+    with open(meta_path) as f:
+        import json
+        meta = json.load(f)
+    # For demo, just return metadata. You can add text extraction, images, etc.
+    return jsonify(meta)
+
+@app.route('/api/download-story-pdf/<story_id>', methods=['GET'])
+def download_story_pdf(story_id):
+    filepath = os.path.join(STORY_STORAGE_PATH, f"{story_id}.pdf")
+    if not os.path.exists(filepath):
+        return "File not found", 404
+    return send_file(filepath, as_attachment=True)
 
 if __name__ == "__main__":
     port = int(os.getenv('PORT', 5000))

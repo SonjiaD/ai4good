@@ -24,6 +24,7 @@ const Home: React.FC = () => {
                   <Link to={'/reading'} className="nav-link">Read</Link>
                   <Link to={'/avatar'} className="nav-link">Customize</Link>
                   <Link to={'/outfit-shop'} className="nav-link">Shop</Link>
+                  <Link to={'/story-history'} className="nav-link">Library</Link>
                   <Link to="/profile" className="nav-link">Profile</Link>
                   <button className="logout-nav-btn" onClick={() => navigate('/LoginSignup')}>Log Out</button> 
       </nav>

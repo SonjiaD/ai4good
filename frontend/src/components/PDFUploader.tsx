@@ -11,6 +11,7 @@ const PDFUploader: React.FC = () => {
 
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('API_BASE_URL:', API_BASE_URL); // <-- Debug log for API URL
     const file = event.target.files?.[0];
     if (!file) return;
 
