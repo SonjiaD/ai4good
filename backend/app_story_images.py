@@ -6,7 +6,7 @@ import json
 import time
 from datetime import datetime
 from urllib.parse import urljoin
-from flask import url_for, request
+from flask import url_for
 from pathlib import Path
 from typing import List, Tuple
 
@@ -16,8 +16,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
-from flask import current_app
-
 # blueprint
 images_bp = Blueprint('images_bp', __name__)
 
@@ -41,22 +39,8 @@ def log_progress(job_id: str | None, message: str) -> None:
     print(f"[JOB {job_id}] {message}")
 
 # bg worker fcn 
-# def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
-#     """Background worker: run process_story_images and store result in JOBS."""
-#     JOBS[job_id]["status"] = "running"
-#     try:
-#         result = process_story_images(pdf_bytes, form_data, job_id=job_id)
-#         JOBS[job_id]["status"] = "done"
-#         JOBS[job_id]["result"] = result
-#     except Exception as e:
-#         JOBS[job_id]["status"] = "error"
-#         JOBS[job_id]["error"] = str(e)
-#         log_progress(job_id, f"Error: {e}")
-# bg worker fcn - for deployment
 def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
     """Background worker: run process_story_images and store result in JOBS."""
-    print(f"Starting background job {job_id}")
-    #with app.app_context():
     JOBS[job_id]["status"] = "running"
     try:
         result = process_story_images(pdf_bytes, form_data, job_id=job_id)
@@ -66,7 +50,6 @@ def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
         JOBS[job_id]["status"] = "error"
         JOBS[job_id]["error"] = str(e)
         log_progress(job_id, f"Error: {e}")
-
 
 # --------
 # config
@@ -93,8 +76,6 @@ IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-1")
 
 # LLM model for story summarization // planning
 SUMMARY_MODEL = os.getenv("SUMMARY_MODEL", "gpt-4o-mini") #TODO: change model (if needed)
-# for img gen on deployed ver (making it not rely on flask):
-BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL", "https://ai4good.onrender.com")
 # ---------------------------
 # Flask App + OpenAI Client
 # ---------------------------
@@ -295,11 +276,7 @@ def file_url(filename: str) -> str:
     # return url_for("images_bp.serve_generated", filename=filename, _external=True)
     # TEST:
     """Turn a filename into a static served URL for generated images."""
-    # return f"http://localhost:5000/api/generated/{filename}" # locally
-    # for deployed version:
-    base = BACKEND_PUBLIC_URL.rstrip("/")
-    return f"{base}/api/generated/{filename}"
-    # return url_for("images_bp.serve_generated", filename=filename, _external=True) old ver
+    return f"http://localhost:5000/api/generated/{filename}"
 
 # NEW: core processor fcn 
 def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
@@ -347,7 +324,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     log_progress(job_id, f"Story summary done in {tafterSummary - tbeforeSummary:.1f}s.")
 
     print(f"Time for story summarization: {tafterSummary - tbeforeSummary:.2f} seconds")
-    # summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
+    summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
     characters = summary.get("characters") or []
     setting = summary.get("setting") or ""
     scenes = summary.get("scenes") or []
@@ -393,7 +370,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
         # testing time 
         tImgStart = time.monotonic()
-       # png_bytes = generate_image(prompt, size=size)
+        png_bytes = generate_image(prompt, size=size)
         tImgEnd = time.monotonic()
         print(f"Time for image generation (page {page_hint}): {tImgEnd - tImgStart:.2f} seconds")
 
@@ -658,7 +635,6 @@ def create_story_images_async():
     }
 
     # kick off background work
-    #app = current_app._get_current_object()  #TODO: remove once done debugging -  get actual Flask app
     EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202

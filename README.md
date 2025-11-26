@@ -31,10 +31,7 @@ An **AI-powered reading companion** designed to support neurodivergent children 
   Highlight any word in the story and get AI-generated, context-aware definitions using **Google Gemini API**.
 
 - **🎨 Story Illustration Generation**
-  Generate kid-friendly illustrations from story text using **OpenAI API**. 
-  - Default Model: `gpt-image-1` (configurable via `IMAGE_MODEL` env variable)
-  - Supports: DALL-E 3, or other OpenAI image models
-  - Images are tagged with kid-friendly prompts (simple shapes, soft colors, no violence)
+  Generate kid-friendly illustrations from story text using **OpenAI DALL-E 3 API**.
 
 - **🧠 In-Context Learning with Learner Profiles**
   Questionnaire responses stored in **Supabase** database and used to tailor AI responses (e.g., adapting for ADHD, dyslexia, auditory processing disorder, etc.).
@@ -55,7 +52,7 @@ The production version uses the following cloud-based AI services:
 | **Google Cloud Text-to-Speech** | Story narration (TTS) | `GOOGLE_API_KEY` or service account credentials | 1M characters/month |
 | **Google Cloud Speech-to-Text** | Voice input (STT) | Service account credentials (`GOOGLE_TTS_CREDENTIALS_PATH`) | 60 min/month |
 | **Google Gemini API** | Quiz generation, feedback, definitions | `GOOGLE_API_KEY` | 15 requests/min, 1500/day |
-| **OpenAI API** | Story illustrations (Image Generation) | `OPENAI_API_KEY` | Pay-per-use ($0.04/image with DALL-E 3) |
+| **OpenAI API** | Story illustrations (DALL-E 3) | `OPENAI_API_KEY` | Pay-per-use ($0.04/image) |
 | **Supabase** | Database & authentication | `SUPABASE_URL`, `SUPABASE_KEY` | 500MB database, 50K auth users |
 
 ### Environment Variables
@@ -70,22 +67,10 @@ GOOGLE_TTS_CREDENTIALS_PATH=./google-credentials.json
 # OpenAI
 OPENAI_API_KEY=your_openai_key_here
 
-# Image Generation Model (Optional)
-# Supported models: gpt-image-1, dall-e-3, etc.
-# Default: gpt-image-1
-IMAGE_MODEL=gpt-image-1
-
 # Supabase
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_KEY=your_supabase_anon_key
 ```
-
-**Image Model Configuration:**
-- `IMAGE_MODEL`: Controls which OpenAI image generation model to use
-  - `gpt-image-1` (default): Fast, cost-effective
-  - `dall-e-3`: Higher quality, more expensive
-  - Other OpenAI image models as available
-- Change this in `.env` and restart the backend to use a different model
 
 ### Google Cloud Service Account Setup
 

@@ -39,5 +39,4 @@ backend/googlecredentialstts.json
 
 #mathcha/tts
 Matcha-TTS/
-/backend
 /backend/backend_env
