@@ -1,3 +1,6 @@
+#.\backend_env\Scripts\Activate.ps1
+#need to be in backend folder
+
 from __future__ import annotations
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -54,6 +57,34 @@ load_dotenv()
 
 import tts_service  #moving to after load_dotenv
 
+# Simple rate limiter for Gemini API calls (15 requests per minute limit)
+import time
+from collections import deque
+
+class RateLimiter:
+    def __init__(self, max_calls: int = 10, time_window: int = 60):
+        """
+        Simple rate limiter using sliding window.
+        max_calls: Maximum calls allowed
+        time_window: Time window in seconds
+        """
+        self.max_calls = max_calls
+        self.time_window = time_window
+        self.calls = deque()
+    
+    def is_allowed(self) -> bool:
+        now = time.time()
+        # Remove calls outside the time window
+        while self.calls and self.calls[0] < now - self.time_window:
+            self.calls.popleft()
+        
+        if len(self.calls) < self.max_calls:
+            self.calls.append(now)
+            return True
+        return False
+
+gemini_rate_limiter = RateLimiter(max_calls=10, time_window=60)  # 10 calls per 60 seconds
+
 # #initialize anthropic claude client, calling the key from .env file
 # claude_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -99,24 +130,47 @@ def _save_profile(data):
         json.dump(data, f, indent=2)
 
 #helper fnc to call gemini
-def call_gemini(prompt, temperature=0.3):
+def call_gemini(prompt, temperature=0.3, max_retries=3):
     """
-    Helper function to call Gemini API
+    Helper function to call Gemini API with retry logic
     
     Args:
         prompt: The text prompt to send to Gemini
         temperature: Controls randomness (0-1). Lower = more focused
+        max_retries: Maximum number of retries on rate limit (429)
     
     Returns:
         The text response from Gemini
     """
-    response = gemini_model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
-            temperature=temperature,
-        )
-    )
-    return response.text
+    import time
+    from google.api_core.exceptions import ResourceExhausted
+    
+    for attempt in range(max_retries):
+        try:
+            if not gemini_rate_limiter.is_allowed():
+                wait_time = 1  # Wait 1 second before retrying
+                print(f"Rate limiter active. Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+                continue
+
+            response = gemini_model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=temperature,
+                )
+            )
+            return response.text
+        except ResourceExhausted as e:
+            if attempt < max_retries - 1:
+                wait_time = 2 ** attempt  # exponential backoff: 1s, 2s, 4s
+                print(f"Rate limited. Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                time.sleep(wait_time)
+            else:
+                print(f"Max retries exceeded. Returning error message.")
+                return f"Error: Gemini API rate limited. Please try again in a few minutes."
+        except Exception as e:
+            print(f"Error calling Gemini: {e}")
+            raise
 
 @app.route("/api/save-questionnaire", methods=["POST"])
 def save_questionnaire():
@@ -418,6 +472,12 @@ def upload_pdf():
 #generating quiz questions
 @app.route('/api/generate-quiz', methods=['POST'])
 def generate_quiz():
+    # Rate limiting check
+    if not gemini_rate_limiter.is_allowed():
+        return jsonify({
+            "error": "Too many requests. Gemini API rate limit (10 per minute). Please wait a moment and try again."
+        }), 429
+    
     data = request.get_json()
     story = data.get("text", "")[:1500]
 
@@ -438,6 +498,10 @@ Output ONLY the 3 questions, numbered:
 3. ...
 """
     raw = call_gemini(q_prompt, temperature = 0.3)
+    
+    # Check if we got an error message
+    if "Error:" in raw:
+        return jsonify({"error": raw}), 429
 
     questions = [line.strip().split(". ", 1)[-1]
                  for line in raw.strip().split("\n")
@@ -448,6 +512,12 @@ Output ONLY the 3 questions, numbered:
 #submiting answer
 @app.route('/api/submit-answer', methods=['POST'])
 def submit_answer():
+    # Rate limiting check
+    if not gemini_rate_limiter.is_allowed():
+        return jsonify({
+            "error": "Too many requests. Gemini API rate limit (10 per minute). Please wait a moment and try again."
+        }), 429
+    
     data = request.get_json()
     story = data.get("text", "")[:1500]
     question = data.get("question", "")
@@ -471,6 +541,10 @@ Student Answer: {answer}
 """
 
     feedback = call_gemini(fb_prompt, temperature = 0.3)
+    
+    # Check if we got an error message
+    if "Error:" in feedback:
+        return jsonify({"error": feedback}), 429
 
     return jsonify({"feedback": feedback})
 

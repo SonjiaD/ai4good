@@ -39,11 +39,11 @@ def log_progress(job_id: str | None, message: str) -> None:
     print(f"[JOB {job_id}] {message}")
 
 # bg worker fcn 
-def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict) -> None:
+def run_image_job(job_id: str, pdf_bytes: bytes, form_data: dict, base_url: str = "http://localhost:5000") -> None:
     """Background worker: run process_story_images and store result in JOBS."""
     JOBS[job_id]["status"] = "running"
     try:
-        result = process_story_images(pdf_bytes, form_data, job_id=job_id)
+        result = process_story_images(pdf_bytes, form_data, job_id=job_id, base_url=base_url)
         JOBS[job_id]["status"] = "done"
         JOBS[job_id]["result"] = result
     except Exception as e:
@@ -271,15 +271,19 @@ def save_png(png_bytes: bytes, stem: str) -> str:
     path.write_bytes(png_bytes)
     return filename
 
-def file_url(filename: str) -> str:
-    # Builds an absolute URL to the blueprint route, including /api prefix
-    # return url_for("images_bp.serve_generated", filename=filename, _external=True)
-    # TEST:
+def file_url(filename: str, base_url: str = "") -> str:
     """Turn a filename into a static served URL for generated images."""
-    return f"http://localhost:5000/api/generated/{filename}"
+    if not base_url:
+        # Try to get from Flask request context
+        from flask import request as flask_request
+        try:
+            base_url = f"{flask_request.scheme}://{flask_request.host}"
+        except:
+            base_url = "http://localhost:5000"
+    return f"{base_url}/api/generated/{filename}"
 
 # NEW: core processor fcn 
-def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None,) -> dict:
+def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None, base_url: str = "") -> dict:
     """
     Core sync logic to:
     - read pages
@@ -287,6 +291,14 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     - generate images
     - return a JSON-serializable dict
     """
+    if not base_url:
+        # Fallback: try to get from Flask request context
+        from flask import request as flask_request
+        try:
+            base_url = f"{flask_request.scheme}://{flask_request.host}"
+        except:
+            base_url = "http://localhost:5000"
+    
     t0 = time.monotonic()
     log_progress(job_id, "Starting story image illustration")
     pages = pdf_bytes_to_pages(pdf_bytes)
@@ -340,6 +352,15 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
                     or "A continuation of the story based on this page.",
                 }
             )
+        for idx, page_text in enumerate(pages[:cap]):
+            scenes.append(
+                {
+                    "id": idx + 1,
+                    "page_hint": idx + 1,
+                    "summary": page_text.strip()
+                    or "A continuation of the story based on this page.",
+                }
+            )
 
     ctx_bits = []
     if setting:
@@ -363,10 +384,9 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     for idx, scene in enumerate(scenes):
         if counted >= cap:
             break
-
+        
         page_hint = scene.get("page_hint") or (idx + 1)
         scene_summary = scene.get("summary") or "A key moment from the story."
-
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
         # testing time 
         tImgStart = time.monotonic()
@@ -376,14 +396,14 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
 
         tDone = time.monotonic()
         print(f"Total time so far: {tDone - t0:.2f} seconds")
-
+        
         try:
             png_bytes = generate_image(prompt, size=size)
             filename = save_png(png_bytes, stem=f"page{page_hint}")
             generated_filenames.append(filename)
             images_json.append(
                 {
-                    "url": file_url(filename),
+                    "url": file_url(filename, base_url=base_url),
                     "page": int(page_hint),
                     "prompt": prompt,
                 }
@@ -431,7 +451,9 @@ def create_story_images():
         return jsonify({"error": f"Failed to read PDF: {e}"}), 400
 
     try:
-        result = process_story_images(pdf_bytes, request.form.to_dict())
+        # Get base URL from request context for image serving
+        base_url = f"{request.scheme}://{request.host}"
+        result = process_story_images(pdf_bytes, request.form.to_dict(), base_url=base_url)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -618,7 +640,7 @@ def create_story_images_async():
     """Async version: enqueue a job and return job_id immediately."""
     if "pdf" not in request.files:
         return jsonify({"error": "Missing 'pdf' file in form-data."}), 400
-
+    
     pdf_file = request.files["pdf"]
     try:
         pdf_bytes = pdf_file.read()
@@ -626,6 +648,9 @@ def create_story_images_async():
         return jsonify({"error": f"Failed to read PDF: {e}"}), 400
 
     form_data = request.form.to_dict()
+    
+    # Get base URL from request context for image serving
+    base_url = f"{request.scheme}://{request.host}"
 
     job_id = str(uuid4())
     JOBS[job_id] = {
@@ -635,7 +660,7 @@ def create_story_images_async():
     }
 
     # kick off background work
-    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data)
+    EXECUTOR.submit(run_image_job, job_id, pdf_bytes, form_data, base_url)
 
     return jsonify({"job_id": job_id, "status": "queued"}), 202
 
