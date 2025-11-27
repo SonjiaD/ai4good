@@ -334,13 +334,12 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     summary = summarize_story_pages(pages, max_scene=cap)
     tafterSummary = time.monotonic()
     log_progress(job_id, f"Story summary done in {tafterSummary - tbeforeSummary:.1f}s.")
-
     print(f"Time for story summarization: {tafterSummary - tbeforeSummary:.2f} seconds")
-    summary = summarize_story_pages(pages, max_scene=cap) #FIXME: modified parameter (test)
     characters = summary.get("characters") or []
     setting = summary.get("setting") or ""
     scenes = summary.get("scenes") or []
 
+    # If LLM didn't return scenes, create one per page
     if not scenes:
         scenes = []
         for idx, page_text in enumerate(pages[:cap]):
@@ -352,15 +351,11 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
                     or "A continuation of the story based on this page.",
                 }
             )
-        for idx, page_text in enumerate(pages[:cap]):
-            scenes.append(
-                {
-                    "id": idx + 1,
-                    "page_hint": idx + 1,
-                    "summary": page_text.strip()
-                    or "A continuation of the story based on this page.",
-                }
-            )
+    else:
+        # If LLM returned scenes, ensure each has a sequential page number
+        for idx, scene in enumerate(scenes):
+            if "page_hint" not in scene or scene["page_hint"] is None:
+                scene["page_hint"] = idx + 1
 
     ctx_bits = []
     if setting:
@@ -378,42 +373,35 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
 
     generated_filenames: list[str] = []
     images_json: list[dict] = []
-
     log_progress(job_id, f"Generating up to {cap} illustration(s)…")
     counted = 0
     for idx, scene in enumerate(scenes):
         if counted >= cap:
             break
         
-        page_hint = scene.get("page_hint") or (idx + 1)
+        # Use idx+1 to ensure sequential page numbers (1, 2, 3, 4, 5)
+        page_num = idx + 1
         scene_summary = scene.get("summary") or "A key moment from the story."
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
-        # testing time 
-        tImgStart = time.monotonic()
-        png_bytes = generate_image(prompt, size=size)
-        tImgEnd = time.monotonic()
-        print(f"Time for image generation (page {page_hint}): {tImgEnd - tImgStart:.2f} seconds")
-
-        tDone = time.monotonic()
-        print(f"Total time so far: {tDone - t0:.2f} seconds")
         
         try:
             png_bytes = generate_image(prompt, size=size)
-            filename = save_png(png_bytes, stem=f"page{page_hint}")
+            filename = save_png(png_bytes, stem=f"page{page_num}")
             generated_filenames.append(filename)
             images_json.append(
                 {
                     "url": file_url(filename, base_url=base_url),
-                    "page": int(page_hint),
+                    "page": page_num,  # Sequential: 1, 2, 3, 4, 5
                     "prompt": prompt,
                 }
             )
             counted += 1
+            log_progress(job_id, f"Generated image for page {page_num}")
         except Exception as e:
             images_json.append(
                 {
                     "error": str(e),
-                    "page": int(page_hint),
+                    "page": page_num,
                 }
             )
 
