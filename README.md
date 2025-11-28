@@ -1,6 +1,6 @@
-# 📚 ReadingBuddy.AI - Personalized Reading Companion for Neurodivergent Learners
+# 📚 ReadingBudd.AI - Personalized Reading Companion for Neurodivergent Learners
 
-An **AI-powered reading companion** designed to support neurodivergent children aged 7–10. ReadingBuddy.AI originated from the **AI4Good Lab** (Mila, May-June 2025), a 2-month program for women and underrepresented genders in machine learning. The project has since evolved with **RBC Borealis mentorship** (2025), adding enhanced API resilience, quota management, and security hardening.
+An **AI-powered reading companion** designed to support neurodivergent children aged 7–10. ReadingBudd.AI originated from the **AI4Good Lab** (Mila, May-June 2025), a 2-month program for women and underrepresented genders in machine learning. The project has since evolved with **RBC Borealis mentorship** (2025), adding enhanced API resilience, quota management, and security hardening.
 
 ## 🎯 The Problem We're Solving
 
@@ -14,7 +14,7 @@ Learning isn't one-size-fits-all, especially for neurodivergent students (ADHD, 
 
 ## 🔗 Resources & Links
 
-- **AI4Good Lab Pitch**: [ReadingBuddy.AI Project Pitch @ AI4GoodLab Demo Day](https://github.com/SonjiaD/ai4good)
+- **AI4Good Lab Pitch**: [ReadingBudd.AI Project Pitch @ AI4GoodLab Demo Day](https://github.com/SonjiaD/ai4good)
 - **Figma Design**: [Interactive Prototype](https://www.figma.com/design/j9fPMIz8Y2nxVmJYDB1hnc/ReadingBudd?node-id=0-1&t=PKDubu9j2tPs6nMM-1)
 - **YouTube Demo**: [Watch our presentation](https://www.youtube.com/watch?v=GFatDhgMKdcI)
 - **Slide Deck**: [Full Presentation](https://docs.google.com/presentation/d/1kwzcAqwsPFRZ223iXDrsqG7W1z3u-UjGa139fp5wK6g/edit?usp=sharing)
@@ -57,11 +57,11 @@ Learning isn't one-size-fits-all, especially for neurodivergent students (ADHD, 
 ## 🎓 Project History: AI4Good Lab → RBC Borealis
 
 ### AI4Good Lab (May-June 2025)
-ReadingBuddy.AI was prototyped during **AI4Good Lab**, a 2-month program hosted by Mila for women and underrepresented genders in machine learning. 
+ReadingBudd.AI was prototyped during **AI4Good Lab**, a 2-month program hosted by Mila for women and underrepresented genders in machine learning. 
 
 **Month 1**: Foundational ML concepts (supervised/unsupervised learning, neural networks, CNNs, RNNs, reinforcement learning)
 
-**Month 2**: 3-week sprint to build AI projects for social good, where ReadingBuddy.AI was born with:
+**Month 2**: 3-week sprint to build AI projects for social good, where ReadingBudd.AI was born with:
 - PDF story upload and formatting
 - Matcha-TTS for child-friendly audio
 - Whisper ASR for voice-based input
@@ -481,7 +481,7 @@ Visit the app at: `http://localhost:8501`
 
 ## 🧠 Matcha-TTS Setup Guide (Windows Only)
 
-ReadingBuddy.AI uses [Matcha-TTS](https://github.com/chocobearz/Matcha-TTS-L2-clarity/tree/main/matcha) for speech clarity, especially for minimal pairs (e.g. “pill” vs “peel”).
+ReadingBudd.AI uses [Matcha-TTS](https://github.com/chocobearz/Matcha-TTS-L2-clarity/tree/main/matcha) for speech clarity, especially for minimal pairs (e.g. “pill” vs “peel”).
 
 ### 🔗 Matcha-TTS GitHub Repo
 - https://github.com/chocobearz/Matcha-TTS-L2-clarity/tree/main/matcha
