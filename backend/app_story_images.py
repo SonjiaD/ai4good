@@ -369,9 +369,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     if ctx_bits:
         context_preamble = (
             base_preamble + "\n\nStory context:\n" + "\n".join(ctx_bits) + "\n"
-        )
-
-    generated_filenames: list[str] = []
+        )    generated_filenames: list[str] = []
     images_json: list[dict] = []
     log_progress(job_id, f"Generating up to {cap} illustration(s)…")
     counted = 0
@@ -379,13 +377,13 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
         if counted >= cap:
             break
         
-        # Use idx+1 to ensure sequential page numbers (1, 2, 3, 4, 5)
-        page_num = idx + 1
         scene_summary = scene.get("summary") or "A key moment from the story."
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
         
         try:
             png_bytes = generate_image(prompt, size=size)
+            # Use counted+1 for sequential page numbers (only successful images)
+            page_num = counted + 1
             filename = save_png(png_bytes, stem=f"page{page_num}")
             generated_filenames.append(filename)
             images_json.append(
@@ -398,16 +396,9 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
             counted += 1
             log_progress(job_id, f"Generated image for page {page_num}")
         except Exception as e:
-            images_json.append(
-                {
-                    "error": str(e),
-                    "page": page_num,
-                }
-            )
-
-    if not generated_filenames:
-        raise RuntimeError(
-            "No images were generated. Check API key/credits and try smaller pages."
+            log_progress(job_id, f"⚠️ Failed to generate image for scene {idx + 1}: {str(e)}")
+            # Skip failed images - don't add to response
+            continueNo images were generated. Check API key/credits and try smaller pages."
         )
     t_done = time.monotonic()
     log_progress(job_id, f"Job completed in {t_done - t0:.1f}s.")
