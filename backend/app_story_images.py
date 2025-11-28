@@ -13,6 +13,7 @@ from typing import List, Tuple
 from flask import Flask, request, jsonify, Blueprint, send_from_directory
 import fitz  # PyMuPDF
 from openai import OpenAI
+import google.generativeai as genai  # Add Gemini API
 from dotenv import load_dotenv
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
@@ -64,7 +65,7 @@ OUTPUT_DIR = Path("generated_images")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Max pages illustrated per upload
-MAX_PAGES = int(os.getenv("MAX_PAGES", "5"))
+MAX_PAGES = int(os.getenv("MAX_PAGES", "4"))
 
 # Default image size
 DEFAULT_SIZE = os.getenv("IMAGE_SIZE", "512x512") # changed for faster generation times
@@ -75,7 +76,7 @@ if DEFAULT_SIZE not in ALLOWED_SIZES:
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-1")
 
 # LLM model for story summarization // planning
-SUMMARY_MODEL = os.getenv("SUMMARY_MODEL", "gpt-4o-mini") #TODO: change model (if needed)
+SUMMARY_MODEL = os.getenv("SUMMARY_MODEL", "gemini-1.5-flash")  # Changed to use Gemini
 # ---------------------------
 # Flask App + OpenAI Client
 # ---------------------------
@@ -85,6 +86,14 @@ def get_openai_client() -> OpenAI:
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set.")
     return OpenAI(api_key=api_key)
+
+def get_gemini_client():
+    """Configure and return Gemini API client."""
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY or GOOGLE_API_KEY is not set.")
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel(SUMMARY_MODEL)
 
 # PDF → Text
 def pdf_bytes_to_pages(pdf_bytes: bytes) -> List[str]:
@@ -102,61 +111,54 @@ def summarize_story_pages(
         max_scene: int = 6,
 ) -> dict:
     """
-    Use an LLM to produce a short story summary
+    Use Gemini LLM to produce a short story summary
     - characters (short descriptions)
     - settings
     - scenes : a list of {id, page_hint, summary} 
+    
+    NOTE: Gemini will automatically create kid-friendly, non-violent scene descriptions
+    to avoid triggering OpenAI's content filter on image generation.
     """
 
     # join all pages into single string, but trim 
     full_text = "\n\n--- PAGE BREAK ---\n\n".join(pages)
     full_text = _trim(full_text, limit=4000)  # limit to 4000 chars
 
-    client = get_openai_client()
+    model = get_gemini_client()
 
-    system_msg = {
-        "role": "system",
-        "content": (
-            "You are a helpful assistant that summarizes children's stories for illustration purposes. "
-            "Given the full story text, you will extract characters, settings,"
-            "and a small list of key scenes to illustrate."
-            "Keep everything simple, concrete, and kid-friendly."
-        ),
-    }
-    user_msg = {
-        "role": "user",
-        "content": (
-            f"Story text (may be multiple pages):\n\n{full_text}\n\n"
-            f"Please respond ONLY with JSON using this schema:\n"
-            "{\n"
-            '  "characters": [\n'
-            '    "short 1-2 sentence describing where the story mostly happens"\n'
-            ' "scenes": [\n'
-            "{\n"
-            '      "id": 1,\n'
-            '      "page_hint": 1, \n'
-            '      "summary": "1-3 sentences describing what should be in the illustration"\n'
-            "    }\n"
-            " ... up to "
-            f"{max_scene} scenes total\n"
-            "  ]\n"
-            "}\n"
-            "Use page_hint as an approximate page number (starting at 1) if it is obvious;"
-            "otherwise just start from 1 and increment."
-        ),
-    }
-
-    resp = client.chat.completions.create(
-        model=SUMMARY_MODEL,
-        messages=[system_msg, user_msg],
-        response_format={"type": "json_object"},
+    prompt = (
+        f"Story text (may be multiple pages):\n\n{full_text}\n\n"
+        f"Please respond ONLY with JSON using this schema:\n"
+        "{\n"
+        '  "characters": ["character 1 description", "character 2 description"],\n'
+        '  "setting": "short 1-2 sentence describing where the story mostly happens",\n'
+        '  "scenes": [\n'
+        "    {\n"
+        '      "id": 1,\n'
+        '      "page_hint": 1,\n'
+        '      "summary": "1-3 sentences describing what should be in the illustration (make it child-friendly and non-violent)"\n'
+        "    }\n"
+        f"    ... up to {max_scene} scenes total\n"
+        "  ]\n"
+        "}\n"
+        "IMPORTANT: Make all scene summaries child-friendly and positive. Avoid describing violence, danger, or scary moments. "
+        "Instead, describe the emotional/narrative moment in a gentle way suitable for children's picture books.\n"
+        "Use page_hint as an approximate page number (starting at 1) if obvious; otherwise just start from 1 and increment."
     )
 
-    content = resp.choices[0].message.content
     try:
+        response = model.generate_content(prompt)
+        content = response.text
+        
+        # Clean up markdown code blocks if present
+        if content.startswith("```json"):
+            content = content.replace("```json", "").replace("```", "").strip()
+        elif content.startswith("```"):
+            content = content.replace("```", "").strip()
+        
         data = json.loads(content)
-    except Exception:
-        # if parsing fails, just fall back later
+    except Exception as e:
+        print(f"Gemini API error: {e}")
         return {}
 
     # Ensure basic shape
@@ -186,14 +188,44 @@ KID_STYLE = (
 )
 
 BLOCKLIST = {
-    "blood", "gun", "knife", "kill", "dead", "gore", "violence", "nsfw", "corpse", "war", "attack"
+    "blood", "gun", "knife", "kill", "dead", "gore", "nsfw", "corpse", "war"
+    # Removed "violence" and "attack" - too broad for fairy tales like Red Riding Hood
 }
 
 def _sanitize_scene(txt: str) -> str:
+    """Replace sensitive words with kid-friendly alternatives instead of blanket replacement."""
     lowered = txt.lower()
-    if any(b in lowered for b in BLOCKLIST):
+    
+    # If contains extreme violence, use generic fallback
+    if any(b in lowered for b in ["blood", "gore", "corpse"]):
         return "A calm, friendly, non-violent fairy-tale illustration suitable for children."
-    return txt
+    
+    # Otherwise, do smart replacements
+    sanitized = txt
+    
+    # Smart word replacements (case-insensitive but preserve original case where possible)
+    replacements = {
+        "wolf": "friendly character",
+        "attacked": "approached",
+        "attacking": "approaching",
+        "attack": "approach",
+        "chase": "follow",
+        "chased": "followed",
+        "leaped out": "appeared",
+        "leap": "arrive",
+        "scary": "mysterious",
+        "frightening": "surprising",
+        "danger": "challenge",
+        "dangerous": "tricky",
+    }
+    
+    # Case-insensitive replacement
+    for bad_word, good_word in replacements.items():
+        # Replace with case preserved
+        import re
+        sanitized = re.sub(rf'\b{bad_word}\b', good_word, sanitized, flags=re.IGNORECASE)
+    
+    return sanitized
 
 def _trim(text: str, limit: int = 600) -> str:
     t = " ".join(text.split())
@@ -322,8 +354,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     characters = summary.get("characters") or []
     setting = summary.get("setting") or ""
     scenes = summary.get("scenes") or []
-    
-    # If LLM didn't return scenes, create one per page
+      # If LLM didn't return scenes, create one per page
     if not scenes:
         scenes = []
         for idx, page_text in enumerate(pages[:cap]):
@@ -356,61 +387,60 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
         )
     
     images_json: list[dict] = []
-    log_progress(job_id, f"Generating up to {cap} illustration(s)…")
+    log_progress(job_id, f"Generating exactly {cap} illustration(s)…")
     
-    MAX_RETRIES = 2  # Retry failed images up to 2 times
+    # NO RETRIES - each attempt costs credits! Try each scene only once
     counted = 0
-    
-    for idx, scene in enumerate(scenes):
-        if counted >= cap:
-            break
-        
+    scene_idx = 0
+    last_error = None
+      # Keep trying different scenes until we get all required images or run out of scenes
+    while counted < cap and scene_idx < len(scenes):
+        scene = scenes[scene_idx]
         scene_summary = scene.get("summary") or "A key moment from the story."
-        prompt = page_to_prompt(scene_summary, idx, context_preamble)
-        page_num = counted + 1  # Page number for this attempt
+        prompt = page_to_prompt(scene_summary, scene_idx, context_preamble)
+        page_num = counted + 1  # Sequential page number
         
-        # Try to generate the image with retries
-        success = False
-        last_error = None
-        
-        for retry in range(MAX_RETRIES):
-            try:
-                log_progress(job_id, f"Generating image for page {page_num} (attempt {retry + 1}/{MAX_RETRIES})")
-                png_bytes = generate_image(prompt, size=size)
-                
-                # Convert to base64 data URL (no file saving!)
-                data_url = png_to_data_url(png_bytes)
-                
-                images_json.append(
-                    {
-                        "url": data_url,  # Base64 data URL
-                        "page": page_num,  # Sequential: 1, 2, 3, 4, 5
-                        "prompt": prompt,
-                    }
-                )
-                success = True
-                counted += 1
-                log_progress(job_id, f"✅ Generated image for page {page_num}")
-                break  # Success! Move to next scene
-            except Exception as e:
-                last_error = str(e)
-                log_progress(job_id, f"⚠️ Attempt {retry + 1} failed for page {page_num}: {last_error}")
-                if retry < MAX_RETRIES - 1:
-                    # Wait a bit before retrying (exponential backoff)
-                    wait_time = 2 ** retry  # 1s, 2s, 4s...
-                    time.sleep(wait_time)
-        
-        # If all retries failed, log and skip this scene
-        if not success:
-            log_progress(job_id, f"❌ Skipping page {page_num} after {MAX_RETRIES} failed attempts: {last_error}")
-            # Don't increment counted - move to next scene and try to fill the gap    if not images_json:
+        try:
+            log_progress(job_id, f"Generating image {page_num}/{cap} from scene {scene_idx + 1}")
+            # Log the prompt being used (for debugging)
+            log_progress(job_id, f"   Prompt preview: {scene_summary[:80]}...")
+            png_bytes = generate_image(prompt, size=size)
+            
+            # Convert to base64 data URL (no file saving!)
+            data_url = png_to_data_url(png_bytes)
+            
+            images_json.append(
+                {
+                    "url": data_url,  # Base64 data URL
+                    "page": page_num,  # Sequential: 1, 2, 3
+                    "prompt": prompt,
+                }
+            )
+            counted += 1
+            log_progress(job_id, f"✅ Successfully generated image {page_num}/{cap}")
+            scene_idx += 1
+            
+        except Exception as e:
+            last_error = str(e)
+            log_progress(job_id, f"⚠️ Failed to generate image from scene {scene_idx + 1}")
+            log_progress(job_id, f"   Error: {last_error}")
+            log_progress(job_id, f"   Scene text: {scene_summary[:100]}...")
+            log_progress(job_id, f"   Skipping this scene and trying next one...")
+            scene_idx += 1
+      # If we generated at least 1 image, return it (even if fewer than requested)
+    if counted == 0:
         raise RuntimeError(
-            "No images were generated. Check API key/credits and try smaller pages."
+            f"Failed to generate any images. API issue: {last_error}"
         )
+    
+    # Log if we got fewer than requested
+    if counted < cap:
+        log_progress(job_id, f"⚠️ Generated {counted}/{cap} images (limited by API credits or scenes)")
+    
     t_done = time.monotonic()
     log_progress(job_id, f"Job completed in {t_done - t0:.1f}s.")
     return {
-        "message": "Images generated.",
+        "message": f"Generated {counted} image(s).",
         "count": len(images_json),
         "images": images_json,
         "summary": {

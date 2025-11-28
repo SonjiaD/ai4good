@@ -398,12 +398,10 @@ const ExtractedText: React.FC = () => {
     setImages([]);
     setImgJobId(null);
     setImgJobStatus(null);
-    setImgProgress([]);
-
-    try {
-      // tweak max_pages/size here - for now 5 (likely 3 for demo)
+    setImgProgress([]);    try {
+      // Always generate exactly 3 images per story
       const start = await startStoryImageJob(file, {
-        max_pages: 5,
+        max_pages: 3, // Fixed to 3 images
         size: "1024x1024",
       });
 
