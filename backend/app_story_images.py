@@ -263,24 +263,10 @@ def generate_image(prompt: str, size: str = DEFAULT_SIZE) -> bytes:
     b64_png = resp.data[0].b64_json  # Base64 encoded PNG
     return base64.b64decode(b64_png)
 
-def save_png(png_bytes: bytes, stem: str) -> str:
-    """Save PNG bytes to OUTPUT_DIR with a timestamped filename."""
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    filename = f"{stem}-{ts}.png"
-    path = OUTPUT_DIR / filename
-    path.write_bytes(png_bytes)
-    return filename
-
-def file_url(filename: str, base_url: str = "") -> str:
-    """Turn a filename into a static served URL for generated images."""
-    if not base_url:
-        # Try to get from Flask request context
-        from flask import request as flask_request
-        try:
-            base_url = f"{flask_request.scheme}://{flask_request.host}"
-        except:
-            base_url = "http://localhost:5000"
-    return f"{base_url}/api/generated/{filename}"
+def png_to_data_url(png_bytes: bytes) -> str:
+    """Convert PNG bytes to a base64 data URL for inline display."""
+    b64 = base64.b64encode(png_bytes).decode('utf-8')
+    return f"data:image/png;base64,{b64}"
 
 # NEW: core processor fcn 
 def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None = None, base_url: str = "") -> dict:
@@ -325,9 +311,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     except ValueError:
         age_int = None
 
-    base_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else ""
-
-    # ---- story summary (LLM) ----
+    base_preamble = build_style_preamble(reader_age=age_int) if use_kid_style else ""    # ---- story summary (LLM) ----
     # for testing time:
     tbeforeSummary = time.monotonic()
     log_progress(job_id, "Summarizing story to extract key scenes")
@@ -338,7 +322,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
     characters = summary.get("characters") or []
     setting = summary.get("setting") or ""
     scenes = summary.get("scenes") or []
-
+    
     # If LLM didn't return scenes, create one per page
     if not scenes:
         scenes = []
@@ -356,7 +340,7 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
         for idx, scene in enumerate(scenes):
             if "page_hint" not in scene or scene["page_hint"] is None:
                 scene["page_hint"] = idx + 1
-
+    
     ctx_bits = []
     if setting:
         ctx_bits.append(f"Overall setting: {setting}")
@@ -364,47 +348,70 @@ def process_story_images(pdf_bytes: bytes, form_data: dict, job_id: str | None =
         ctx_bits.append("Main characters:")
         for ch in characters:
             ctx_bits.append(f"- {ch}")
-
+    
     context_preamble = base_preamble
     if ctx_bits:
         context_preamble = (
             base_preamble + "\n\nStory context:\n" + "\n".join(ctx_bits) + "\n"
-        )    generated_filenames: list[str] = []
+        )
+    
     images_json: list[dict] = []
     log_progress(job_id, f"Generating up to {cap} illustration(s)…")
+    
+    MAX_RETRIES = 2  # Retry failed images up to 2 times
     counted = 0
+    
     for idx, scene in enumerate(scenes):
         if counted >= cap:
             break
         
         scene_summary = scene.get("summary") or "A key moment from the story."
         prompt = page_to_prompt(scene_summary, idx, context_preamble)
+        page_num = counted + 1  # Page number for this attempt
         
-        try:
-            png_bytes = generate_image(prompt, size=size)
-            # Use counted+1 for sequential page numbers (only successful images)
-            page_num = counted + 1
-            filename = save_png(png_bytes, stem=f"page{page_num}")
-            generated_filenames.append(filename)
-            images_json.append(
-                {
-                    "url": file_url(filename, base_url=base_url),
-                    "page": page_num,  # Sequential: 1, 2, 3, 4, 5
-                    "prompt": prompt,
-                }
-            )
-            counted += 1
-            log_progress(job_id, f"Generated image for page {page_num}")
-        except Exception as e:
-            log_progress(job_id, f"⚠️ Failed to generate image for scene {idx + 1}: {str(e)}")
-            # Skip failed images - don't add to response
-            continueNo images were generated. Check API key/credits and try smaller pages."
+        # Try to generate the image with retries
+        success = False
+        last_error = None
+        
+        for retry in range(MAX_RETRIES):
+            try:
+                log_progress(job_id, f"Generating image for page {page_num} (attempt {retry + 1}/{MAX_RETRIES})")
+                png_bytes = generate_image(prompt, size=size)
+                
+                # Convert to base64 data URL (no file saving!)
+                data_url = png_to_data_url(png_bytes)
+                
+                images_json.append(
+                    {
+                        "url": data_url,  # Base64 data URL
+                        "page": page_num,  # Sequential: 1, 2, 3, 4, 5
+                        "prompt": prompt,
+                    }
+                )
+                success = True
+                counted += 1
+                log_progress(job_id, f"✅ Generated image for page {page_num}")
+                break  # Success! Move to next scene
+            except Exception as e:
+                last_error = str(e)
+                log_progress(job_id, f"⚠️ Attempt {retry + 1} failed for page {page_num}: {last_error}")
+                if retry < MAX_RETRIES - 1:
+                    # Wait a bit before retrying (exponential backoff)
+                    wait_time = 2 ** retry  # 1s, 2s, 4s...
+                    time.sleep(wait_time)
+        
+        # If all retries failed, log and skip this scene
+        if not success:
+            log_progress(job_id, f"❌ Skipping page {page_num} after {MAX_RETRIES} failed attempts: {last_error}")
+            # Don't increment counted - move to next scene and try to fill the gap    if not images_json:
+        raise RuntimeError(
+            "No images were generated. Check API key/credits and try smaller pages."
         )
     t_done = time.monotonic()
     log_progress(job_id, f"Job completed in {t_done - t0:.1f}s.")
     return {
         "message": "Images generated.",
-        "count": len(generated_filenames),
+        "count": len(images_json),
         "images": images_json,
         "summary": {
             "characters": characters,

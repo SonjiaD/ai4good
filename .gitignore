@@ -40,3 +40,4 @@ backend/googlecredentialstts.json
 #mathcha/tts
 Matcha-TTS/
 /backend/backend_env
+/backend/generated_images
