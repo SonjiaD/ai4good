@@ -1,6 +1,6 @@
 # 📚 ReadingBudd.AI - Personalized Reading Companion for Neurodivergent Learners
 
-An **AI-powered reading companion** designed to support neurodivergent children aged 7–10. ReadingBudd.AI originated from the **AI4Good Lab** (Mila, May-June 2025), a 2-month program for women and underrepresented genders in machine learning. The project has since evolved with **RBC Borealis mentorship** (2025), adding enhanced API resilience, quota management, and security hardening.
+An **AI-powered reading companion** designed to support neurodivergent children aged 7–10. ReadingBudd.AI originated from the **AI4Good Lab** (Mila and Google DeepMind, May-June 2025), a 2-month program for women and underrepresented genders in machine learning. The project has since evolved with **RBC Borealis mentorship** (2025), adding enhanced API resilience, quota management, and security hardening.
 
 ## 🎯 The Problem We're Solving
 
